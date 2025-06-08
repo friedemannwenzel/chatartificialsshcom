@@ -20,4 +20,12 @@ export default defineSchema({
   })
     .index("by_chat", ["chatId"])
     .index("by_chat_created", ["chatId", "createdAt"]),
+
+  userPreferences: defineTable({
+    userId: v.string(),
+    themeId: v.string(),
+    syncAcrossDevices: v.optional(v.boolean()),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"]),
 }); 

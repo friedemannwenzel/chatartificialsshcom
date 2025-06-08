@@ -3,13 +3,15 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Check } from "lucide-react";
+
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Check, Cloud, CloudOff } from "lucide-react";
 import { useCustomTheme } from "@/hooks/useCustomTheme";
 import { cn } from "@/lib/utils";
 
 export function ThemeSelector() {
-  const { currentTheme, setTheme, themePresets } = useCustomTheme();
+  const { currentTheme, setTheme, themePresets, syncAcrossDevices, toggleSyncAcrossDevices } = useCustomTheme();
 
   const getPreviewColors = (themeId: string) => {
     const theme = themePresets.find(t => t.id === themeId);
@@ -41,8 +43,8 @@ export function ThemeSelector() {
         </p>
       </div>
 
-      <ScrollArea className="h-[500px] w-full border rounded-md">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 p-4">
+      <div className="border rounded-md">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 p-4 max-h-[300px] overflow-y-auto">
           {themePresets.map((theme) => {
           const colors = getPreviewColors(theme.id);
           const isSelected = currentTheme === theme.id;
@@ -118,9 +120,39 @@ export function ThemeSelector() {
                       );
           })}
         </div>
-      </ScrollArea>
+      </div>
 
-      <div className="pt-4 border-t">
+      <div className="space-y-6 pt-4 border-t">
+        {/* Sync Across Devices */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                {syncAcrossDevices ? (
+                  <Cloud className="h-4 w-4 text-primary" />
+                ) : (
+                  <CloudOff className="h-4 w-4 text-muted-foreground" />
+                )}
+                <Label htmlFor="sync-toggle" className="font-medium">
+                  Sync Across Devices
+                </Label>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {syncAcrossDevices 
+                  ? "Your theme preferences are synced across all your devices"
+                  : "Theme preferences are stored locally on this device only"
+                }
+              </p>
+            </div>
+            <Switch
+              id="sync-toggle"
+              checked={syncAcrossDevices}
+              onCheckedChange={toggleSyncAcrossDevices}
+            />
+          </div>
+        </div>
+
+        {/* Current Theme */}
         <div className="flex items-center justify-between">
           <div>
             <h4 className="font-medium">Current Theme</h4>

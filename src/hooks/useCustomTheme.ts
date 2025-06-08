@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useUser } from "@clerk/nextjs";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
 
 export interface ThemePreset {
   id: string;
@@ -613,25 +616,70 @@ export const themePresets: ThemePreset[] = [
 export function useCustomTheme() {
   const [currentTheme, setCurrentTheme] = useState<string>("default");
   const [isInitialized, setIsInitialized] = useState(false);
+  const [syncAcrossDevices, setSyncAcrossDevices] = useState(false);
+  
+  const { user } = useUser();
+  const userPreferences = useQuery(
+    api.userPreferences.getUserPreferences,
+    user ? { userId: user.id } : "skip"
+  );
+  const updateThemePreference = useMutation(api.userPreferences.updateThemePreference);
+  const updateSyncSetting = useMutation(api.userPreferences.updateSyncSetting);
 
-  // Initialize theme on mount
+  // Initialize theme from database or localStorage
   useEffect(() => {
+    if (!user || userPreferences === undefined) return;
+
     const initializeTheme = () => {
-      const savedTheme = localStorage.getItem("custom-theme");
-      if (savedTheme && savedTheme !== "default") {
-        setCurrentTheme(savedTheme);
-        // Apply theme after a short delay to ensure DOM is ready
+      let themeToApply = "default";
+      let syncEnabled = false;
+
+      if (userPreferences) {
+        // User has preferences in database
+        themeToApply = userPreferences.themeId;
+        syncEnabled = userPreferences.syncAcrossDevices ?? false;
+        
+        if (syncEnabled) {
+          // If sync is enabled, use database theme and update localStorage
+          localStorage.setItem("custom-theme", themeToApply);
+          localStorage.setItem("theme-sync-enabled", "true");
+        } else {
+          // If sync is disabled, prefer localStorage
+          const localTheme = localStorage.getItem("custom-theme");
+          if (localTheme) {
+            themeToApply = localTheme;
+          }
+          localStorage.setItem("theme-sync-enabled", "false");
+        }
+      } else {
+        // No database preferences, check localStorage
+        const localTheme = localStorage.getItem("custom-theme");
+        const localSyncSetting = localStorage.getItem("theme-sync-enabled");
+        
+        if (localTheme) {
+          themeToApply = localTheme;
+        }
+        if (localSyncSetting) {
+          syncEnabled = localSyncSetting === "true";
+        }
+      }
+
+      setCurrentTheme(themeToApply);
+      setSyncAcrossDevices(syncEnabled);
+      
+      if (themeToApply !== "default") {
         setTimeout(() => {
-          applyTheme(savedTheme);
+          applyTheme(themeToApply);
         }, 100);
       }
+      
       setIsInitialized(true);
     };
 
     if (typeof window !== "undefined") {
       initializeTheme();
     }
-  }, []);
+  }, [user, userPreferences]);
 
   const applyTheme = (themeId: string) => {
     if (typeof window === "undefined") return;
@@ -666,10 +714,49 @@ export function useCustomTheme() {
     });
   };
 
-  const setTheme = (themeId: string) => {
+  const setTheme = async (themeId: string) => {
     setCurrentTheme(themeId);
     localStorage.setItem("custom-theme", themeId);
     applyTheme(themeId);
+
+    // If user is logged in and sync is enabled, update database
+    if (user && syncAcrossDevices) {
+      try {
+        await updateThemePreference({
+          userId: user.id,
+          themeId,
+          syncAcrossDevices,
+        });
+      } catch (error) {
+        console.error("Failed to sync theme to database:", error);
+      }
+    }
+  };
+
+  const toggleSyncAcrossDevices = async (enabled: boolean) => {
+    setSyncAcrossDevices(enabled);
+    localStorage.setItem("theme-sync-enabled", enabled.toString());
+
+    if (user) {
+      try {
+        if (enabled) {
+          // When enabling sync, save current theme to database
+          await updateThemePreference({
+            userId: user.id,
+            themeId: currentTheme,
+            syncAcrossDevices: enabled,
+          });
+        } else {
+          // When disabling sync, just update the sync setting
+          await updateSyncSetting({
+            userId: user.id,
+            syncAcrossDevices: enabled,
+          });
+        }
+      } catch (error) {
+        console.error("Failed to update sync setting:", error);
+      }
+    }
   };
 
   // Re-apply theme when dark mode changes
@@ -705,5 +792,7 @@ export function useCustomTheme() {
     setTheme,
     themePresets,
     isInitialized,
+    syncAcrossDevices,
+    toggleSyncAcrossDevices,
   };
 } 

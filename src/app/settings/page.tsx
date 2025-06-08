@@ -20,9 +20,9 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="flex-1 overflow-auto">
-      <div className="max-w-4xl mx-auto p-6 space-y-6">
-        <div className="flex items-center gap-3 mb-8">
+    <div className="flex-1 overflow-hidden flex flex-col">
+      <div className="max-w-4xl mx-auto w-full flex flex-col h-full">
+        <div className="flex items-center gap-3 p-6 pb-4">
           <Settings className="h-8 w-8" />
           <div>
             <h1 className="text-3xl font-bold">Settings</h1>
@@ -30,8 +30,8 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <Tabs defaultValue="account" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+        <Tabs defaultValue="account" className="w-full flex flex-col flex-1 overflow-hidden px-6">
+          <TabsList className="grid w-full grid-cols-5 mb-6">
             <TabsTrigger value="account">Account</TabsTrigger>
             <TabsTrigger value="customization">Customization</TabsTrigger>
             <TabsTrigger value="themes">Themes</TabsTrigger>
@@ -39,7 +39,8 @@ export default function SettingsPage() {
             <TabsTrigger value="contact">Contact Us</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="account" className="space-y-6">
+          <TabsContent value="account" className="flex-1 overflow-auto">
+            <div className="space-y-6 pb-6">
             <div className="grid gap-6 md:grid-cols-2">
               <Card>
                 <CardHeader>
@@ -120,9 +121,11 @@ export default function SettingsPage() {
                 </CardContent>
               </Card>
             </div>
+            </div>
           </TabsContent>
 
-          <TabsContent value="customization" className="space-y-6">
+          <TabsContent value="customization" className="flex-1 overflow-auto">
+            <div className="space-y-6 pb-6">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -139,9 +142,11 @@ export default function SettingsPage() {
                 </div>
               </CardContent>
             </Card>
+            </div>
           </TabsContent>
 
-          <TabsContent value="themes" className="space-y-6">
+          <TabsContent value="themes" className="flex-1 overflow-auto">
+            <div className="space-y-6 pb-6">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -156,9 +161,11 @@ export default function SettingsPage() {
                 <ThemeSelector />
               </CardContent>
             </Card>
+            </div>
           </TabsContent>
 
-          <TabsContent value="models" className="space-y-6">
+          <TabsContent value="models" className="flex-1 overflow-auto">
+            <div className="space-y-6 pb-6">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -175,9 +182,11 @@ export default function SettingsPage() {
                 </div>
               </CardContent>
             </Card>
+            </div>
           </TabsContent>
 
-          <TabsContent value="contact" className="space-y-6">
+          <TabsContent value="contact" className="flex-1 overflow-auto">
+            <div className="space-y-6 pb-6">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -197,6 +206,7 @@ export default function SettingsPage() {
                 </Button>
               </CardContent>
             </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </div>

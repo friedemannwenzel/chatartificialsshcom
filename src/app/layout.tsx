@@ -7,8 +7,8 @@ import {
 import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
 import ConvexClientProvider from '@/components/ConvexClientProvider'
-import { Sidebar } from '@/components/Sidebar'
-import { UserButton } from '@clerk/nextjs'
+import { SidebarLayout } from '@/components/SidebarLayout'
+import { ThemeProvider } from "@/components/theme-provider"
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -32,27 +32,25 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en">
+      <html lang="en" suppressHydrationWarning>
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
           <ConvexClientProvider>
             <SignedIn>
-              <div className="flex h-screen bg-background">
-                <Sidebar />
-                <div className="flex-1 flex flex-col">
-                  <header className="border-b p-4 flex justify-between items-center">
-                    <h1 className="text-xl font-semibold">T3 Chat</h1>
-                    <UserButton afterSignOutUrl="/" />
-                  </header>
-                  <main className="flex-1 overflow-hidden">
-                    {children}
-                  </main>
-                </div>
-              </div>
+              <SidebarLayout>
+                {children}
+              </SidebarLayout>
             </SignedIn>
             <SignedOut>
               {children}
             </SignedOut>
           </ConvexClientProvider>
+          </ThemeProvider>
         </body>
       </html>
     </ClerkProvider>

@@ -107,7 +107,8 @@
 
 ### Design Excellence
 - **Dark/light mode** with system preference
-- **Custom themes** (maybe 3-4 beautiful options)
+- **Custom themes** using different Tailwind CSS theme variants from tweakui.com
+- **User theme selection** - Let users pick their preferred color scheme
 - **Smooth animations** throughout
 - **Keyboard shortcuts** for power users
 
@@ -156,7 +157,8 @@
 ### Phase 5: Polish & Launch (Week 6+)
 - [ ] Performance optimization
 - [ ] Mobile responsiveness
-- [ ] Advanced features (sharing, themes)
+- [ ] Advanced features (sharing, custom theme selection)
+- [ ] Theme picker UI with tweakui.com variants
 - [ ] Testing and bug fixes
 - [ ] Documentation and demo
 

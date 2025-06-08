@@ -1,15 +1,14 @@
 import { type Metadata } from 'next'
 import {
   ClerkProvider,
-  SignInButton,
-  SignUpButton,
   SignedIn,
   SignedOut,
-  UserButton,
 } from '@clerk/nextjs'
 import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
 import ConvexClientProvider from '@/components/ConvexClientProvider'
+import { Sidebar } from '@/components/Sidebar'
+import { UserButton } from '@clerk/nextjs'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -36,7 +35,23 @@ export default function RootLayout({
       <html lang="en">
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
           <ConvexClientProvider>
-            {children}
+            <SignedIn>
+              <div className="flex h-screen bg-background">
+                <Sidebar />
+                <div className="flex-1 flex flex-col">
+                  <header className="border-b p-4 flex justify-between items-center">
+                    <h1 className="text-xl font-semibold">T3 Chat</h1>
+                    <UserButton afterSignOutUrl="/" />
+                  </header>
+                  <main className="flex-1 overflow-hidden">
+                    {children}
+                  </main>
+                </div>
+              </div>
+            </SignedIn>
+            <SignedOut>
+              {children}
+            </SignedOut>
           </ConvexClientProvider>
         </body>
       </html>

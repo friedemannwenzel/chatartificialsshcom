@@ -10,23 +10,23 @@
 ## 🛠️ Tech Stack (Beating Theo's Setup)
 
 ### Core Framework
-- **Next.js 14+** with App Router (TypeScript)
+- **Next.js 15+** with App Router (TypeScript)
 - **Tailwind CSS** + **shadcn/ui** for beautiful components
 - **Framer Motion** for smooth animations
 
 ### Database & Backend
-- **Convex** (real-time, great DX) OR **Supabase** (if we want SQL)
+- **Convex** (real-time, great DX)
 - Real-time chat updates
 - Optimistic UI updates
 
 ### Authentication
-- **Better-auth** (your preference over OpenAuth)
-- Social logins (Google, GitHub)
+- **Clerk** because it works great with convex
+- Social logins (Google)
 - Session management
 
 ### Hosting & Deployment
 - **Vercel** (matching Theo but with better performance)
-- **Vercel Blob** for file storage
+- **Vercel Blob** for file storage (not sure yet)
 - Edge functions for global speed
 
 ---
@@ -34,21 +34,21 @@
 ## 🤖 Multi-LLM Integration Strategy
 
 ### Primary Models
-1. **OpenAI GPT-4/3.5** - Your current expertise
-2. **Anthropic Claude 3** - Excellent for reasoning
-3. **Google Gemini Pro** - Great free tier
-4. **Groq Llama** - Lightning fast responses
+1. **OpenAI GPT-4o/ GPT-4.1** - Your current expertise
+2. **Anthropic Claude 4 (maybe)** - Excellent for reasoning
+3. **Google Gemini 2.5 flash** - Great free tier
+4. **Grok 3-mini** - Lightning fast responses
 
 ### Implementation Approach
-- **OpenRouter** - Single API for multiple models (simplifies integration)
+- direct API keys for each provider if not available openrouter
 - Model switching in UI with clear capabilities/pricing
 - Stream responses for all models
 - Model-specific system prompts
 
 ### API Priority
 1. Start with OpenAI (your comfort zone)
-2. Add OpenRouter for instant multi-model access
-3. Individual APIs for custom features
+2. Individual APIs for custom features
+3. Add OpenRouter for instant multi-model access
 
 ---
 
@@ -67,7 +67,7 @@
 - Model-specific capabilities display
 
 ### ✅ Authentication & Sync
-- User accounts with Better-auth
+- User accounts with clerj
 - Chat history persistence
 - Cross-device synchronization
 - Export chat functionality
@@ -127,21 +127,21 @@
 
 ## 📋 Development Phases
 
-### Phase 1: Foundation (Week 1-2)
+### Phase 1: Foundation
 - [ ] Next.js project setup with TypeScript
-- [ ] Better-auth integration
+- [ ] clerk integration
 - [ ] Basic chat UI with shadcn/ui
 - [ ] OpenAI integration with streaming
 - [ ] Convex database setup
 - [ ] Deploy to Vercel
 
-### Phase 2: Multi-Model (Week 3)
+### Phase 2: Multi-Model
 - [ ] OpenRouter integration
 - [ ] Model switching interface
 - [ ] Response comparison view
 - [ ] Usage tracking
 
-### Phase 3: File Attachments (Week 4)
+### Phase 3: File Attachments 
 - [ ] Image upload with vision models
 - [ ] PDF processing pipeline
 - [ ] File storage with Vercel Blob

@@ -3,6 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Check } from "lucide-react";
 import { useCustomTheme } from "@/hooks/useCustomTheme";
 import { cn } from "@/lib/utils";
@@ -12,7 +13,7 @@ export function ThemeSelector() {
 
   const getPreviewColors = (themeId: string) => {
     const theme = themePresets.find(t => t.id === themeId);
-    if (!theme || themeId === "default") {
+    if (!theme) {
       return {
         primary: "hsl(var(--primary))",
         secondary: "hsl(var(--secondary))",
@@ -21,7 +22,7 @@ export function ThemeSelector() {
       };
     }
 
-    // Extract colors from oklch values for preview
+    // Use OKLCH colors directly for preview
     const variables = theme.variables.light;
     return {
       primary: variables["--primary"] || "hsl(var(--primary))",
@@ -40,8 +41,9 @@ export function ThemeSelector() {
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {themePresets.map((theme) => {
+      <ScrollArea className="h-[500px] w-full border rounded-md">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 p-4">
+          {themePresets.map((theme) => {
           const colors = getPreviewColors(theme.id);
           const isSelected = currentTheme === theme.id;
 
@@ -113,16 +115,17 @@ export function ThemeSelector() {
                 </div>
               </CardContent>
             </Card>
-          );
-        })}
-      </div>
+                      );
+          })}
+        </div>
+      </ScrollArea>
 
       <div className="pt-4 border-t">
         <div className="flex items-center justify-between">
           <div>
             <h4 className="font-medium">Current Theme</h4>
             <p className="text-sm text-muted-foreground">
-              {themePresets.find(t => t.id === currentTheme)?.name || "Default"}
+              {themePresets.find(t => t.id === currentTheme)?.name || "T3 Chat"}
             </p>
           </div>
           {currentTheme !== "default" && (
@@ -130,7 +133,7 @@ export function ThemeSelector() {
               variant="outline" 
               onClick={() => setTheme("default")}
             >
-              Reset to Default
+              Reset to T3 Chat
             </Button>
           )}
         </div>

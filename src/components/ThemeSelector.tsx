@@ -157,7 +157,7 @@ export function ThemeSelector() {
           <div>
             <h4 className="font-medium">Current Theme</h4>
             <p className="text-sm text-muted-foreground">
-              {themePresets.find(t => t.id === currentTheme)?.name || "T3 Chat"}
+              {themePresets.find(t => t.id === currentTheme)?.name || "Default"}
             </p>
           </div>
           {currentTheme !== "default" && (
@@ -165,7 +165,7 @@ export function ThemeSelector() {
               variant="outline" 
               onClick={() => setTheme("default")}
             >
-              Reset to T3 Chat
+              Reset to Default
             </Button>
           )}
         </div>

@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings, User, CreditCard, Bell, Shield, Palette, Bot, Mail, LogOut } from "lucide-react";
+import { Settings, User, CreditCard, Shield, Palette, Bot, Mail, LogOut } from "lucide-react";
 import { ThemeSelector } from "@/components/ThemeSelector";
 import { useSecureLogout } from "@/hooks/useSecureLogout";
 
@@ -94,7 +94,7 @@ export default function SettingsPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="text-sm text-muted-foreground">
-                    You're currently on the Free plan
+                    You&apos;re currently on the Free plan
                   </div>
                   <Button className="w-full">
                     Upgrade to Pro
@@ -197,7 +197,7 @@ export default function SettingsPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="text-sm text-muted-foreground">
-                  Need help? We're here to assist you.
+                  Need help? We&apos;re here to assist you.
                 </div>
                 <Button className="w-full">
                   Contact Support

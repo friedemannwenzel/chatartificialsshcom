@@ -25,7 +25,6 @@ import {
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
-import { useState } from "react";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 

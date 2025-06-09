@@ -139,7 +139,7 @@ export function Sidebar({
           onClick={handleNewChat}
           className={cn(
             "h-12 w-12 rounded-full shadow-lg backdrop-blur-xl border border-white/20",
-            "bg-primary/90 hover:bg-primary text-primary-foreground",
+            "bg-primary/20 hover:bg-primary/30 text-primary-foreground",
             "transition-all duration-300 ease-out",
             "hover:shadow-xl hover:scale-105 active:scale-95",
             "shadow-[0_8px_32px_rgba(0,0,0,0.12)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.16)]"

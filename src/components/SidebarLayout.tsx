@@ -17,7 +17,7 @@ export function SidebarLayout({ children }: SidebarLayoutProps) {
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (sidebarState === "collapsed") {
-        const isNearLeftEdge = e.clientX <= 20; // 20px from left edge
+        const isNearLeftEdge = e.clientX <= 30; // 20px from left edge
         
         if (isNearLeftEdge && !isHovering) {
           setIsHovering(true);

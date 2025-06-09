@@ -9,8 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   Plus, 
   MessageSquare, 
-  PanelLeftClose, 
-  PanelLeftOpen,
+  PanelLeft,
   Settings,
   Moon,
   Sun,
@@ -28,12 +27,25 @@ import { v4 as uuidv4 } from "uuid";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 
+type SidebarState = "open" | "collapsed" | "hover";
+
 interface SidebarProps {
-  isCollapsed: boolean;
+  state: SidebarState;
+  isHovering: boolean;
+  isVisible: boolean;
+  isFloating: boolean;
   onToggle: () => void;
+  onClose: () => void;
 }
 
-export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
+export function Sidebar({ 
+  state, 
+  isHovering, 
+  isVisible, 
+  isFloating, 
+  onToggle, 
+  onClose 
+}: SidebarProps) {
   const { user } = useUser();
   const router = useRouter();
   const params = useParams();
@@ -83,7 +95,6 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       }
     });
 
-    // Remove empty groups
     Object.keys(groups).forEach(key => {
       if (groups[key].length === 0) {
         delete groups[key];
@@ -105,41 +116,244 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       .slice(0, 2);
   };
 
+  // When completely collapsed, only show floating action button
+  if (state === "collapsed" && !isHovering) {
+    return (
+      <div className="fixed top-6 left-6 z-50 flex flex-col gap-3">
+        {/* Sidebar Toggle Button */}
+        <Button
+          onClick={onToggle}
+          className={cn(
+            "h-12 w-12 rounded-full shadow-lg backdrop-blur-xl border border-white/20",
+            "bg-card/80 hover:bg-card/90 text-foreground",
+            "transition-all duration-300 ease-out",
+            "hover:shadow-xl hover:scale-105 active:scale-95",
+            "shadow-[0_8px_32px_rgba(0,0,0,0.12)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.16)]"
+          )}
+        >
+          <PanelLeft className="h-5 w-5" />
+        </Button>
+
+        {/* New Chat Button */}
+        <Button
+          onClick={handleNewChat}
+          className={cn(
+            "h-12 w-12 rounded-full shadow-lg backdrop-blur-xl border border-white/20",
+            "bg-primary/90 hover:bg-primary text-primary-foreground",
+            "transition-all duration-300 ease-out",
+            "hover:shadow-xl hover:scale-105 active:scale-95",
+            "shadow-[0_8px_32px_rgba(0,0,0,0.12)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.16)]"
+          )}
+        >
+          <Plus className="h-5 w-5" />
+        </Button>
+      </div>
+    );
+  }
+
+  // Floating sidebar (when hovering over collapsed state)
+  if (isFloating) {
+    return (
+      <>
+        {/* Backdrop Blur Overlay */}
+        <div 
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-30 transition-all duration-300"
+          onClick={onClose}
+        />
+        
+        {/* Floating Sidebar Panel */}
+        <div className="fixed inset-y-0 left-0 z-40 transition-all duration-300 ease-out">
+          <div className="h-full p-6 flex items-center">
+            <div className={cn(
+              "w-80 h-[calc(100vh-3rem)] rounded-3xl",
+              "bg-card/70 backdrop-blur-2xl border border-white/20",
+              "shadow-[0_24px_64px_rgba(0,0,0,0.15)]",
+              "flex flex-col overflow-hidden",
+              "transition-all duration-300 ease-out"
+            )}>
+              {/* Header */}
+              <div className="p-6 border-b border-white/10">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-semibold tracking-tight">T3 Chat</h2>
+                  <div className="flex items-center gap-2">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className={cn(
+                            "h-9 w-9 rounded-full",
+                            "hover:bg-white/10 border border-white/10",
+                            "transition-all duration-200"
+                          )}
+                        >
+                          {theme === "light" ? (
+                            <Sun className="h-4 w-4" />
+                          ) : theme === "dark" ? (
+                            <Moon className="h-4 w-4" />
+                          ) : (
+                            <Monitor className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent 
+                        align="end" 
+                        className="backdrop-blur-xl bg-card/90 border border-white/20"
+                      >
+                        <DropdownMenuItem onClick={() => setTheme("light")}>
+                          <Sun className="mr-2 h-4 w-4" />
+                          Light
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setTheme("dark")}>
+                          <Moon className="mr-2 h-4 w-4" />
+                          Dark
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setTheme("system")}>
+                          <Monitor className="mr-2 h-4 w-4" />
+                          System
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    
+                    <Button
+                      onClick={handleNewChat}
+                      size="sm"
+                      className={cn(
+                        "h-9 w-9 rounded-full",
+                        "bg-primary/20 hover:bg-primary/30",
+                        "border border-white/10"
+                      )}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Chat History */}
+              <ScrollArea className="flex-1 px-6">
+                <div className="space-y-6 py-4">
+                  {Object.entries(chatGroups).map(([groupName, groupChats]) => (
+                    <div key={groupName}>
+                      <h3 className="text-xs font-medium text-muted-foreground mb-3 px-3 uppercase tracking-wider">
+                        {groupName}
+                      </h3>
+                      <div className="space-y-2">
+                        {groupChats.map((chat) => (
+                          <Link
+                            key={chat._id}
+                            href={`/c/${chat.chatId}`}
+                            className={cn(
+                              "block rounded-2xl p-3 text-sm transition-all duration-200",
+                              "hover:bg-white/10 border border-transparent",
+                              "hover:border-white/10 hover:shadow-lg",
+                              currentChatId === chat.chatId 
+                                ? "bg-primary/20 border-primary/30 shadow-md" 
+                                : ""
+                            )}
+                          >
+                            <span className="truncate block">
+                              {chat.title || "New Chat"}
+                            </span>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {Object.keys(chatGroups).length === 0 && (
+                    <div className="text-center text-muted-foreground py-12">
+                      <div className={cn(
+                        "h-16 w-16 mx-auto mb-4 rounded-2xl",
+                        "bg-white/5 border border-white/10",
+                        "flex items-center justify-center"
+                      )}>
+                        <MessageSquare className="h-8 w-8 opacity-50" />
+                      </div>
+                      <p className="text-sm font-medium">No chats yet</p>
+                      <p className="text-xs opacity-70 mt-1">Start a new conversation!</p>
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+
+              {/* User Profile */}
+              <div className="p-6 border-t border-white/10">
+                <Link href="/settings">
+                  <Button
+                    variant="ghost"
+                    className={cn(
+                      "w-full justify-start gap-3 h-auto p-4 rounded-2xl",
+                      "hover:bg-white/10 border border-white/10",
+                      "transition-all duration-200"
+                    )}
+                  >
+                    <Avatar className="h-10 w-10 ring-2 ring-white/20">
+                      <AvatarImage src={user?.imageUrl} />
+                      <AvatarFallback className="text-sm bg-primary/20">
+                        {getUserInitials(user?.fullName)}
+                      </AvatarFallback>
+                    </Avatar>
+                    
+                    <div className="flex flex-col items-start text-left flex-1">
+                      <span className="text-sm font-medium truncate max-w-[160px]">
+                        {user?.fullName || user?.emailAddresses[0]?.emailAddress || "User"}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        Free Plan
+                      </span>
+                    </div>
+                    
+                    <Settings className="h-4 w-4 opacity-60" />
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Normal sidebar (when open)
   return (
-    <div className={cn(
-      "flex h-full flex-col border-r bg-background transition-all duration-300",
-      isCollapsed ? "w-12" : "w-64"
-    )}>
-      {/* Header */}
+    <div className="w-80 h-full p-6 flex items-center">
       <div className={cn(
-        "flex items-center p-4 border-b",
-        isCollapsed ? "justify-center" : "justify-between"
+        "w-full h-[calc(100vh-3rem)] rounded-3xl",
+        "bg-card/70 backdrop-blur-2xl border border-white/20",
+        "shadow-[0_24px_64px_rgba(0,0,0,0.15)]",
+        "flex flex-col overflow-hidden",
+        "transition-all duration-300 ease-out"
       )}>
-        {isCollapsed ? (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onToggle}
-            className="h-8 w-8 p-0"
-          >
-            <PanelLeftOpen className="h-4 w-4" />
-          </Button>
-        ) : (
-          <div className="flex items-center gap-3 w-full">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onToggle}
-              className="h-8 w-8 p-0"
-            >
-              <PanelLeftClose className="h-4 w-4" />
-            </Button>
-            
-            <h2 className="text-lg font-semibold">T3 Chat</h2>
-            <div className="flex items-center gap-1 ml-auto">
+        {/* Header */}
+        <div className="p-6 border-b border-white/10">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold tracking-tight">T3 Chat</h2>
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={onToggle}
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "h-9 w-9 rounded-full",
+                  "hover:bg-white/10 border border-white/10",
+                  "transition-all duration-200"
+                )}
+              >
+                <PanelLeft className="h-4 w-4" />
+              </Button>
+              
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className={cn(
+                      "h-9 w-9 rounded-full",
+                      "hover:bg-white/10 border border-white/10",
+                      "transition-all duration-200"
+                    )}
+                  >
                     {theme === "light" ? (
                       <Sun className="h-4 w-4" />
                     ) : theme === "dark" ? (
@@ -149,7 +363,10 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                     )}
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent 
+                  align="end"
+                  className="backdrop-blur-xl bg-card/90 border border-white/20"
+                >
                   <DropdownMenuItem onClick={() => setTheme("light")}>
                     <Sun className="mr-2 h-4 w-4" />
                     Light
@@ -168,97 +385,97 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
               <Button
                 onClick={handleNewChat}
                 size="sm"
-                className="h-8 w-8 p-0"
+                className={cn(
+                  "h-9 w-9 rounded-full",
+                  "bg-primary/20 hover:bg-primary/30",
+                  "border border-white/10"
+                )}
               >
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
           </div>
-        )}
-      </div>
-
-      {!isCollapsed && (
-        <>
-          {/* Chat History */}
-          <ScrollArea className="flex-1 p-2">
-            <div className="space-y-4">
-              {Object.entries(chatGroups).map(([groupName, groupChats]) => (
-                <div key={groupName}>
-                  <h3 className="text-xs font-medium text-muted-foreground mb-2 px-2">
-                    {groupName}
-                  </h3>
-                  <div className="space-y-1">
-                    {groupChats.map((chat) => (
-                      <Link
-                        key={chat._id}
-                        href={`/c/${chat.chatId}`}
-                        className={cn(
-                          "flex items-center gap-3 rounded-md p-2 text-sm hover:bg-accent hover:text-accent-foreground transition-colors",
-                          currentChatId === chat.chatId ? "bg-accent" : ""
-                        )}
-                      >
-                        <span className="truncate">
-                          {chat.title || "New Chat"}
-                        </span>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              ))}
-              
-              {Object.keys(chatGroups).length === 0 && (
-                <div className="text-center text-muted-foreground p-4">
-                  <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">No chats yet</p>
-                  <p className="text-xs">Start a new conversation!</p>
-                </div>
-              )}
-            </div>
-          </ScrollArea>
-
-          {/* User Profile */}
-          <div className="border-t p-2">
-            <Link href="/settings">
-              <Button
-                variant="ghost"
-                className="w-full justify-start gap-3 h-auto p-3"
-              >
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={user?.imageUrl} />
-                  <AvatarFallback className="text-xs">
-                    {getUserInitials(user?.fullName)}
-                  </AvatarFallback>
-                </Avatar>
-                
-                <div className="flex flex-col items-start text-left">
-                  <span className="text-sm font-medium truncate max-w-[120px]">
-                    {user?.fullName || user?.emailAddresses[0]?.emailAddress || "User"}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    Free Plan
-                  </span>
-                </div>
-                
-                <Settings className="h-4 w-4 ml-auto opacity-60" />
-              </Button>
-            </Link>
-          </div>
-        </>
-      )}
-
-      {isCollapsed && (
-        <div className="flex-1 flex flex-col items-center justify-center p-2">
-          <Button
-            onClick={handleNewChat}
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0 opacity-60 hover:opacity-100"
-            title="New Chat"
-          >
-            <Plus className="h-3 w-3" />
-          </Button>
         </div>
-      )}
+
+        {/* Chat History */}
+        <ScrollArea className="flex-1 px-6">
+          <div className="space-y-6 py-4">
+            {Object.entries(chatGroups).map(([groupName, groupChats]) => (
+              <div key={groupName}>
+                <h3 className="text-xs font-medium text-muted-foreground mb-3 px-3 uppercase tracking-wider">
+                  {groupName}
+                </h3>
+                <div className="space-y-2">
+                  {groupChats.map((chat) => (
+                    <Link
+                      key={chat._id}
+                      href={`/c/${chat.chatId}`}
+                      className={cn(
+                        "block rounded-2xl p-3 text-sm transition-all duration-200",
+                        "hover:bg-white/10 border border-transparent",
+                        "hover:border-white/10 hover:shadow-lg",
+                        currentChatId === chat.chatId 
+                          ? "bg-primary/20 border-primary/30 shadow-md" 
+                          : ""
+                      )}
+                    >
+                      <span className="truncate block">
+                        {chat.title || "New Chat"}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ))}
+            
+            {Object.keys(chatGroups).length === 0 && (
+              <div className="text-center text-muted-foreground py-12">
+                <div className={cn(
+                  "h-16 w-16 mx-auto mb-4 rounded-2xl",
+                  "bg-white/5 border border-white/10",
+                  "flex items-center justify-center"
+                )}>
+                  <MessageSquare className="h-8 w-8 opacity-50" />
+                </div>
+                <p className="text-sm font-medium">No chats yet</p>
+                <p className="text-xs opacity-70 mt-1">Start a new conversation!</p>
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+
+        {/* User Profile */}
+        <div className="p-6 border-t border-white/10">
+          <Link href="/settings">
+            <Button
+              variant="ghost"
+              className={cn(
+                "w-full justify-start gap-3 h-auto p-4 rounded-2xl",
+                "hover:bg-white/10 border border-white/10",
+                "transition-all duration-200"
+              )}
+            >
+              <Avatar className="h-10 w-10 ring-2 ring-white/20">
+                <AvatarImage src={user?.imageUrl} />
+                <AvatarFallback className="text-sm bg-primary/20">
+                  {getUserInitials(user?.fullName)}
+                </AvatarFallback>
+              </Avatar>
+              
+              <div className="flex flex-col items-start text-left flex-1">
+                <span className="text-sm font-medium truncate max-w-[160px]">
+                  {user?.fullName || user?.emailAddresses[0]?.emailAddress || "User"}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  Free Plan
+                </span>
+              </div>
+              
+              <Settings className="h-4 w-4 opacity-60" />
+            </Button>
+          </Link>
+        </div>
+      </div>
     </div>
   );
 } 

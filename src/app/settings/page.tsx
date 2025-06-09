@@ -7,13 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Settings, User, CreditCard, Bell, Shield, Palette, Bot, Mail, LogOut } from "lucide-react";
 import { ThemeSelector } from "@/components/ThemeSelector";
+import { useSecureLogout } from "@/hooks/useSecureLogout";
 
 export default function SettingsPage() {
-  const { signOut, openUserProfile } = useClerk();
-
-  const handleSignOut = () => {
-    signOut({ redirectUrl: "/" });
-  };
+  const { openUserProfile } = useClerk();
+  const { secureSignOut } = useSecureLogout();
 
   const handleManageAccount = () => {
     openUserProfile();
@@ -75,7 +73,7 @@ export default function SettingsPage() {
                 </CardHeader>
                 <CardContent>
                   <Button 
-                    onClick={handleSignOut} 
+                    onClick={secureSignOut} 
                     variant="destructive" 
                     className="w-full"
                   >

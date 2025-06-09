@@ -11,6 +11,7 @@ import { SidebarLayout } from '@/components/SidebarLayout'
 import { ThemeProvider } from "@/components/theme-provider"
 import { CustomThemeProvider } from "@/components/CustomThemeProvider"
 import { ThemeScript } from "@/components/ThemeScript"
+import { SecurityProvider } from "@/components/SecurityProvider"
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -47,14 +48,16 @@ export default function RootLayout({
           >
           <ConvexClientProvider>
             <CustomThemeProvider>
-              <SignedIn>
-                <SidebarLayout>
+              <SecurityProvider>
+                <SignedIn>
+                  <SidebarLayout>
+                    {children}
+                  </SidebarLayout>
+                </SignedIn>
+                <SignedOut>
                   {children}
-                </SidebarLayout>
-              </SignedIn>
-              <SignedOut>
-                {children}
-              </SignedOut>
+                </SignedOut>
+              </SecurityProvider>
             </CustomThemeProvider>
           </ConvexClientProvider>
           </ThemeProvider>

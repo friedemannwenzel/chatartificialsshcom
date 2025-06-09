@@ -8,6 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send, Bot, User } from "lucide-react";
 import { Doc } from "../../convex/_generated/dataModel";
+import { ModelSelector } from "./ModelSelector";
+import { AIModel, DEFAULT_MODEL } from "@/lib/models";
 
 interface ChatInterfaceProps {
   chatId: string;
@@ -18,6 +20,7 @@ export function ChatInterface({ chatId, messages }: ChatInterfaceProps) {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [streamingMessage, setStreamingMessage] = useState("");
+  const [selectedModel, setSelectedModel] = useState<AIModel>(DEFAULT_MODEL);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -66,6 +69,7 @@ export function ChatInterface({ chatId, messages }: ChatInterfaceProps) {
             })),
             { role: "user", content: userMessage },
           ],
+          model: selectedModel.id,
         }),
       });
 
@@ -190,26 +194,34 @@ export function ChatInterface({ chatId, messages }: ChatInterfaceProps) {
       </ScrollArea>
 
       <div className="border-t p-4">
-        <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
-          <div className="flex gap-2">
-            <Textarea
-              ref={textareaRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Type your message..."
-              className="min-h-[60px] resize-none"
-              disabled={isLoading}
+        <div className="max-w-4xl mx-auto space-y-4">
+          <div className="flex justify-center">
+            <ModelSelector
+              selectedModel={selectedModel}
+              onModelChange={setSelectedModel}
             />
-            <Button 
-              type="submit" 
-              disabled={!input.trim() || isLoading}
-              size="lg"
-            >
-              <Send className="w-4 h-4" />
-            </Button>
           </div>
-        </form>
+          <form onSubmit={handleSubmit}>
+            <div className="flex gap-2">
+              <Textarea
+                ref={textareaRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Type your message..."
+                className="min-h-[60px] resize-none"
+                disabled={isLoading}
+              />
+              <Button 
+                type="submit" 
+                disabled={!input.trim() || isLoading}
+                size="lg"
+              >
+                <Send className="w-4 h-4" />
+              </Button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

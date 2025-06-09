@@ -129,11 +129,11 @@
 ## 📋 Development Phases
 
 ### Phase 1: Foundation
-- [ ] Next.js project setup with TypeScript
-- [ ] clerk integration
-- [ ] Basic chat UI with shadcn/ui
-- [ ] OpenAI integration with streaming
-- [ ] Convex database setup
+- [x] Next.js project setup with TypeScript
+- [x] clerk integration
+- [x] Basic chat UI with shadcn/ui
+- [x] OpenAI integration with streaming
+- [x] Convex database setup
 - [ ] Deploy to Vercel
 
 ### Phase 2: Multi-Model

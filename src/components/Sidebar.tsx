@@ -163,18 +163,18 @@ export function Sidebar({
         
         {/* Floating Sidebar Panel */}
         <div className="fixed inset-y-0 left-0 z-40 transition-all duration-300 ease-out">
-          <div className="h-full p-6 flex items-center">
+          <div className="h-full p-4 flex items-center">
             <div className={cn(
-              "w-80 h-[calc(100vh-3rem)] rounded-3xl",
+              "w-full h-[calc(100vh-2rem)] rounded-3xl",
               "bg-card/70 backdrop-blur-2xl border border-white/20",
               "shadow-[0_24px_64px_rgba(0,0,0,0.15)]",
               "flex flex-col overflow-hidden",
               "transition-all duration-300 ease-out"
             )}>
               {/* Header */}
-              <div className="p-6 border-b border-white/10">
+              <div className="p-4 border-b border-white/10">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-semibold tracking-tight">T3 Chat</h2>
+                  <h2 className="text-lg font-semibold tracking-tight">T3 Chat</h2>
                   <div className="flex items-center gap-2">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -182,7 +182,7 @@ export function Sidebar({
                           variant="ghost" 
                           size="sm" 
                           className={cn(
-                            "h-9 w-9 rounded-full",
+                            "h-8 w-8 rounded-full",
                             "hover:bg-white/10 border border-white/10",
                             "transition-all duration-200"
                           )}
@@ -219,7 +219,7 @@ export function Sidebar({
                       onClick={handleNewChat}
                       size="sm"
                       className={cn(
-                        "h-9 w-9 rounded-full",
+                        "h-8 w-8 rounded-full",
                         "bg-primary/20 hover:bg-primary/30",
                         "border border-white/10"
                       )}
@@ -231,20 +231,20 @@ export function Sidebar({
               </div>
 
               {/* Chat History */}
-              <ScrollArea className="flex-1 px-6">
-                <div className="space-y-6 py-4">
+              <ScrollArea className="flex-1 px-4">
+                <div className="space-y-4 py-3">
                   {Object.entries(chatGroups).map(([groupName, groupChats]) => (
                     <div key={groupName}>
-                      <h3 className="text-xs font-medium text-muted-foreground mb-3 px-3 uppercase tracking-wider">
+                      <h3 className="text-xs font-medium text-muted-foreground mb-2 px-2 uppercase tracking-wider">
                         {groupName}
                       </h3>
-                      <div className="space-y-2">
+                      <div className="space-y-1">
                         {groupChats.map((chat) => (
                           <Link
                             key={chat._id}
                             href={`/c/${chat.chatId}`}
                             className={cn(
-                              "block rounded-2xl p-3 text-sm transition-all duration-200",
+                              "block rounded-2xl p-2.5 text-sm transition-all duration-200",
                               "hover:bg-white/10 border border-transparent",
                               "hover:border-white/10 hover:shadow-lg",
                               currentChatId === chat.chatId 
@@ -262,13 +262,13 @@ export function Sidebar({
                   ))}
                   
                   {Object.keys(chatGroups).length === 0 && (
-                    <div className="text-center text-muted-foreground py-12">
+                    <div className="text-center text-muted-foreground py-8">
                       <div className={cn(
-                        "h-16 w-16 mx-auto mb-4 rounded-2xl",
+                        "h-12 w-12 mx-auto mb-3 rounded-2xl",
                         "bg-white/5 border border-white/10",
                         "flex items-center justify-center"
                       )}>
-                        <MessageSquare className="h-8 w-8 opacity-50" />
+                        <MessageSquare className="h-6 w-6 opacity-50" />
                       </div>
                       <p className="text-sm font-medium">No chats yet</p>
                       <p className="text-xs opacity-70 mt-1">Start a new conversation!</p>
@@ -278,19 +278,19 @@ export function Sidebar({
               </ScrollArea>
 
               {/* User Profile */}
-              <div className="p-6 border-t border-white/10">
+              <div className="p-4 border-t border-white/10">
                 <Link href="/settings">
                   <Button
                     variant="ghost"
                     className={cn(
-                      "w-full justify-start gap-3 h-auto p-4 rounded-2xl",
+                      "w-full justify-start gap-3 h-auto p-3 rounded-2xl",
                       "hover:bg-white/10 border border-white/10",
                       "transition-all duration-200"
                     )}
                   >
-                    <Avatar className="h-10 w-10 ring-2 ring-white/20">
+                    <Avatar className="h-8 w-8 ring-2 ring-white/20">
                       <AvatarImage src={user?.imageUrl} />
-                      <AvatarFallback className="text-sm bg-primary/20">
+                      <AvatarFallback className="text-xs bg-primary/20">
                         {getUserInitials(user?.fullName)}
                       </AvatarFallback>
                     </Avatar>
@@ -317,25 +317,25 @@ export function Sidebar({
 
   // Normal sidebar (when open)
   return (
-    <div className="w-80 h-full p-6 flex items-center">
+    <div className="w-80 h-full p-4 flex items-center">
       <div className={cn(
-        "w-full h-[calc(100vh-3rem)] rounded-3xl",
+        "w-full h-[calc(100vh-2rem)] rounded-3xl",
         "bg-card/70 backdrop-blur-2xl border border-white/20",
         "shadow-[0_24px_64px_rgba(0,0,0,0.15)]",
         "flex flex-col overflow-hidden",
         "transition-all duration-300 ease-out"
       )}>
         {/* Header */}
-        <div className="p-6 border-b border-white/10">
+        <div className="p-4 border-b border-white/10">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold tracking-tight">T3 Chat</h2>
+            <h2 className="text-lg font-semibold tracking-tight">T3 Chat</h2>
             <div className="flex items-center gap-2">
               <Button
                 onClick={onToggle}
                 variant="ghost"
                 size="sm"
                 className={cn(
-                  "h-9 w-9 rounded-full",
+                  "h-8 w-8 rounded-full",
                   "hover:bg-white/10 border border-white/10",
                   "transition-all duration-200"
                 )}
@@ -349,7 +349,7 @@ export function Sidebar({
                     variant="ghost" 
                     size="sm" 
                     className={cn(
-                      "h-9 w-9 rounded-full",
+                      "h-8 w-8 rounded-full",
                       "hover:bg-white/10 border border-white/10",
                       "transition-all duration-200"
                     )}
@@ -386,7 +386,7 @@ export function Sidebar({
                 onClick={handleNewChat}
                 size="sm"
                 className={cn(
-                  "h-9 w-9 rounded-full",
+                  "h-8 w-8 rounded-full",
                   "bg-primary/20 hover:bg-primary/30",
                   "border border-white/10"
                 )}
@@ -398,20 +398,20 @@ export function Sidebar({
         </div>
 
         {/* Chat History */}
-        <ScrollArea className="flex-1 px-6">
-          <div className="space-y-6 py-4">
+        <ScrollArea className="flex-1 px-4">
+          <div className="space-y-4 py-3">
             {Object.entries(chatGroups).map(([groupName, groupChats]) => (
               <div key={groupName}>
-                <h3 className="text-xs font-medium text-muted-foreground mb-3 px-3 uppercase tracking-wider">
+                <h3 className="text-xs font-medium text-muted-foreground mb-2 px-2 uppercase tracking-wider">
                   {groupName}
                 </h3>
-                <div className="space-y-2">
+                <div className="space-y-1">
                   {groupChats.map((chat) => (
                     <Link
                       key={chat._id}
                       href={`/c/${chat.chatId}`}
                       className={cn(
-                        "block rounded-2xl p-3 text-sm transition-all duration-200",
+                        "block rounded-2xl p-2.5 text-sm transition-all duration-200",
                         "hover:bg-white/10 border border-transparent",
                         "hover:border-white/10 hover:shadow-lg",
                         currentChatId === chat.chatId 
@@ -429,13 +429,13 @@ export function Sidebar({
             ))}
             
             {Object.keys(chatGroups).length === 0 && (
-              <div className="text-center text-muted-foreground py-12">
+              <div className="text-center text-muted-foreground py-8">
                 <div className={cn(
-                  "h-16 w-16 mx-auto mb-4 rounded-2xl",
+                  "h-12 w-12 mx-auto mb-3 rounded-2xl",
                   "bg-white/5 border border-white/10",
                   "flex items-center justify-center"
                 )}>
-                  <MessageSquare className="h-8 w-8 opacity-50" />
+                  <MessageSquare className="h-6 w-6 opacity-50" />
                 </div>
                 <p className="text-sm font-medium">No chats yet</p>
                 <p className="text-xs opacity-70 mt-1">Start a new conversation!</p>
@@ -445,19 +445,19 @@ export function Sidebar({
         </ScrollArea>
 
         {/* User Profile */}
-        <div className="p-6 border-t border-white/10">
+        <div className="p-4 border-t border-white/10">
           <Link href="/settings">
             <Button
               variant="ghost"
               className={cn(
-                "w-full justify-start gap-3 h-auto p-4 rounded-2xl",
+                "w-full justify-start gap-3 h-auto p-3 rounded-2xl",
                 "hover:bg-white/10 border border-white/10",
                 "transition-all duration-200"
               )}
             >
-              <Avatar className="h-10 w-10 ring-2 ring-white/20">
+              <Avatar className="h-8 w-8 ring-2 ring-white/20">
                 <AvatarImage src={user?.imageUrl} />
-                <AvatarFallback className="text-sm bg-primary/20">
+                <AvatarFallback className="text-xs bg-primary/20">
                   {getUserInitials(user?.fullName)}
                 </AvatarFallback>
               </Avatar>

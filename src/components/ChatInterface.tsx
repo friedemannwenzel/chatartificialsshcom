@@ -5,11 +5,11 @@ import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send, Bot, User } from "lucide-react";
 import { Doc } from "../../convex/_generated/dataModel";
 import { ModelSelector } from "./ModelSelector";
 import { AIModel, DEFAULT_MODEL } from "@/lib/models";
+import { MessageContent } from "./MessageContent";
 
 interface ChatInterfaceProps {
   chatId: string;
@@ -29,10 +29,7 @@ export function ChatInterface({ chatId, messages }: ChatInterfaceProps) {
 
   const scrollToBottom = () => {
     if (scrollAreaRef.current) {
-      const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
-      if (scrollContainer) {
-        scrollContainer.scrollTop = scrollContainer.scrollHeight;
-      }
+      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
     }
   };
 
@@ -140,87 +137,103 @@ export function ChatInterface({ chatId, messages }: ChatInterfaceProps) {
   };
 
   return (
-    <div className="flex flex-col h-full">
-      <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
-        <div className="space-y-4 max-w-4xl mx-auto">
-          {messages.map((message) => (
-            <div
-              key={message._id}
-              className={`flex gap-3 ${
-                message.role === "user" ? "justify-end" : "justify-start"
-              }`}
-            >
-              {message.role === "assistant" && (
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Bot className="w-4 h-4" />
-                </div>
-              )}
+    <div className="flex flex-col h-full relative">
+      {/* Scrollable chat area with bottom padding for fixed input */}
+      <div className="flex-1 overflow-hidden">
+        <div className="h-full overflow-y-auto pb-40" ref={scrollAreaRef}>
+          <div className="space-y-4 max-w-5xl mx-auto p-4 pt-6">
+            {messages.map((message) => (
               <div
-                className={`max-w-[80%] rounded-lg p-3 ${
-                  message.role === "user"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted"
+                key={message._id}
+                className={`flex gap-3 ${
+                  message.role === "user" ? "justify-end" : "justify-start"
                 }`}
               >
-                <p className="whitespace-pre-wrap">{message.content}</p>
-              </div>
-              {message.role === "user" && (
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                  <User className="w-4 h-4" />
+                {message.role === "assistant" && (
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <Bot className="w-4 h-4" />
+                  </div>
+                )}
+                <div
+                  className={`max-w-[80%] rounded-2xl p-4 ${
+                    message.role === "user"
+                      ? "bg-primary/90 text-primary-foreground shadow-lg"
+                      : "bg-card/70 backdrop-blur-xl border border-white/20 shadow-md"
+                  }`}
+                >
+                  {message.role === "assistant" ? (
+                    <MessageContent content={message.content} />
+                  ) : (
+                    <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
+                  )}
                 </div>
-              )}
-            </div>
-          ))}
-
-          {streamingMessage && (
-            <div className="flex gap-3 justify-start">
-              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                <Bot className="w-4 h-4" />
+                {message.role === "user" && (
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <User className="w-4 h-4" />
+                  </div>
+                )}
               </div>
-              <div className="max-w-[80%] rounded-lg p-3 bg-muted">
-                <p className="whitespace-pre-wrap">{streamingMessage}</p>
-                <div className="w-2 h-4 bg-primary animate-pulse inline-block ml-1" />
+            ))}
+
+            {streamingMessage && (
+              <div className="flex gap-3 justify-start">
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Bot className="w-4 h-4" />
+                </div>
+                <div className="max-w-[80%] rounded-2xl p-4 bg-card/70 backdrop-blur-xl border border-white/20 shadow-md">
+                  <MessageContent content={streamingMessage} />
+                  <div className="w-2 h-4 bg-primary animate-pulse inline-block ml-1" />
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {messages.length === 0 && !streamingMessage && (
-            <div className="text-center text-muted-foreground py-12">
-              <Bot className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>Start a conversation by typing a message below.</p>
-            </div>
-          )}
-        </div>
-      </ScrollArea>
-
-      <div className="border-t p-4">
-        <div className="max-w-4xl mx-auto space-y-4">
-          <div className="flex justify-center">
-            <ModelSelector
-              selectedModel={selectedModel}
-              onModelChange={setSelectedModel}
-            />
+            {messages.length === 0 && !streamingMessage && (
+              <div className="text-center text-muted-foreground py-12">
+                <Bot className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <p className="text-lg font-medium">Start a conversation</p>
+                <p className="text-sm opacity-70 mt-1">Type a message below to begin</p>
+              </div>
+            )}
           </div>
-          <form onSubmit={handleSubmit}>
-            <div className="flex gap-2">
-              <Textarea
-                ref={textareaRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Type your message..."
-                className="min-h-[60px] resize-none"
-                disabled={isLoading}
-              />
-              <Button 
-                type="submit" 
-                disabled={!input.trim() || isLoading}
-                size="lg"
-              >
-                <Send className="w-4 h-4" />
-              </Button>
+        </div>
+      </div>
+
+      {/* Fixed input bar styled like sidebar */}
+      <div className="absolute bottom-0 left-0 right-0 p-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-card/70 backdrop-blur-2xl border border-white/20 rounded-3xl shadow-[0_24px_64px_rgba(0,0,0,0.15)] p-4">
+            <div className="space-y-4">
+              <div className="flex justify-center">
+                <ModelSelector
+                  selectedModel={selectedModel}
+                  onModelChange={setSelectedModel}
+                />
+              </div>
+              <form onSubmit={handleSubmit}>
+                <div className="flex gap-3 items-end">
+                  <div className="flex-1">
+                    <Textarea
+                      ref={textareaRef}
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      placeholder="Type your message..."
+                      className="min-h-[60px] max-h-[120px] resize-none bg-background/50 border-white/10 rounded-2xl backdrop-blur-xl"
+                      disabled={isLoading}
+                    />
+                  </div>
+                  <Button 
+                    type="submit" 
+                    disabled={!input.trim() || isLoading}
+                    size="lg"
+                    className="h-[60px] w-[60px] rounded-2xl bg-primary/20 hover:bg-primary/30 border border-white/10"
+                  >
+                    <Send className="w-5 h-5" />
+                  </Button>
+                </div>
+              </form>
             </div>
-          </form>
+          </div>
         </div>
       </div>
     </div>

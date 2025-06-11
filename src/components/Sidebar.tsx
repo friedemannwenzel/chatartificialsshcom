@@ -165,7 +165,7 @@ export function Sidebar({
         <div className="fixed inset-y-0 left-0 z-40 transition-all duration-300 ease-out">
           <div className="h-full p-4 flex items-center">
             <div className={cn(
-              "w-full h-[calc(100vh-2rem)] rounded-3xl",
+              "w-full h-[calc(100vh-2rem)] rounded-[var(--radius)]",
               "bg-card/70 backdrop-blur-2xl border border-white/20",
               "shadow-[0_24px_64px_rgba(0,0,0,0.15)]",
               "flex flex-col overflow-hidden",
@@ -319,7 +319,7 @@ export function Sidebar({
   return (
     <div className="w-80 h-full p-4 flex items-center">
       <div className={cn(
-        "w-full h-[calc(100vh-2rem)] rounded-3xl",
+        "w-full h-[calc(100vh-2rem)] rounded-[var(--radius)]",
         "bg-card/70 backdrop-blur-2xl border border-white/20",
         "shadow-[0_24px_64px_rgba(0,0,0,0.15)]",
         "flex flex-col overflow-hidden",

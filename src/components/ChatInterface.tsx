@@ -150,7 +150,7 @@ export function ChatInterface({ chatId, messages }: ChatInterfaceProps) {
                 }`}
               >
                 {message.role === "assistant" && (
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 rounded-[var(--radius)] bg-primary/10 flex items-center justify-center flex-shrink-0">
                     <Bot className="w-4 h-4" />
                   </div>
                 )}
@@ -168,7 +168,7 @@ export function ChatInterface({ chatId, messages }: ChatInterfaceProps) {
                   )}
                 </div>
                 {message.role === "user" && (
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 rounded-[var(--radius)] bg-primary/10 flex items-center justify-center flex-shrink-0">
                     <User className="w-4 h-4" />
                   </div>
                 )}
@@ -201,7 +201,7 @@ export function ChatInterface({ chatId, messages }: ChatInterfaceProps) {
       {/* Fixed input bar styled like sidebar */}
       <div className="absolute bottom-0 left-0 right-0 p-4">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-card/70 backdrop-blur-2xl border border-white/20 rounded-3xl shadow-[0_24px_64px_rgba(0,0,0,0.15)] p-4">
+          <div className="bg-card/70 backdrop-blur-2xl border border-white/20 rounded-[var(--radius)] shadow-[0_24px_64px_rgba(0,0,0,0.15)] p-4">
             <div className="space-y-4">
               <div className="flex justify-center">
                 <ModelSelector
@@ -218,7 +218,7 @@ export function ChatInterface({ chatId, messages }: ChatInterfaceProps) {
                       onChange={(e) => setInput(e.target.value)}
                       onKeyDown={handleKeyDown}
                       placeholder="Type your message..."
-                      className="min-h-[60px] max-h-[120px] resize-none bg-background/50 border-white/10 rounded-2xl backdrop-blur-xl"
+                      className="min-h-[60px] max-h-[120px] resize-none bg-background/50 border-white/10 rounded-[var(--radius)] backdrop-blur-xl"
                       disabled={isLoading}
                     />
                   </div>
@@ -226,7 +226,7 @@ export function ChatInterface({ chatId, messages }: ChatInterfaceProps) {
                     type="submit" 
                     disabled={!input.trim() || isLoading}
                     size="lg"
-                    className="h-[60px] w-[60px] rounded-2xl bg-primary/20 hover:bg-primary/30 border border-white/10"
+                    className="h-[60px] w-[60px] rounded-[var(--radius)] bg-primary/20 hover:bg-primary/30 border border-white/10"
                   >
                     <Send className="w-5 h-5" />
                   </Button>

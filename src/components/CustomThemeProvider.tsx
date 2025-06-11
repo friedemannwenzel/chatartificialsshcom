@@ -13,12 +13,12 @@ export function CustomThemeProvider({ children }: CustomThemeProviderProps) {
   // Ensure theme is applied on every render
   useEffect(() => {
     if (isInitialized && typeof window !== "undefined") {
-      const applyStoredTheme = () => {
+      const applyStoredTheme = async () => {
         const savedTheme = localStorage.getItem("custom-theme");
         if (savedTheme && savedTheme !== "default") {
           // Re-apply the theme to ensure it persists
-          const { themePresets } = require("@/hooks/useCustomTheme");
-          const theme = themePresets.find((t: any) => t.id === savedTheme);
+          const { themePresets } = await import("@/hooks/useCustomTheme");
+          const theme = themePresets.find((t) => t.id === savedTheme);
           if (theme) {
             const isDark = document.documentElement.classList.contains("dark");
             const variables = isDark ? theme.variables.dark : theme.variables.light;
@@ -30,21 +30,21 @@ export function CustomThemeProvider({ children }: CustomThemeProviderProps) {
         }
       };
 
-      // Apply theme immediately
-      applyStoredTheme();
+              // Apply theme immediately
+        applyStoredTheme().catch(console.error);
 
-      // Also apply on route changes (for Next.js navigation)
-      const handleRouteChange = () => {
-        setTimeout(applyStoredTheme, 50);
-      };
+              // Also apply on route changes (for Next.js navigation)
+        const handleRouteChange = () => {
+          setTimeout(() => applyStoredTheme(), 50);
+        };
 
       // Listen for navigation events
       window.addEventListener("popstate", handleRouteChange);
       
-      // For Next.js App Router, we need to listen for DOM changes
-      const observer = new MutationObserver(() => {
-        setTimeout(applyStoredTheme, 50);
-      });
+              // For Next.js App Router, we need to listen for DOM changes
+        const observer = new MutationObserver(() => {
+          setTimeout(() => applyStoredTheme(), 50);
+        });
 
       observer.observe(document.body, {
         childList: true,

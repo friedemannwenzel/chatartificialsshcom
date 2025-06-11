@@ -3,6 +3,11 @@ import OpenAI from 'openai';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { auth } from '@clerk/nextjs/server';
 
+interface ChatMessage {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+}
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -38,8 +43,8 @@ export async function POST(req: NextRequest) {
       
       // Convert OpenAI format to Gemini format
       const geminiMessages = messages
-        .filter((msg: any) => msg.role !== 'system')
-        .map((msg: any) => ({
+        .filter((msg: ChatMessage) => msg.role !== 'system')
+        .map((msg: ChatMessage) => ({
           role: msg.role === 'assistant' ? 'model' : 'user',
           parts: [{ text: msg.content }],
         }));

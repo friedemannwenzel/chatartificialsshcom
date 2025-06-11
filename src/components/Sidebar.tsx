@@ -41,7 +41,6 @@ interface SidebarProps {
 export function Sidebar({ 
   state, 
   isHovering, 
-  isVisible, 
   isFloating, 
   onToggle, 
   onClose 
@@ -62,7 +61,14 @@ export function Sidebar({
     router.push(`/c/${newChatId}`);
   };
 
-  const groupChatsByDate = (chats: any[]) => {
+  interface Chat {
+    _id: string;
+    chatId: string;
+    title?: string;
+    createdAt: number;
+  }
+
+  const groupChatsByDate = (chats: Chat[]) => {
     if (!chats) return {};
     
     const now = new Date();
@@ -71,7 +77,7 @@ export function Sidebar({
     const thisWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
     const thisMonth = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-    const groups: Record<string, any[]> = {
+    const groups: Record<string, Chat[]> = {
       Today: [],
       Yesterday: [],
       "This Week": [],

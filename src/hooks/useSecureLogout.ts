@@ -1,11 +1,9 @@
 "use client";
 
 import { useClerk } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
 
 export function useSecureLogout() {
   const { signOut } = useClerk();
-  const router = useRouter();
 
   const secureSignOut = async () => {
     try {

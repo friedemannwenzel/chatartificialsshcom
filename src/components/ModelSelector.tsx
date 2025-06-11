@@ -17,7 +17,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
-import { AI_MODELS, AIModel, DEFAULT_MODEL } from "@/lib/models";
+import { AI_MODELS, AIModel } from "@/lib/models";
 
 interface ModelSelectorProps {
   selectedModel: AIModel;

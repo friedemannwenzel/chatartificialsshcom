@@ -2,8 +2,8 @@
 
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { oneDark, oneLight } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { Copy, Check } from 'lucide-react';
@@ -13,6 +13,12 @@ import { cn } from '@/lib/utils';
 interface MessageContentProps {
   content: string;
   className?: string;
+}
+
+interface CodeComponentProps {
+  inline?: boolean;
+  className?: string;
+  children?: React.ReactNode;
 }
 
 export function MessageContent({ content, className }: MessageContentProps) {
@@ -34,7 +40,8 @@ export function MessageContent({ content, className }: MessageContentProps) {
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
-          code({ node, inline, className, children, ...props }: any) {
+          code(props: CodeComponentProps) {
+            const { inline, className, children, ...restProps } = props;
             const match = /language-(\w+)/.exec(className || '');
             const language = match ? match[1] : '';
             const code = String(children).replace(/\n$/, '');
@@ -92,10 +99,10 @@ export function MessageContent({ content, className }: MessageContentProps) {
                         ? 'hsl(var(--card) / 0.85)' 
                         : 'hsl(var(--card) / 0.95)',
                       position: 'relative',
-                    } as any}
+                    }}
                     showLineNumbers={false}
                     wrapLines={true}
-                    {...props}
+                    {...restProps}
                   >
                     {code}
                   </SyntaxHighlighter>
@@ -126,7 +133,7 @@ export function MessageContent({ content, className }: MessageContentProps) {
                   "border border-border/50"
                 )}
                 style={{ borderRadius: 'var(--radius)' }}
-                {...props}
+                {...restProps}
               >
                 {children}
               </code>
@@ -225,6 +232,44 @@ export function MessageContent({ content, className }: MessageContentProps) {
               <p className="mb-3 leading-relaxed">
                 {children}
               </p>
+            );
+          },
+
+          li({ children }) {
+            return (
+              <li className="text-sm leading-relaxed">
+                {children}
+              </li>
+            );
+          },
+
+          pre({ children }) {
+            return (
+              <pre className="overflow-x-auto rounded-[var(--radius)] bg-muted p-4 my-4">
+                {children}
+              </pre>
+            );
+          },
+
+          hr() {
+            return (
+              <hr className="my-6 border-border" />
+            );
+          },
+
+          em({ children }) {
+            return (
+              <em className="italic text-muted-foreground">
+                {children}
+              </em>
+            );
+          },
+
+          strong({ children }) {
+            return (
+              <strong className="font-semibold">
+                {children}
+              </strong>
             );
           },
         }}

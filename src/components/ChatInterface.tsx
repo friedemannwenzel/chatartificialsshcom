@@ -95,7 +95,7 @@ export function ChatInterface({ chatId, messages }: ChatInterfaceProps) {
               const parsed = JSON.parse(data);
               assistantMessage += parsed.content || "";
               setStreamingMessage(assistantMessage);
-            } catch (e) {
+            } catch {
               // Ignore parsing errors
             }
           }

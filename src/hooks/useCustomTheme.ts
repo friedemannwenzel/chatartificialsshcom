@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -727,6 +727,25 @@ export function useCustomTheme() {
   const updateThemePreference = useMutation(api.userPreferences.updateThemePreference);
   const updateSyncSetting = useMutation(api.userPreferences.updateSyncSetting);
 
+  const applyTheme = useCallback((themeId: string) => {
+    if (typeof window === "undefined") return;
+    
+    const theme = themePresets.find(t => t.id === themeId);
+    if (!theme || themeId === "default") {
+      removeCustomVariables();
+      return;
+    }
+
+    const isDark = document.documentElement.classList.contains("dark");
+    const variables = isDark ? theme.variables.dark : theme.variables.light;
+
+    // Apply variables to root
+    const root = document.documentElement;
+    Object.entries(variables).forEach(([property, value]) => {
+      root.style.setProperty(property, value);
+    });
+  }, []);
+
   // Initialize theme from database or localStorage
   useEffect(() => {
     if (!user || userPreferences === undefined) return;
@@ -780,26 +799,9 @@ export function useCustomTheme() {
     if (typeof window !== "undefined") {
       initializeTheme();
     }
-  }, [user, userPreferences]);
+  }, [user, userPreferences, applyTheme]);
 
-  const applyTheme = (themeId: string) => {
-    if (typeof window === "undefined") return;
-    
-    const theme = themePresets.find(t => t.id === themeId);
-    if (!theme || themeId === "default") {
-      removeCustomVariables();
-      return;
-    }
 
-    const isDark = document.documentElement.classList.contains("dark");
-    const variables = isDark ? theme.variables.dark : theme.variables.light;
-
-    // Apply variables to root
-    const root = document.documentElement;
-    Object.entries(variables).forEach(([property, value]) => {
-      root.style.setProperty(property, value);
-    });
-  };
 
   const removeCustomVariables = () => {
     if (typeof window === "undefined") return;
@@ -879,14 +881,14 @@ export function useCustomTheme() {
     });
 
     return () => observer.disconnect();
-  }, [currentTheme, isInitialized]);
+  }, [currentTheme, isInitialized, applyTheme]);
 
   // Re-apply theme when navigating between pages
   useEffect(() => {
     if (isInitialized && currentTheme !== "default") {
       applyTheme(currentTheme);
     }
-  }, [currentTheme, isInitialized]);
+  }, [currentTheme, isInitialized, applyTheme]);
 
   return {
     currentTheme,

@@ -16,12 +16,6 @@ export function SecurityProvider({ children }: SecurityProviderProps) {
   useEffect(() => {
     if (!isLoaded) return;
 
-    const isPublicRoute = [
-      '/',
-      '/sign-in',
-      '/sign-up'
-    ].some(route => pathname === route || pathname.startsWith(route));
-
     const isProtectedRoute = [
       '/c',
       '/settings'

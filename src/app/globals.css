@@ -36,9 +36,9 @@
   --sidebar-accent-foreground: oklch(1.0000 0 0);
   --sidebar-border: oklch(0.8792 0 0);
   --sidebar-ring: oklch(0.8269 0.1080 211.9627);
-  --font-sans: Inter;
-  --font-serif: Merriweather;
-  --font-mono: Monaco;
+  --font-sans: Geist;
+  --font-serif: Geist;
+  --font-mono: Geist_Mono;
   --radius: 16px;
   --shadow-2xs: 0px 4px 16px 0px hsl(0 0% 0% / 0.10);
   --shadow-xs: 0px 4px 16px 0px hsl(0 0% 0% / 0.10);
@@ -63,7 +63,7 @@
   --secondary: oklch(0.8955 0.1322 95.6535);
   --secondary-foreground: oklch(0.3211 0 0);
   --muted: oklch(0.4748 0 0);
-  --muted-foreground: oklch(1.0000 0 0);
+  --muted-foreground: oklch(0.8297 0 0);
   --accent: oklch(0.7115 0.1310 174.1956);
   --accent-foreground: oklch(1.0000 0 0);
   --destructive: oklch(0.5433 0.1740 29.6967);
@@ -84,9 +84,9 @@
   --sidebar-accent-foreground: oklch(1.0000 0 0);
   --sidebar-border: oklch(0.4276 0 0);
   --sidebar-ring: oklch(0.6817 0.1351 244.8071);
-  --font-sans: Inter;
-  --font-serif: Merriweather;
-  --font-mono: Monaco;
+  --font-sans: Geist;
+  --font-serif: Geist;
+  --font-mono: Geist_Mono;
   --radius: 16px;
   --shadow-2xs: 0px 4px 16px 0px hsl(0 0% 0% / 0.20);
   --shadow-xs: 0px 4px 16px 0px hsl(0 0% 0% / 0.20);

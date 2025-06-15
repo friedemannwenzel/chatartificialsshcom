@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import OpenAI from 'openai';
 import { auth } from '@clerk/nextjs/server';
 
 interface ChatMessage {
@@ -34,6 +35,9 @@ interface GroundingMetadata {
 }
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!);
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY!,
+});
 
 export async function POST(req: NextRequest) {
   try {
@@ -55,17 +59,95 @@ export async function POST(req: NextRequest) {
 
     const { messages, model = 'gemini-2.0-flash', webSearch = false } = await req.json();
 
-    if (!model.startsWith('gemini')) {
+    const isOpenAI = model.startsWith('gpt') || model.startsWith('o1');
+    const isGemini = model.startsWith('gemini');
+
+    if (!isOpenAI && !isGemini) {
       return NextResponse.json(
-        { error: 'Only Gemini models are supported' },
+        { error: 'Only OpenAI and Gemini models are supported' },
         { status: 400 }
       );
     }
 
+    const encoder = new TextEncoder();
+
+    // Handle OpenAI models
+    if (isOpenAI) {
+      const openaiMessages = messages.map((msg: ChatMessage) => ({
+        role: msg.role,
+        content: msg.content,
+      }));
+
+      const isO1Model = model.startsWith('o1');
+      const streamConfig: any = {
+        model,
+        messages: openaiMessages,
+        stream: !isO1Model,
+      };
+
+      if (isO1Model) {
+        const response = await openai.chat.completions.create(streamConfig);
+        const content = response.choices[0]?.message?.content || '';
+        
+        const stream = new ReadableStream({
+          start(controller) {
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content })}\n\n`));
+            controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+            controller.close();
+          },
+        });
+
+        return new Response(stream, {
+          headers: {
+            'Content-Type': 'text/plain; charset=utf-8',
+            'Cache-Control': 'no-cache, no-store, must-revalidate, private',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+            'Connection': 'keep-alive',
+            'X-Content-Type-Options': 'nosniff',
+            'X-Frame-Options': 'DENY',
+            'Referrer-Policy': 'strict-origin-when-cross-origin',
+          },
+        });
+      }
+
+      const stream = await openai.chat.completions.create(streamConfig);
+
+      const readableStream = new ReadableStream({
+        async start(controller) {
+          try {
+            for await (const chunk of stream) {
+              const content = chunk.choices[0]?.delta?.content || '';
+              if (content) {
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content })}\n\n`));
+              }
+            }
+            controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+            controller.close();
+          } catch (error) {
+            console.error('OpenAI streaming error:', error);
+            controller.error(error);
+          }
+        },
+      });
+
+      return new Response(readableStream, {
+        headers: {
+          'Content-Type': 'text/plain; charset=utf-8',
+          'Cache-Control': 'no-cache, no-store, must-revalidate, private',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+          'Connection': 'keep-alive',
+          'X-Content-Type-Options': 'nosniff',
+          'X-Frame-Options': 'DENY',
+          'Referrer-Policy': 'strict-origin-when-cross-origin',
+        },
+      });
+    }
+
+    // Handle Gemini models (existing logic)
     const isGemini15 = model.startsWith('gemini-1.5');
     const toolKey = isGemini15 ? 'googleSearchRetrieval' : 'googleSearch';
-
-    const encoder = new TextEncoder();
 
     const modelConfig: any = { 
       model,

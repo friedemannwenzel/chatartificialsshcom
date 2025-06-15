@@ -31,26 +31,6 @@ export const models: AIModel[] = [
     supportsWebSearch: false,
     capabilities: ["text", "vision", "code"]
   },
-  {
-    id: "o1-mini",
-    name: "o1-mini",
-    provider: "openai",
-    description: "Reasoning model optimized for STEM",
-    maxTokens: 65536,
-    supportsStreaming: false,
-    supportsWebSearch: false,
-    capabilities: ["reasoning", "math", "code"]
-  },
-  {
-    id: "gpt-4-turbo",
-    name: "GPT-4 Turbo",
-    provider: "openai",
-    description: "High-performance GPT-4 model with 128k context",
-    maxTokens: 128000,
-    supportsStreaming: true,
-    supportsWebSearch: false,
-    capabilities: ["text", "vision", "code"]
-  },
 
   // Google Models
   {
@@ -62,80 +42,6 @@ export const models: AIModel[] = [
     supportsStreaming: true,
     supportsWebSearch: true,
     capabilities: ["text", "vision", "audio", "web-search"]
-  },
-  {
-    id: "gemini-1.5-pro",
-    name: "Gemini 1.5 Pro",
-    provider: "google",
-    description: "Most capable Gemini model with 2M token context",
-    maxTokens: 2097152,
-    supportsStreaming: true,
-    supportsWebSearch: true,
-    capabilities: ["text", "vision", "audio", "web-search"]
-  },
-  {
-    id: "gemini-1.5-flash",
-    name: "Gemini 1.5 Flash",
-    provider: "google",
-    description: "Fast and efficient Gemini model",
-    maxTokens: 1048576,
-    supportsStreaming: true,
-    supportsWebSearch: true,
-    capabilities: ["text", "vision", "audio", "web-search"]
-  },
-  {
-    id: "gemini-2.5-flash",
-    name: "Gemini 2.5 Flash",
-    provider: "google",
-    description: "Next-generation Gemini Flash model offering improved price-performance and up-to-date grounding with Google Search",
-    maxTokens: 1048576,
-    supportsStreaming: true,
-    supportsWebSearch: true,
-    capabilities: ["text", "vision", "audio", "web-search"]
-  },
-
-  // Anthropic Models
-  {
-    id: "claude-3-5-sonnet-20241022",
-    name: "Claude 3.5 Sonnet (New)",
-    provider: "anthropic",
-    description: "Latest Claude model with improved capabilities",
-    maxTokens: 200000,
-    supportsStreaming: true,
-    supportsWebSearch: false,
-    capabilities: ["text", "vision", "code"]
-  },
-  {
-    id: "claude-3-5-sonnet-20240620",
-    name: "Claude 3.5 Sonnet",
-    provider: "anthropic",
-    description: "Balanced model for most tasks",
-    maxTokens: 200000,
-    supportsStreaming: true,
-    supportsWebSearch: false,
-    capabilities: ["text", "vision", "code"]
-  },
-  {
-    id: "claude-3-opus-20240229",
-    name: "Claude 3 Opus",
-    provider: "anthropic",
-    description: "Most capable Claude model for complex tasks",
-    maxTokens: 200000,
-    supportsStreaming: true,
-    supportsWebSearch: false,
-    capabilities: ["text", "vision", "code"]
-  },
-
-  // xAI Models
-  {
-    id: "grok-beta",
-    name: "Grok Beta",
-    provider: "xai",
-    description: "xAI's conversational AI model",
-    maxTokens: 131072,
-    supportsStreaming: true,
-    supportsWebSearch: false,
-    capabilities: ["text", "conversation"]
   }
 ];
 

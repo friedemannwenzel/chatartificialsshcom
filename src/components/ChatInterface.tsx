@@ -5,7 +5,7 @@ import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Bot, User } from "lucide-react";
+import { Send, ArrowDown } from "lucide-react";
 import { Doc } from "../../convex/_generated/dataModel";
 import { ModelSelector } from "./ModelSelector";
 import { AIModel, DEFAULT_MODEL } from "@/lib/models";
@@ -23,6 +23,7 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
   const [isLoading, setIsLoading] = useState(false);
   const [streamingMessage, setStreamingMessage] = useState("");
   const [selectedModel, setSelectedModel] = useState<AIModel>(DEFAULT_MODEL);
+  const [showScrollButton, setShowScrollButton] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { user } = useUser();
@@ -37,9 +38,32 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
     }
   };
 
+  const checkScrollPosition = () => {
+    if (scrollAreaRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = scrollAreaRef.current;
+      const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+      setShowScrollButton(!isNearBottom);
+    }
+  };
+
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, streamingMessage]);
+    const scrollArea = scrollAreaRef.current;
+    if (scrollArea) {
+      scrollArea.addEventListener('scroll', checkScrollPosition);
+      checkScrollPosition(); // Check initial position
+      
+      return () => {
+        scrollArea.removeEventListener('scroll', checkScrollPosition);
+      };
+    }
+  }, []);
+
+  // Only scroll to bottom for new user messages, not during streaming
+  useEffect(() => {
+    if (messages.length > 0 && messages[messages.length - 1].role === "user") {
+      scrollToBottom();
+    }
+  }, [messages]);
 
   const handleAIResponse = useCallback(async () => {
     if (isLoading || messages.length === 0) return;
@@ -180,19 +204,14 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
       {/* Scrollable chat area with bottom padding for fixed input */}
       <div className="flex-1 overflow-hidden">
         <div className="h-full overflow-y-auto pb-40" ref={scrollAreaRef}>
-          <div className="space-y-4 max-w-5xl mx-auto p-4 pt-6">
+          <div className="space-y-4 max-w-4xl py-4 mx-auto pt-6">
             {messages.map((message) => (
               <div
                 key={message._id}
-                className={`flex gap-3 ${
+                className={`flex ${
                   message.role === "user" ? "justify-end" : "justify-start"
                 }`}
               >
-                {message.role === "assistant" && (
-                  <div className="w-8 h-8 rounded-[var(--radius)] bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Bot className="w-4 h-4" />
-                  </div>
-                )}
                 <div
                   className={`max-w-[80%] rounded-2xl p-4 ${
                     message.role === "user"
@@ -206,29 +225,19 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
                     <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
                   )}
                 </div>
-                {message.role === "user" && (
-                  <div className="w-8 h-8 rounded-[var(--radius)] bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <User className="w-4 h-4" />
-                  </div>
-                )}
               </div>
             ))}
 
             {streamingMessage && (
-              <div className="flex gap-3 justify-start">
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <Bot className="w-4 h-4" />
-                </div>
+              <div className="flex justify-start">
                 <div className="max-w-[80%] rounded-2xl p-4 bg-card/70 backdrop-blur-xl border border-white/20 shadow-md">
                   <MessageContent content={streamingMessage} />
-                  <div className="w-2 h-4 bg-primary animate-pulse inline-block ml-1" />
                 </div>
               </div>
             )}
 
             {messages.length === 0 && !streamingMessage && (
               <div className="text-center text-muted-foreground py-12">
-                <Bot className="w-12 h-12 mx-auto mb-4 opacity-50" />
                 <p className="text-lg font-medium">Start a conversation</p>
                 <p className="text-sm opacity-70 mt-1">Type a message below to begin</p>
               </div>
@@ -236,6 +245,21 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
           </div>
         </div>
       </div>
+
+      {/* Scroll to bottom button */}
+      {showScrollButton && (
+        <div className="absolute bottom-44 left-1/2 transform -translate-x-1/2">
+          <Button
+            onClick={scrollToBottom}
+            size="sm"
+            className="h-10 px-4 rounded-[var(--radius)] bg-card/80 backdrop-blur-xl border border-white/20 shadow-lg hover:bg-card/90 transition-all duration-200 hover:cursor-pointer flex items-center gap-2"
+            variant="secondary"
+          >
+            <span className="text-sm">Scroll to bottom</span>
+            <ArrowDown className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
 
       {/* Fixed input bar styled like sidebar */}
       <div className="absolute bottom-0 left-0 right-0 p-4">

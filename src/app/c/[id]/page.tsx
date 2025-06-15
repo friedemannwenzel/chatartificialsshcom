@@ -2,10 +2,9 @@
 
 import { useParams } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery } from "convex/react";
 import { api } from "convex/_generated/api";
 import { ChatInterface } from "@/components/ChatInterface";
-import { useEffect } from "react";
 
 export default function ChatPage() {
   const params = useParams();
@@ -22,16 +21,7 @@ export default function ChatPage() {
     chatId ? { chatId } : "skip"
   );
 
-  const createChat = useMutation(api.chats.createChat);
-
-  useEffect(() => {
-    if (user?.id && chatId && chat === null) {
-      createChat({
-        chatId,
-        userId: user.id,
-      });
-    }
-  }, [user?.id, chatId, chat, createChat]);
+  // Chat creation is now handled when the first message is sent
 
   if (!user || !chatId) {
     return <div>Loading...</div>;
@@ -41,6 +31,7 @@ export default function ChatPage() {
     <ChatInterface 
       chatId={chatId}
       messages={messages || []}
+      chatExists={chat !== null}
     />
   );
 } 

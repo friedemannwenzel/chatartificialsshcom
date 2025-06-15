@@ -23,7 +23,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { v4 as uuidv4 } from "uuid";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 
@@ -57,8 +56,7 @@ export function Sidebar({
   );
 
   const handleNewChat = () => {
-    const newChatId = uuidv4();
-    router.push(`/c/${newChatId}`);
+    router.push('/');
   };
 
   interface Chat {

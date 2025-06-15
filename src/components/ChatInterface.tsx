@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
@@ -10,22 +10,26 @@ import { Doc } from "../../convex/_generated/dataModel";
 import { ModelSelector } from "./ModelSelector";
 import { AIModel, DEFAULT_MODEL } from "@/lib/models";
 import { MessageContent } from "./MessageContent";
+import { useUser } from "@clerk/nextjs";
 
 interface ChatInterfaceProps {
   chatId: string;
   messages: Doc<"messages">[];
+  chatExists?: boolean;
 }
 
-export function ChatInterface({ chatId, messages }: ChatInterfaceProps) {
+export function ChatInterface({ chatId, messages, chatExists = true }: ChatInterfaceProps) {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [streamingMessage, setStreamingMessage] = useState("");
   const [selectedModel, setSelectedModel] = useState<AIModel>(DEFAULT_MODEL);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { user } = useUser();
 
   const addMessage = useMutation(api.chats.addMessage);
   const updateChatTitle = useMutation(api.chats.updateChatTitle);
+  const createChat = useMutation(api.chats.createChat);
 
   const scrollToBottom = () => {
     if (scrollAreaRef.current) {
@@ -37,35 +41,23 @@ export function ChatInterface({ chatId, messages }: ChatInterfaceProps) {
     scrollToBottom();
   }, [messages, streamingMessage]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || isLoading) return;
-
-    const userMessage = input.trim();
-    setInput("");
+  const handleAIResponse = useCallback(async () => {
+    if (isLoading || messages.length === 0) return;
+    
     setIsLoading(true);
     setStreamingMessage("");
 
     try {
-      await addMessage({
-        chatId,
-        content: userMessage,
-        role: "user",
-      });
-
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          messages: [
-            ...messages.map(msg => ({
-              role: msg.role,
-              content: msg.content,
-            })),
-            { role: "user", content: userMessage },
-          ],
+          messages: messages.map(msg => ({
+            role: msg.role,
+            content: msg.content,
+          })),
           model: selectedModel.id,
         }),
       });
@@ -110,10 +102,11 @@ export function ChatInterface({ chatId, messages }: ChatInterfaceProps) {
         });
 
         // Auto-generate title if this is the first message
-        if (messages.length === 0) {
-          const title = userMessage.length > 40 
-            ? userMessage.substring(0, 40) + "..."
-            : userMessage;
+        if (messages.length === 1) {
+          const firstUserMessage = messages[0];
+          const title = firstUserMessage.content.length > 40 
+            ? firstUserMessage.content.substring(0, 40) + "..."
+            : firstUserMessage.content;
           await updateChatTitle({
             chatId,
             title,
@@ -123,9 +116,55 @@ export function ChatInterface({ chatId, messages }: ChatInterfaceProps) {
 
       setStreamingMessage("");
     } catch (error) {
-      console.error("Error sending message:", error);
+      console.error("Error getting AI response:", error);
     } finally {
       setIsLoading(false);
+    }
+  }, [isLoading, messages, selectedModel.id, chatId, addMessage, updateChatTitle]);
+
+  // Trigger AI response if there's a user message without an assistant response
+  useEffect(() => {
+    const shouldTriggerResponse = 
+      messages.length > 0 && 
+      messages[messages.length - 1].role === "user" &&
+      !isLoading &&
+      !streamingMessage;
+    
+    if (shouldTriggerResponse) {
+      // Check if this is an odd number of messages (user message without response)
+      const needsResponse = messages.length % 2 === 1;
+      
+      if (needsResponse) {
+        handleAIResponse();
+      }
+    }
+  }, [messages, isLoading, streamingMessage, handleAIResponse]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() || isLoading || !user?.id) return;
+
+    const userMessage = input.trim();
+    setInput("");
+
+    try {
+      // Create chat if it doesn't exist
+      if (!chatExists) {
+        await createChat({
+          chatId,
+          userId: user.id,
+        });
+      }
+
+      await addMessage({
+        chatId,
+        content: userMessage,
+        role: "user",
+      });
+
+      // The AI response will be triggered automatically by the useEffect
+    } catch (error) {
+      console.error("Error sending message:", error);
     }
   };
 

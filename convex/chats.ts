@@ -94,4 +94,27 @@ export const getMessagesByChat = query({
     
     return messages;
   },
+});
+
+export const deleteMessagesFromIndex = mutation({
+  args: {
+    chatId: v.string(),
+    fromIndex: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const messages = await ctx.db
+      .query("messages")
+      .withIndex("by_chat_created", (q) => q.eq("chatId", args.chatId))
+      .order("asc")
+      .collect();
+    
+    // Delete messages from the specified index onwards
+    const messagesToDelete = messages.slice(args.fromIndex);
+    
+    for (const message of messagesToDelete) {
+      await ctx.db.delete(message._id);
+    }
+    
+    return messagesToDelete.length;
+  },
 }); 

@@ -5,12 +5,14 @@ import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, ArrowDown } from "lucide-react";
+import { Send, ArrowDown, MoreHorizontal, RotateCcw, Edit, Copy, GitBranch, Check } from "lucide-react";
 import { Doc } from "../../convex/_generated/dataModel";
 import { ModelSelector } from "./ModelSelector";
 import { AIModel, DEFAULT_MODEL } from "@/lib/models";
 import { MessageContent } from "./MessageContent";
 import { useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
+import { v4 as uuidv4 } from "uuid";
 
 interface ChatInterfaceProps {
   chatId: string;
@@ -24,13 +26,131 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
   const [streamingMessage, setStreamingMessage] = useState("");
   const [selectedModel, setSelectedModel] = useState<AIModel>(DEFAULT_MODEL);
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const [hoveredMessage, setHoveredMessage] = useState<string | null>(null);
+  const [editingMessage, setEditingMessage] = useState<string | null>(null);
+  const [editText, setEditText] = useState("");
+  const [copiedMessage, setCopiedMessage] = useState<string | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { user } = useUser();
+  const router = useRouter();
 
   const addMessage = useMutation(api.chats.addMessage);
   const updateChatTitle = useMutation(api.chats.updateChatTitle);
   const createChat = useMutation(api.chats.createChat);
+  const deleteMessagesFromIndex = useMutation(api.chats.deleteMessagesFromIndex);
+
+  // Message action functions
+  const copyToClipboard = async (text: string, messageId: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedMessage(messageId);
+      // Reset the copied state after 2 seconds
+      setTimeout(() => setCopiedMessage(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+    }
+  };
+
+  const handleRetry = async (messageIndex: number) => {
+    if (messages[messageIndex].role === "user") {
+      // For user messages, resend the message and remove all subsequent messages
+      const messageContent = messages[messageIndex].content;
+      
+      try {
+        // Remove all messages from this point onwards (including the current message)
+        await deleteMessagesFromIndex({
+          chatId,
+          fromIndex: messageIndex,
+        });
+        
+        // Add the message again to trigger a new AI response
+        await addMessage({
+          chatId,
+          content: messageContent,
+          role: "user",
+        });
+      } catch (error) {
+        console.error("Error retrying message:", error);
+      }
+    } else if (messageIndex > 0 && messages[messageIndex - 1].role === "user") {
+      // For assistant messages, remove this message and regenerate response
+      try {
+        // Remove all messages from this assistant message onwards
+        await deleteMessagesFromIndex({
+          chatId,
+          fromIndex: messageIndex,
+        });
+        
+        // The AI response will be automatically triggered by the useEffect
+        // since we now have a user message without a response
+      } catch (error) {
+        console.error("Error retrying assistant message:", error);
+      }
+    }
+  };
+
+  const handleEdit = (messageId: string, content: string) => {
+    setEditingMessage(messageId);
+    setEditText(content);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingMessage || !editText.trim()) return;
+    
+    // TODO: Implement message editing in the database
+    console.log("Save edit:", editingMessage, editText);
+    setEditingMessage(null);
+    setEditText("");
+  };
+
+  const handleCancelEdit = () => {
+    setEditingMessage(null);
+    setEditText("");
+  };
+
+  const handleBranch = async (messageIndex: number) => {
+    if (!user?.id) return;
+    
+    try {
+      // Create a new chat ID
+      const newChatId = uuidv4();
+      
+      // Create the new chat
+      await createChat({
+        chatId: newChatId,
+        userId: user.id,
+      });
+
+      // Copy all messages up to and including the selected message
+      const messagesToCopy = messages.slice(0, messageIndex + 1);
+      
+      for (const message of messagesToCopy) {
+        await addMessage({
+          chatId: newChatId,
+          content: message.content,
+          role: message.role,
+        });
+      }
+
+      // Set the title based on the first message if it exists
+      if (messagesToCopy.length > 0 && messagesToCopy[0].role === "user") {
+        const title = messagesToCopy[0].content.length > 40 
+          ? messagesToCopy[0].content.substring(0, 40) + "... (Branch)"
+          : messagesToCopy[0].content + " (Branch)";
+        
+        await updateChatTitle({
+          chatId: newChatId,
+          title,
+        });
+      }
+
+      // Navigate to the new chat
+      router.push(`/c/${newChatId}`);
+    } catch (error) {
+      console.error("Error creating branch:", error);
+    }
+  };
 
   const scrollToBottom = () => {
     if (scrollAreaRef.current) {
@@ -199,40 +319,208 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
     }
   };
 
+  // Message Actions Component
+  const MessageActions = ({ 
+    messageId, 
+    messageIndex, 
+    role, 
+    content, 
+    model 
+  }: { 
+    messageId: string; 
+    messageIndex: number; 
+    role: "user" | "assistant"; 
+    content: string; 
+    model?: string;
+  }) => {
+    const isHovered = hoveredMessage === messageId;
+    const showActions = isHovered;
+    const isCopied = copiedMessage === messageId;
+
+    return (
+      <div className={`flex ${role === "user" ? "justify-end" : "justify-start"} mt-2`}>
+        <div 
+          className="flex items-center gap-1"
+          onMouseEnter={() => setHoveredMessage(messageId)}
+          onMouseLeave={() => setHoveredMessage(null)}
+        >
+          {!showActions ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-white/10 cursor-pointer"
+            >
+              <MoreHorizontal className="h-3 w-3" />
+            </Button>
+          ) : (
+            <div className="flex items-center gap-1">
+              {role === "user" ? (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0 hover:bg-white/10 transition-colors cursor-pointer"
+                    onClick={() => handleRetry(messageIndex)}
+                    title="Retry"
+                  >
+                    <RotateCcw className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0 hover:bg-white/10 transition-colors cursor-pointer"
+                    onClick={() => handleEdit(messageId, content)}
+                    title="Edit"
+                  >
+                    <Edit className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0 hover:bg-white/10 transition-colors cursor-pointer"
+                    onClick={() => copyToClipboard(content, messageId)}
+                    title="Copy"
+                  >
+                    {isCopied ? (
+                      <Check className="h-3 w-3 text-green-500" />
+                    ) : (
+                      <Copy className="h-3 w-3" />
+                    )}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0 hover:bg-white/10 transition-colors cursor-pointer"
+                    onClick={() => handleRetry(messageIndex)}
+                    title="Retry"
+                  >
+                    <RotateCcw className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0 hover:bg-white/10 transition-colors cursor-pointer"
+                    onClick={() => copyToClipboard(content, messageId)}
+                    title="Copy"
+                  >
+                    {isCopied ? (
+                      <Check className="h-3 w-3 text-green-500" />
+                    ) : (
+                      <Copy className="h-3 w-3" />
+                    )}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0 hover:bg-white/10 transition-colors cursor-pointer"
+                    onClick={() => handleBranch(messageIndex)}
+                    title="Branch"
+                  >
+                    <GitBranch className="h-3 w-3" />
+                  </Button>
+                  {model && (
+                    <span className="text-xs text-muted-foreground px-2 py-1 bg-white/5 rounded ml-2">
+                      {model}
+                    </span>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="flex flex-col h-full relative">
       {/* Scrollable chat area with bottom padding for fixed input */}
       <div className="flex-1 overflow-hidden">
         <div className="h-full overflow-y-auto pb-40" ref={scrollAreaRef}>
           <div className="space-y-4 max-w-4xl py-4 mx-auto pt-6">
-            {messages.map((message) => (
+            {messages.map((message, messageIndex) => (
               <div
                 key={message._id}
-                className={`flex ${
-                  message.role === "user" ? "justify-end" : "justify-start"
+                className={`flex flex-col ${
+                  message.role === "user" ? "items-end" : "items-start"
                 }`}
+                onMouseEnter={() => setHoveredMessage(message._id)}
+                onMouseLeave={() => setHoveredMessage(null)}
               >
                 <div
-                  className={`max-w-[80%] rounded-2xl p-4 ${
+                  className={`max-w-[80%] rounded-2xl p-4 relative group ${
                     message.role === "user"
                       ? "bg-primary/90 text-primary-foreground shadow-lg"
                       : "bg-card/70 backdrop-blur-xl border border-white/20 shadow-md"
                   }`}
                 >
-                  {message.role === "assistant" ? (
-                    <MessageContent content={message.content} />
+                  {editingMessage === message._id ? (
+                    <div className="space-y-2">
+                      <Textarea
+                        value={editText}
+                        onChange={(e) => setEditText(e.target.value)}
+                        className="min-h-[60px] resize-none bg-background/50 border-white/10"
+                        autoFocus
+                      />
+                      <div className="flex gap-2 justify-end">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleCancelEdit}
+                          className="h-8 px-3 text-xs"
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={handleSaveEdit}
+                          className="h-8 px-3 text-xs"
+                        >
+                          Save
+                        </Button>
+                      </div>
+                    </div>
                   ) : (
-                    <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
+                    <>
+                      {message.role === "assistant" ? (
+                        <MessageContent content={message.content} />
+                      ) : (
+                        <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
+                      )}
+                    </>
                   )}
                 </div>
+                {editingMessage !== message._id && (
+                  <MessageActions
+                    messageId={message._id}
+                    messageIndex={messageIndex}
+                    role={message.role}
+                    content={message.content}
+                    model={message.role === "assistant" ? selectedModel.name : undefined}
+                  />
+                )}
               </div>
             ))}
 
             {streamingMessage && (
-              <div className="flex justify-start">
-                <div className="max-w-[80%] rounded-2xl p-4 bg-card/70 backdrop-blur-xl border border-white/20 shadow-md">
+              <div 
+                className="flex flex-col items-start"
+                onMouseEnter={() => setHoveredMessage("streaming")}
+                onMouseLeave={() => setHoveredMessage(null)}
+              >
+                <div className="max-w-[80%] rounded-2xl p-4 bg-card/70 backdrop-blur-xl border border-white/20 shadow-md relative group">
                   <MessageContent content={streamingMessage} />
                 </div>
+                <MessageActions
+                  messageId="streaming"
+                  messageIndex={messages.length}
+                  role="assistant"
+                  content={streamingMessage}
+                  model={selectedModel.name}
+                />
               </div>
             )}
 

@@ -15,7 +15,6 @@ export const createChat = mutation({
       userId: args.userId,
       title: args.title,
       createdAt: now,
-      updatedAt: now,
     });
   },
 });
@@ -25,7 +24,7 @@ export const getChatsByUser = query({
   handler: async (ctx, args) => {
     const chats = await ctx.db
       .query("chats")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
       .order("desc")
       .collect();
     
@@ -62,7 +61,6 @@ export const updateChatTitle = mutation({
     
     await ctx.db.patch(chat._id, {
       title: args.title,
-      updatedAt: Date.now(),
     });
   },
 });
@@ -88,7 +86,7 @@ export const getMessagesByChat = query({
   handler: async (ctx, args) => {
     const messages = await ctx.db
       .query("messages")
-      .withIndex("by_chat_created", (q) => q.eq("chatId", args.chatId))
+      .withIndex("by_chatId", (q) => q.eq("chatId", args.chatId))
       .order("asc")
       .collect();
     
@@ -104,7 +102,7 @@ export const deleteMessagesFromIndex = mutation({
   handler: async (ctx, args) => {
     const messages = await ctx.db
       .query("messages")
-      .withIndex("by_chat_created", (q) => q.eq("chatId", args.chatId))
+      .withIndex("by_chatId", (q) => q.eq("chatId", args.chatId))
       .order("asc")
       .collect();
     

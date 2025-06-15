@@ -5,14 +5,42 @@ import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, ArrowDown, MoreHorizontal, RotateCcw, Edit, Copy, GitBranch, Check } from "lucide-react";
+import { ArrowDown, MoreHorizontal, RotateCcw, Edit, Copy, GitBranch, Check, ExternalLink, Globe } from "lucide-react";
 import { Doc } from "../../convex/_generated/dataModel";
-import { ModelSelector } from "./ModelSelector";
-import { AIModel, DEFAULT_MODEL } from "@/lib/models";
+import { MessageInputBar } from "./MessageInputBar";
+import { AIModel } from "@/lib/models";
+import { storage } from "@/lib/storage";
 import { MessageContent } from "./MessageContent";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
+import { Badge } from "@/components/ui/badge";
+
+interface GroundingChunk {
+  web?: {
+    uri: string;
+    title: string;
+  };
+}
+
+interface GroundingSupport {
+  segment: {
+    startIndex: number;
+    endIndex: number;
+    text: string;
+  };
+  groundingChunkIndices: number[];
+  confidenceScores: number[];
+}
+
+interface GroundingMetadata {
+  groundingChunks: GroundingChunk[];
+  groundingSupports: GroundingSupport[];
+  webSearchQueries: string[];
+  searchEntryPoint?: {
+    renderedContent: string;
+  };
+}
 
 interface ChatInterfaceProps {
   chatId: string;
@@ -20,18 +48,74 @@ interface ChatInterfaceProps {
   chatExists?: boolean;
 }
 
+// Sources component to display web search sources
+const SourcesDisplay = ({ groundingMetadata }: { groundingMetadata: GroundingMetadata }) => {
+  if (!groundingMetadata || !groundingMetadata.groundingChunks || groundingMetadata.groundingChunks.length === 0) {
+    return null;
+  }
+
+  const webSources = groundingMetadata.groundingChunks
+    .filter(chunk => chunk && chunk.web)
+    .map(chunk => chunk.web!)
+    .filter((source, index, self) => 
+      index === self.findIndex(s => s.uri === source.uri)
+    ); // Remove duplicates
+
+  if (webSources.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+      <div className="flex items-center gap-2 mb-2">
+        <Globe className="w-4 h-4 text-blue-600" />
+        <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
+          Sources ({webSources.length})
+        </span>
+        {groundingMetadata.webSearchQueries && groundingMetadata.webSearchQueries.length > 0 && (
+          <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+            Query: {groundingMetadata.webSearchQueries[0]}
+          </Badge>
+        )}
+      </div>
+      <div className="space-y-2">
+        {webSources.map((source, index) => (
+          <a
+            key={index}
+            href={source.uri}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-start gap-2 p-2 rounded-md hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors group"
+          >
+            <span className="text-xs font-mono text-blue-600 dark:text-blue-400 mt-0.5 min-w-[1.5rem]">
+              [{index + 1}]
+            </span>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-medium text-blue-800 dark:text-blue-200 truncate group-hover:text-blue-900 dark:group-hover:text-blue-100">
+                {source.title}
+              </div>
+              <div className="text-xs text-blue-600 dark:text-blue-400 truncate">
+                {source.uri}
+              </div>
+            </div>
+            <ExternalLink className="w-3 h-3 text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity mt-0.5" />
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 export function ChatInterface({ chatId, messages, chatExists = true }: ChatInterfaceProps) {
-  const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [streamingMessage, setStreamingMessage] = useState("");
-  const [selectedModel, setSelectedModel] = useState<AIModel>(DEFAULT_MODEL);
+  const [streamingGroundingMetadata, setStreamingGroundingMetadata] = useState<GroundingMetadata | null>(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [hoveredMessage, setHoveredMessage] = useState<string | null>(null);
   const [editingMessage, setEditingMessage] = useState<string | null>(null);
   const [editText, setEditText] = useState("");
   const [copiedMessage, setCopiedMessage] = useState<string | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { user } = useUser();
   const router = useRouter();
 
@@ -185,11 +269,14 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
     }
   }, [messages]);
 
-  const handleAIResponse = useCallback(async () => {
+  const handleAIResponse = useCallback(async (model?: AIModel, webSearch?: boolean) => {
     if (isLoading || messages.length === 0) return;
     
     setIsLoading(true);
     setStreamingMessage("");
+
+    // Use provided model or get from storage
+    const selectedModel = model || storage.getSelectedModel();
 
     try {
       const response = await fetch("/api/chat", {
@@ -203,6 +290,7 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
             content: msg.content,
           })),
           model: selectedModel.id,
+          webSearch,
         }),
       });
 
@@ -213,6 +301,7 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let assistantMessage = "";
+      let groundingMetadata: GroundingMetadata | null = null;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -229,8 +318,14 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
             }
             try {
               const parsed = JSON.parse(data);
-              assistantMessage += parsed.content || "";
-              setStreamingMessage(assistantMessage);
+              if (parsed.content) {
+                assistantMessage += parsed.content;
+                setStreamingMessage(assistantMessage);
+              }
+              if (parsed.groundingMetadata) {
+                groundingMetadata = parsed.groundingMetadata;
+                setStreamingGroundingMetadata(groundingMetadata);
+              }
             } catch {
               // Ignore parsing errors
             }
@@ -259,12 +354,13 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
       }
 
       setStreamingMessage("");
+      setStreamingGroundingMetadata(null);
     } catch (error) {
       console.error("Error getting AI response:", error);
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, messages, selectedModel.id, chatId, addMessage, updateChatTitle]);
+  }, [isLoading, messages, chatId, addMessage, updateChatTitle]);
 
   // Trigger AI response if there's a user message without an assistant response
   useEffect(() => {
@@ -284,12 +380,8 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
     }
   }, [messages, isLoading, streamingMessage, handleAIResponse]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || isLoading || !user?.id) return;
-
-    const userMessage = input.trim();
-    setInput("");
+  const handleSendMessage = async (content: string, model: AIModel, webSearch?: boolean) => {
+    if (!content.trim() || isLoading || !user?.id) return;
 
     try {
       // Create chat if it doesn't exist
@@ -302,20 +394,16 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
 
       await addMessage({
         chatId,
-        content: userMessage,
+        content: content.trim(),
         role: "user",
       });
 
-      // The AI response will be triggered automatically by the useEffect
+      // Store the model and web search preference for the AI response
+      setTimeout(() => {
+        handleAIResponse(model, webSearch);
+      }, 100);
     } catch (error) {
       console.error("Error sending message:", error);
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit(e);
     }
   };
 
@@ -486,7 +574,10 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
                   ) : (
                     <>
                       {message.role === "assistant" ? (
-                        <MessageContent content={message.content} />
+                        <>
+                          <MessageContent content={message.content} />
+                          {/* TODO: Add sources display for saved messages with grounding metadata */}
+                        </>
                       ) : (
                         <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
                       )}
@@ -499,7 +590,7 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
                     messageIndex={messageIndex}
                     role={message.role}
                     content={message.content}
-                    model={message.role === "assistant" ? selectedModel.name : undefined}
+                    model={message.role === "assistant" ? storage.getSelectedModel().name : undefined}
                   />
                 )}
               </div>
@@ -513,13 +604,16 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
               >
                 <div className="max-w-[80%] rounded-2xl p-4 bg-card/70 backdrop-blur-xl border border-white/20 shadow-md relative group">
                   <MessageContent content={streamingMessage} />
+                  {streamingGroundingMetadata && (
+                    <SourcesDisplay groundingMetadata={streamingGroundingMetadata} />
+                  )}
                 </div>
                 <MessageActions
                   messageId="streaming"
                   messageIndex={messages.length}
                   role="assistant"
                   content={streamingMessage}
-                  model={selectedModel.name}
+                  model={storage.getSelectedModel().name}
                 />
               </div>
             )}
@@ -536,7 +630,7 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
 
       {/* Scroll to bottom button */}
       {showScrollButton && (
-        <div className="absolute bottom-44 left-1/2 transform -translate-x-1/2">
+        <div className="absolute bottom-34 left-1/2 transform -translate-x-1/2">
           <Button
             onClick={scrollToBottom}
             size="sm"
@@ -549,43 +643,13 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
         </div>
       )}
 
-      {/* Fixed input bar styled like sidebar */}
-      <div className="absolute bottom-0 left-0 right-0 p-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-card/70 backdrop-blur-2xl border border-white/20 rounded-[var(--radius)] shadow-[0_24px_64px_rgba(0,0,0,0.15)] p-4">
-            <div className="space-y-4">
-              <div className="flex justify-center">
-                <ModelSelector
-                  selectedModel={selectedModel}
-                  onModelChange={setSelectedModel}
-                />
-              </div>
-              <form onSubmit={handleSubmit}>
-                <div className="flex gap-3 items-end">
-                  <div className="flex-1">
-                    <Textarea
-                      ref={textareaRef}
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      placeholder="Type your message..."
-                      className="min-h-[60px] max-h-[120px] resize-none bg-background/50 border-white/10 rounded-[var(--radius)] backdrop-blur-xl"
-                      disabled={isLoading}
-                    />
-                  </div>
-                  <Button 
-                    type="submit" 
-                    disabled={!input.trim() || isLoading}
-                    size="lg"
-                    className="h-[60px] w-[60px] rounded-[var(--radius)] bg-primary/20 hover:bg-primary/30 border border-white/10"
-                  >
-                    <Send className="w-5 h-5" />
-                  </Button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
+      {/* Message Input Bar */}
+      <div className="absolute bottom-0 left-0 right-0">
+        <MessageInputBar
+          onSendMessage={handleSendMessage}
+          disabled={isLoading}
+          placeholder="Type your message..."
+        />
       </div>
     </div>
   );

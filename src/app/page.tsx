@@ -2,22 +2,18 @@
 
 import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Sparkles, Zap, Send } from "lucide-react";
-import { useState, useRef } from "react";
+import { MessageSquare, Sparkles, Zap } from "lucide-react";
+import { useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { Textarea } from "@/components/ui/textarea";
-import { ModelSelector } from "@/components/ModelSelector";
-import { AIModel, DEFAULT_MODEL } from "@/lib/models";
+import { MessageInputBar } from "@/components/MessageInputBar";
+import { AIModel } from "@/lib/models";
 import { useRouter } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
 
 export default function HomePage() {
-  const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedModel, setSelectedModel] = useState<AIModel>(DEFAULT_MODEL);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { user } = useUser();
   const router = useRouter();
 
@@ -25,14 +21,10 @@ export default function HomePage() {
   const addMessage = useMutation(api.chats.addMessage);
   const updateChatTitle = useMutation(api.chats.updateChatTitle);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || isLoading || !user?.id) return;
+  const handleSendMessage = async (content: string, model: AIModel, webSearch?: boolean) => {
+    if (!content.trim() || isLoading || !user?.id) return;
 
-    const userMessage = input.trim();
     const newChatId = uuidv4();
-    
-    setInput("");
     setIsLoading(true);
 
     try {
@@ -45,14 +37,14 @@ export default function HomePage() {
       // Add user message
       await addMessage({
         chatId: newChatId,
-        content: userMessage,
+        content: content.trim(),
         role: "user",
       });
 
       // Generate title from first message
-      const title = userMessage.length > 40 
-        ? userMessage.substring(0, 40) + "..."
-        : userMessage;
+      const title = content.length > 40 
+        ? content.substring(0, 40) + "..."
+        : content;
       
       await updateChatTitle({
         chatId: newChatId,
@@ -64,13 +56,6 @@ export default function HomePage() {
     } catch (error) {
       console.error("Error creating chat:", error);
       setIsLoading(false);
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit(e);
     }
   };
 
@@ -123,43 +108,13 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Fixed input bar styled like ChatInterface */}
-          <div className="absolute bottom-0 left-0 right-0 p-4">
-            <div className="max-w-4xl mx-auto">
-              <div className="bg-card/70 backdrop-blur-2xl border border-white/20 rounded-[var(--radius)] shadow-[0_24px_64px_rgba(0,0,0,0.15)] p-4">
-                <div className="space-y-4">
-                  <div className="flex justify-center">
-                    <ModelSelector
-                      selectedModel={selectedModel}
-                      onModelChange={setSelectedModel}
-                    />
-                  </div>
-                  <form onSubmit={handleSubmit}>
-                    <div className="flex gap-3 items-end">
-                      <div className="flex-1">
-                        <Textarea
-                          ref={textareaRef}
-                          value={input}
-                          onChange={(e) => setInput(e.target.value)}
-                          onKeyDown={handleKeyDown}
-                          placeholder="Type your message to start a new conversation..."
-                          className="min-h-[60px] max-h-[120px] resize-none bg-background/50 border-white/10 rounded-[var(--radius)] backdrop-blur-xl"
-                          disabled={isLoading}
-                        />
-                      </div>
-                      <Button 
-                        type="submit" 
-                        disabled={!input.trim() || isLoading}
-                        size="lg"
-                        className="h-[60px] w-[60px] rounded-[var(--radius)] bg-primary/20 hover:bg-primary/30 border border-white/10"
-                      >
-                        <Send className="w-5 h-5" />
-                      </Button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            </div>
+          {/* Message Input Bar */}
+          <div className="absolute bottom-0 left-0 right-0">
+            <MessageInputBar
+              onSendMessage={handleSendMessage}
+              disabled={isLoading}
+              placeholder="Type your message to start a new conversation..."
+            />
           </div>
         </div>
       </SignedIn>

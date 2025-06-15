@@ -721,11 +721,10 @@ export function useCustomTheme() {
   
   const { user } = useUser();
   const userPreferences = useQuery(
-    api.userPreferences.getUserPreferences,
+    api.preferences.getUserPreferences,
     user ? { userId: user.id } : "skip"
   );
-  const updateThemePreference = useMutation(api.userPreferences.updateThemePreference);
-  const updateSyncSetting = useMutation(api.userPreferences.updateSyncSetting);
+  const setUserPreferences = useMutation(api.preferences.setUserPreferences);
 
   const applyTheme = useCallback((themeId: string) => {
     if (typeof window === "undefined") return;
@@ -756,8 +755,8 @@ export function useCustomTheme() {
 
       if (userPreferences) {
         // User has preferences in database
-        themeToApply = userPreferences.themeId;
-        syncEnabled = userPreferences.syncAcrossDevices ?? false;
+        themeToApply = userPreferences.theme || "default";
+        syncEnabled = false; // Remove sync feature for now since it's not in the schema
         
         if (syncEnabled) {
           // If sync is enabled, use database theme and update localStorage
@@ -825,10 +824,16 @@ export function useCustomTheme() {
     // If user is logged in and sync is enabled, update database
     if (user && syncAcrossDevices) {
       try {
-        await updateThemePreference({
+        await setUserPreferences({
           userId: user.id,
-          themeId,
-          syncAcrossDevices,
+          theme: themeId,
+          selectedModel: {
+            id: "gpt-4o",
+            name: "GPT-4o",
+            provider: "openai",
+            description: "Most capable GPT-4 model",
+            supportsStreaming: true,
+          },
         });
       } catch (error) {
         console.error("Failed to sync theme to database:", error);
@@ -844,16 +849,16 @@ export function useCustomTheme() {
       try {
         if (enabled) {
           // When enabling sync, save current theme to database
-          await updateThemePreference({
+          await setUserPreferences({
             userId: user.id,
-            themeId: currentTheme,
-            syncAcrossDevices: enabled,
-          });
-        } else {
-          // When disabling sync, just update the sync setting
-          await updateSyncSetting({
-            userId: user.id,
-            syncAcrossDevices: enabled,
+            theme: currentTheme,
+            selectedModel: {
+              id: "gpt-4o",
+              name: "GPT-4o",
+              provider: "openai",
+              description: "Most capable GPT-4 model",
+              supportsStreaming: true,
+            },
           });
         }
       } catch (error) {

@@ -17,7 +17,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
-import { AI_MODELS, AIModel } from "@/lib/models";
+import { models, AIModel } from "@/lib/models";
 
 interface ModelSelectorProps {
   selectedModel: AIModel;
@@ -79,7 +79,7 @@ export function ModelSelector({ selectedModel, onModelChange }: ModelSelectorPro
           <CommandList>
             <CommandEmpty>No models found.</CommandEmpty>
             <CommandGroup heading="OpenAI Models">
-              {AI_MODELS.filter(model => model.provider === 'openai').map((model) => (
+              {models.filter((model: AIModel) => model.provider === 'openai').map((model: AIModel) => (
                 <CommandItem
                   key={model.id}
                   value={model.id}
@@ -108,7 +108,7 @@ export function ModelSelector({ selectedModel, onModelChange }: ModelSelectorPro
               ))}
             </CommandGroup>
             <CommandGroup heading="Google Models">
-              {AI_MODELS.filter(model => model.provider === 'google').map((model) => (
+              {models.filter((model: AIModel) => model.provider === 'google').map((model: AIModel) => (
                 <CommandItem
                   key={model.id}
                   value={model.id}

@@ -1,6 +1,7 @@
-import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
 
+// Get user preferences
 export const getUserPreferences = query({
   args: { userId: v.string() },
   handler: async (ctx, args) => {
@@ -13,6 +14,7 @@ export const getUserPreferences = query({
   },
 });
 
+// Set user preferences
 export const setUserPreferences = mutation({
   args: {
     userId: v.string(),
@@ -29,20 +31,22 @@ export const setUserPreferences = mutation({
     theme: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const existing = await ctx.db
+    const existingPreferences = await ctx.db
       .query("userPreferences")
       .withIndex("by_userId", (q) => q.eq("userId", args.userId))
       .first();
 
     const now = Date.now();
 
-    if (existing) {
-      await ctx.db.patch(existing._id, {
+    if (existingPreferences) {
+      // Update existing preferences
+      await ctx.db.patch(existingPreferences._id, {
         selectedModel: args.selectedModel,
         theme: args.theme,
         lastUsed: now,
       });
     } else {
+      // Create new preferences
       await ctx.db.insert("userPreferences", {
         userId: args.userId,
         selectedModel: args.selectedModel,
@@ -53,6 +57,7 @@ export const setUserPreferences = mutation({
   },
 });
 
+// Update selected model only
 export const updateSelectedModel = mutation({
   args: {
     userId: v.string(),
@@ -68,19 +73,21 @@ export const updateSelectedModel = mutation({
     }),
   },
   handler: async (ctx, args) => {
-    const existing = await ctx.db
+    const existingPreferences = await ctx.db
       .query("userPreferences")
       .withIndex("by_userId", (q) => q.eq("userId", args.userId))
       .first();
 
     const now = Date.now();
 
-    if (existing) {
-      await ctx.db.patch(existing._id, {
+    if (existingPreferences) {
+      // Update existing preferences
+      await ctx.db.patch(existingPreferences._id, {
         selectedModel: args.selectedModel,
         lastUsed: now,
       });
     } else {
+      // Create new preferences
       await ctx.db.insert("userPreferences", {
         userId: args.userId,
         selectedModel: args.selectedModel,

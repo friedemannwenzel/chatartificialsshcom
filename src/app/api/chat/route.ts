@@ -55,7 +55,6 @@ export async function POST(req: NextRequest) {
 
     const { messages, model = 'gemini-2.0-flash', webSearch = false } = await req.json();
 
-    // Only support Gemini models
     if (!model.startsWith('gemini')) {
       return NextResponse.json(
         { error: 'Only Gemini models are supported' },
@@ -68,10 +67,8 @@ export async function POST(req: NextRequest) {
 
     const encoder = new TextEncoder();
 
-    // Configure Gemini model with proper tools for web search
     const modelConfig: any = { 
       model,
-      // Add tools for web search if enabled
       ...(webSearch && {
         tools: [{ [toolKey]: {} }]
       })
@@ -79,7 +76,6 @@ export async function POST(req: NextRequest) {
 
     const geminiModel = genAI.getGenerativeModel(modelConfig);
     
-    // Convert OpenAI format to Gemini format
     const geminiMessages = messages
       .filter((msg: ChatMessage) => msg.role !== 'system')
       .map((msg: ChatMessage) => ({
@@ -87,7 +83,6 @@ export async function POST(req: NextRequest) {
         parts: [{ text: msg.content }],
       }));
 
-    // Handle system messages by prepending to first user message
     const systemMessages = messages.filter((msg: ChatMessage) => msg.role === 'system');
     if (systemMessages.length > 0 && geminiMessages.length > 0) {
       const systemContent = systemMessages.map((msg: ChatMessage) => msg.content).join('\n\n');
@@ -98,7 +93,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Use generateContentStream for both regular and web search requests
     const result = await geminiModel.generateContentStream({
       contents: geminiMessages
     });
@@ -117,20 +111,12 @@ export async function POST(req: NextRequest) {
             }
           }
 
-          // Get the final response to extract grounding metadata
           const finalResponse = await result.response;
           const candidates = finalResponse.candidates;
           
           if (candidates && candidates[0]) {
-            console.log('Full candidate response:', JSON.stringify(candidates[0], null, 2));
-            
-            // Check for grounding metadata
             if (candidates[0].groundingMetadata) {
               groundingMetadata = candidates[0].groundingMetadata;
-              
-              console.log('Grounding metadata found:', JSON.stringify(groundingMetadata, null, 2));
-              
-              // Send grounding metadata as a separate event
               controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
                 groundingMetadata: {
                   groundingChunks: groundingMetadata.groundingChunks || [],
@@ -141,12 +127,8 @@ export async function POST(req: NextRequest) {
               })}\n\n`));
             }
 
-            // Also check for grounding attributions (alternative structure)
             if (candidates[0].groundingAttributions) {
               const attributions = candidates[0].groundingAttributions;
-              console.log('Grounding attributions found:', JSON.stringify(attributions, null, 2));
-              
-              // Convert attributions to our expected format
               const convertedMetadata = {
                 groundingChunks: attributions.map((attr: any) => ({
                   web: attr.web ? {

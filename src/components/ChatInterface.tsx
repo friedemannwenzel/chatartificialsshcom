@@ -5,7 +5,7 @@ import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowDown, MoreHorizontal, RotateCcw, Edit, Copy, GitBranch, Check, ExternalLink, Globe } from "lucide-react";
+import { ArrowDown, MoreHorizontal, RotateCcw, Edit, Copy, GitBranch, Check, ExternalLink, Globe, ChevronDown, ChevronRight } from "lucide-react";
 import { Doc } from "../../convex/_generated/dataModel";
 import { MessageInputBar } from "./MessageInputBar";
 import { AIModel } from "@/lib/models";
@@ -15,6 +15,7 @@ import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
 import { Badge } from "@/components/ui/badge";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface GroundingChunk {
   web?: {
@@ -48,8 +49,10 @@ interface ChatInterfaceProps {
   chatExists?: boolean;
 }
 
-// Sources component to display web search sources
-const SourcesDisplay = ({ groundingMetadata }: { groundingMetadata: GroundingMetadata }) => {
+// Search Grounding Details component with collapsible dropdown
+const SearchGroundingDetails = ({ groundingMetadata }: { groundingMetadata: GroundingMetadata }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
   if (!groundingMetadata || !groundingMetadata.groundingChunks || groundingMetadata.groundingChunks.length === 0) {
     return null;
   }
@@ -59,49 +62,84 @@ const SourcesDisplay = ({ groundingMetadata }: { groundingMetadata: GroundingMet
     .map(chunk => chunk.web!)
     .filter((source, index, self) => 
       index === self.findIndex(s => s.uri === source.uri)
-    ); // Remove duplicates
+    );
 
   if (webSources.length === 0) {
     return null;
   }
 
   return (
-    <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
-      <div className="flex items-center gap-2 mb-2">
-        <Globe className="w-4 h-4 text-blue-600" />
-        <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
-          Sources ({webSources.length})
-        </span>
-        {groundingMetadata.webSearchQueries && groundingMetadata.webSearchQueries.length > 0 && (
-          <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
-            Query: {groundingMetadata.webSearchQueries[0]}
-          </Badge>
-        )}
-      </div>
-      <div className="space-y-2">
-        {webSources.map((source, index) => (
-          <a
-            key={index}
-            href={source.uri}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-start gap-2 p-2 rounded-md hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors group"
+    <div className="mt-3">
+      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        <CollapsibleTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 px-3 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2"
           >
-            <span className="text-xs font-mono text-blue-600 dark:text-blue-400 mt-0.5 min-w-[1.5rem]">
-              [{index + 1}]
-            </span>
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium text-blue-800 dark:text-blue-200 truncate group-hover:text-blue-900 dark:group-hover:text-blue-100">
-                {source.title}
-              </div>
-              <div className="text-xs text-blue-600 dark:text-blue-400 truncate">
-                {source.uri}
+            {isOpen ? (
+              <ChevronDown className="w-3 h-3" />
+            ) : (
+              <ChevronRight className="w-3 h-3" />
+            )}
+            <Globe className="w-3 h-3" />
+            Search Grounding Details
+            <Badge variant="secondary" className="text-xs ml-1">
+              {webSources.length}
+            </Badge>
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="mt-2">
+          <div className="p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+            <div className="flex items-center gap-2 mb-3">
+              <Globe className="w-4 h-4 text-blue-600" />
+              <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                Search Queries:
+              </span>
+              <div className="flex flex-wrap gap-1">
+                {groundingMetadata.webSearchQueries.map((query, index) => (
+                  <Badge key={index} variant="secondary" className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                    {query}
+                  </Badge>
+                ))}
               </div>
             </div>
-            <ExternalLink className="w-3 h-3 text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity mt-0.5" />
-          </a>
-        ))}
-      </div>
+            <div className="space-y-2">
+              <div className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">
+                Sources ({webSources.length}):
+              </div>
+              {webSources.map((source, index) => (
+                <a
+                  key={index}
+                  href={source.uri}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-start gap-2 p-2 rounded-md hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors group"
+                >
+                  <span className="text-xs font-mono text-blue-600 dark:text-blue-400 mt-0.5 min-w-[1.5rem]">
+                    [{index + 1}]
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-blue-800 dark:text-blue-200 truncate group-hover:text-blue-900 dark:group-hover:text-blue-100">
+                      {source.title}
+                    </div>
+                    <div className="text-xs text-blue-600 dark:text-blue-400 truncate">
+                      {source.uri}
+                    </div>
+                  </div>
+                  <ExternalLink className="w-3 h-3 text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity mt-0.5" />
+                </a>
+              ))}
+              {groundingMetadata.searchEntryPoint?.renderedContent && (
+                <div
+                  className="mt-3"
+                  dangerouslySetInnerHTML={{ __html: groundingMetadata.searchEntryPoint.renderedContent }}
+                />
+              )}
+            </div>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
     </div>
   );
 };
@@ -338,6 +376,7 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
           chatId,
           content: assistantMessage,
           role: "assistant",
+          groundingMetadata: groundingMetadata || undefined,
         });
 
         // Auto-generate title if this is the first message
@@ -576,7 +615,9 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
                       {message.role === "assistant" ? (
                         <>
                           <MessageContent content={message.content} />
-                          {/* TODO: Add sources display for saved messages with grounding metadata */}
+                          {message.groundingMetadata && (
+                            <SearchGroundingDetails groundingMetadata={message.groundingMetadata} />
+                          )}
                         </>
                       ) : (
                         <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
@@ -605,7 +646,7 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
                 <div className="max-w-[80%] rounded-2xl p-4 bg-card/70 backdrop-blur-xl border border-white/20 shadow-md relative group">
                   <MessageContent content={streamingMessage} />
                   {streamingGroundingMetadata && (
-                    <SourcesDisplay groundingMetadata={streamingGroundingMetadata} />
+                    <SearchGroundingDetails groundingMetadata={streamingGroundingMetadata} />
                   )}
                 </div>
                 <MessageActions

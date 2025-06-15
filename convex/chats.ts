@@ -70,6 +70,27 @@ export const addMessage = mutation({
     chatId: v.string(),
     content: v.string(),
     role: v.union(v.literal("user"), v.literal("assistant")),
+    groundingMetadata: v.optional(v.object({
+      groundingChunks: v.array(v.object({
+        web: v.optional(v.object({
+          uri: v.string(),
+          title: v.string(),
+        })),
+      })),
+      groundingSupports: v.array(v.object({
+        segment: v.object({
+          startIndex: v.number(),
+          endIndex: v.number(),
+          text: v.string(),
+        }),
+        groundingChunkIndices: v.array(v.number()),
+        confidenceScores: v.array(v.number()),
+      })),
+      webSearchQueries: v.array(v.string()),
+      searchEntryPoint: v.optional(v.object({
+        renderedContent: v.string(),
+      })),
+    })),
   },
   handler: async (ctx, args) => {
     return await ctx.db.insert("messages", {
@@ -77,6 +98,7 @@ export const addMessage = mutation({
       content: args.content,
       role: args.role,
       createdAt: Date.now(),
+      groundingMetadata: args.groundingMetadata,
     });
   },
 });

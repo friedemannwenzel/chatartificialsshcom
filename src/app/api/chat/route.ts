@@ -63,6 +63,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const isGemini15 = model.startsWith('gemini-1.5');
+    const toolKey = isGemini15 ? 'googleSearchRetrieval' : 'googleSearch';
+
     const encoder = new TextEncoder();
 
     // Configure Gemini model with proper tools for web search
@@ -70,7 +73,7 @@ export async function POST(req: NextRequest) {
       model,
       // Add tools for web search if enabled
       ...(webSearch && {
-        tools: [{ googleSearch: {} }]
+        tools: [{ [toolKey]: {} }]
       })
     };
 

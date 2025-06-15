@@ -16,6 +16,27 @@ export default defineSchema({
     role: v.union(v.literal("user"), v.literal("assistant")),
     content: v.string(),
     createdAt: v.number(),
+    groundingMetadata: v.optional(v.object({
+      groundingChunks: v.array(v.object({
+        web: v.optional(v.object({
+          uri: v.string(),
+          title: v.string(),
+        })),
+      })),
+      groundingSupports: v.array(v.object({
+        segment: v.object({
+          startIndex: v.number(),
+          endIndex: v.number(),
+          text: v.string(),
+        }),
+        groundingChunkIndices: v.array(v.number()),
+        confidenceScores: v.array(v.number()),
+      })),
+      webSearchQueries: v.array(v.string()),
+      searchEntryPoint: v.optional(v.object({
+        renderedContent: v.string(),
+      })),
+    })),
   })
     .index("by_chatId", ["chatId"])
     .index("by_createdAt", ["createdAt"]),

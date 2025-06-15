@@ -83,6 +83,16 @@ export const models: AIModel[] = [
     supportsWebSearch: true,
     capabilities: ["text", "vision", "audio", "web-search"]
   },
+  {
+    id: "gemini-2.5-flash",
+    name: "Gemini 2.5 Flash",
+    provider: "google",
+    description: "Next-generation Gemini Flash model offering improved price-performance and up-to-date grounding with Google Search",
+    maxTokens: 1048576,
+    supportsStreaming: true,
+    supportsWebSearch: true,
+    capabilities: ["text", "vision", "audio", "web-search"]
+  },
 
   // Anthropic Models
   {

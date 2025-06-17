@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import OpenAI from 'openai';
 import { auth } from '@clerk/nextjs/server';
+import { z } from 'zod';
 
 interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
@@ -39,6 +40,32 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
 });
 
+// helper to split markdown into text/image parts for OpenAI vision models
+const imageRegex = /!\[[^\]]*\]\(([^)]+)\)/g;
+
+function markdownToOpenAIParts(md: string): ({ type: 'text'; text: string } | { type: 'image_url'; image_url: { url: string } })[] {
+  const parts: Array<any> = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+  while ((match = imageRegex.exec(md)) !== null) {
+    const [fullMatch, url] = match;
+    const { index } = match;
+    if (index! > lastIndex) {
+      const textSegment = md.slice(lastIndex, index);
+      if (textSegment.trim()) parts.push({ type: 'text', text: textSegment });
+    }
+    parts.push({ type: 'image_url', image_url: { url } });
+    lastIndex = index! + fullMatch.length;
+  }
+  if (lastIndex < md.length) {
+    const textRemainder = md.slice(lastIndex);
+    if (textRemainder.trim()) parts.push({ type: 'text', text: textRemainder });
+  }
+  // fallback to entire text part if nothing parsed
+  if (parts.length === 0) return [{ type: 'text', text: md }];
+  return parts;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { userId } = await auth();
@@ -73,10 +100,19 @@ export async function POST(req: NextRequest) {
 
     // Handle OpenAI models
     if (isOpenAI) {
-      const openaiMessages = messages.map((msg: ChatMessage) => ({
-        role: msg.role,
-        content: msg.content,
-      }));
+      const openaiMessages = messages.map((msg: ChatMessage) => {
+        if (msg.role === 'user') {
+          return {
+            role: 'user',
+            content: markdownToOpenAIParts(msg.content),
+          } as any;
+        }
+        // assistant or system
+        return {
+          role: msg.role,
+          content: msg.content,
+        };
+      });
 
       const isO1Model = model.startsWith('o1');
       const streamConfig: any = {

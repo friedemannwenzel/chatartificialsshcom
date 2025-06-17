@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, Paperclip, Globe, ChevronDown, Sparkles, Brain, Eye, Zap } from "lucide-react";
+import { Send, Globe, ChevronDown, Sparkles, Brain, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -13,15 +13,14 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { Toggle } from "@/components/ui/toggle";
 import { models, AIModel } from "@/lib/models";
 import { storage, CloudSyncOptions, UserPreferences } from "@/lib/storage";
 import { useUser } from "@clerk/nextjs";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import Image from "next/image";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
+import { generateUploadButton } from "@uploadthing/react";
+import type { MessageAttachmentRouter } from "@/app/api/uploadthing/core";
 
 interface MessageInputBarProps {
   onSendMessage: (content: string, model: AIModel, webSearch?: boolean) => void;
@@ -86,12 +85,15 @@ const useAutoSizeTextArea = (
   }, [textAreaRef, value]);
 };
 
+const AttachmentUploadButton = generateUploadButton<MessageAttachmentRouter>();
+
 export function MessageInputBar({ 
   onSendMessage, 
   disabled = false, 
   placeholder = "Type your message here..." 
 }: MessageInputBarProps) {
   const [message, setMessage] = useState("");
+  const [attachments, setAttachments] = useState<Array<{ url: string; name: string }>>([]);
   const [selectedModel, setSelectedModel] = useState<AIModel>(() => storage.getSelectedModel());
   const [webSearchEnabled, setWebSearchEnabled] = useState(false);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -170,10 +172,26 @@ export function MessageInputBar({
   };
 
   const handleSend = () => {
-    if (message.trim() && !disabled) {
-      onSendMessage(message.trim(), selectedModel, webSearchEnabled);
-      setMessage("");
-    }
+    if (disabled) return;
+
+    const trimmed = message.trim();
+    const hasContent = trimmed.length > 0 || attachments.length > 0;
+    if (!hasContent) return;
+
+    let finalContent = trimmed;
+    attachments.forEach((file) => {
+      const lower = file.name.toLowerCase();
+      const isImage = [".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".svg"].some((ext) => lower.endsWith(ext));
+      if (isImage) {
+        finalContent += `\n\n![${file.name}](${file.url})`;
+      } else {
+        finalContent += `\n\n[${file.name}](${file.url})`;
+      }
+    });
+
+    onSendMessage(finalContent, selectedModel, webSearchEnabled);
+    setMessage("");
+    setAttachments([]);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -322,14 +340,21 @@ export function MessageInputBar({
                 rows={1}
               />
               <div className="absolute right-2 top-2 flex items-center gap-1">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-8 w-8 p-0"
-                  disabled
-                >
-                  <Paperclip className="w-4 h-4" />
-                </Button>
+                <AttachmentUploadButton
+                  endpoint="messageAttachment"
+                  onClientUploadComplete={(res: Array<{ url: string; name: string }>) => {
+                    if (!res) return;
+                    const files = res.map((f) => ({
+                      url: f.url,
+                      name: f.name,
+                    }));
+                    setAttachments((prev) => [...prev, ...files]);
+                  }}
+                  onUploadError={() => {}}
+                  appearance={{
+                    button: "h-8 w-8 p-0 bg-transparent hover:bg-muted/20 rounded-md",
+                  }}
+                />
                 <Button
                   size="sm"
                   onClick={handleSend}

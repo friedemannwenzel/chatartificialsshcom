@@ -10,7 +10,6 @@ export interface AIModel {
 }
 
 export const models: AIModel[] = [
-  // OpenAI Models
   {
     id: "gpt-4o",
     name: "GPT-4o",
@@ -31,8 +30,36 @@ export const models: AIModel[] = [
     supportsWebSearch: false,
     capabilities: ["text", "vision", "code"]
   },
-
-  // Google Models
+  {
+    id: "gpt-4.1",
+    name: "GPT-4.1",
+    provider: "openai",
+    description: "OpenAI GPT-4.1 flagship model",
+    maxTokens: 1000000,
+    supportsStreaming: true,
+    supportsWebSearch: false,
+    capabilities: ["text", "vision", "code"]
+  },
+  {
+    id: "gpt-4.1-mini",
+    name: "GPT-4.1 Mini",
+    provider: "openai",
+    description: "OpenAI GPT-4.1 mini model for even faster and more affordable responses",
+    maxTokens: 128000,
+    supportsStreaming: true,
+    supportsWebSearch: false,
+    capabilities: ["text", "vision", "code"]
+  },
+  {
+    id: "gpt-4.1-vision",
+    name: "GPT-4.1 Vision",
+    provider: "openai",
+    description: "OpenAI GPT-4.1 model with advanced vision capabilities",
+    maxTokens: 128000,
+    supportsStreaming: true,
+    supportsWebSearch: false,
+    capabilities: ["text", "vision", "code"]
+  },
   {
     id: "gemini-2.0-flash",
     name: "Gemini 2.0 Flash",

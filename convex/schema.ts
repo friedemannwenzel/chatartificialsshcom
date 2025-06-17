@@ -15,6 +15,12 @@ export default defineSchema({
     chatId: v.string(),
     role: v.union(v.literal("user"), v.literal("assistant")),
     content: v.string(),
+    attachments: v.optional(v.array(v.object({
+      url: v.string(),
+      name: v.string(),
+      type: v.string(),
+      size: v.optional(v.number()),
+    }))),
     createdAt: v.number(),
     groundingMetadata: v.optional(v.object({
       groundingChunks: v.array(v.object({

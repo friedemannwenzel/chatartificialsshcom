@@ -419,8 +419,27 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
     }
   }, [messages, isLoading, streamingMessage, handleAIResponse]);
 
-  const handleSendMessage = async (content: string, model: AIModel, webSearch?: boolean) => {
-    if (!content.trim() || isLoading || !user?.id) return;
+  const handleSendMessage = async (content: string, model: AIModel, webSearch?: boolean, attachments?: Array<{ url: string; name: string; type: string; size?: number }>) => {
+    if (isLoading || !user?.id) return;
+    
+    const hasContent = content.trim().length > 0 || (attachments && attachments.length > 0);
+    if (!hasContent) return;
+
+    // Combine text content with attachments as markdown
+    let finalContent = content.trim();
+    if (attachments && attachments.length > 0) {
+      attachments.forEach((file) => {
+        const isImage = file.type?.startsWith("image/") || 
+          (!file.type && [".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".svg"].some(ext => 
+            file.name.toLowerCase().endsWith(ext)
+          ));
+        if (isImage) {
+          finalContent += `\n\n![${file.name}](${file.url})`;
+        } else {
+          finalContent += `\n\n[${file.name}](${file.url})`;
+        }
+      });
+    }
 
     try {
       // Create chat if it doesn't exist
@@ -433,8 +452,9 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
 
       await addMessage({
         chatId,
-        content: content.trim(),
+        content: finalContent,
         role: "user",
+        attachments,
       });
 
       // Store the model and web search preference for the AI response

@@ -187,6 +187,21 @@ export function MessageContent({ content, className }: MessageContentProps) {
             );
           },
 
+          img({ src, alt }) {
+            if (!src) return null;
+            
+            return (
+              <div className="my-4">
+                <img
+                  src={src as string}
+                  alt={alt || 'Uploaded image'}
+                  className="rounded-lg border max-w-full h-auto max-h-96"
+                  style={{ objectFit: 'contain' }}
+                />
+              </div>
+            );
+          },
+
           ul({ children }) {
             return (
               <ul className="list-disc list-inside space-y-1 my-2">

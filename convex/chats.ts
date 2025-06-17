@@ -70,6 +70,12 @@ export const addMessage = mutation({
     chatId: v.string(),
     content: v.string(),
     role: v.union(v.literal("user"), v.literal("assistant")),
+    attachments: v.optional(v.array(v.object({
+      url: v.string(),
+      name: v.string(),
+      type: v.string(),
+      size: v.optional(v.number()),
+    }))),
     groundingMetadata: v.optional(v.object({
       groundingChunks: v.array(v.object({
         web: v.optional(v.object({
@@ -97,6 +103,7 @@ export const addMessage = mutation({
       chatId: args.chatId,
       content: args.content,
       role: args.role,
+      attachments: args.attachments,
       createdAt: Date.now(),
       groundingMetadata: args.groundingMetadata,
     });

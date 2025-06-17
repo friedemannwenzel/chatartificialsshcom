@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, Globe, ChevronDown, Sparkles, Brain, Eye } from "lucide-react";
+import { Send, Globe, ChevronDown, Sparkles, Brain, Eye, X, Paperclip, FileText, Image as ImageIcon, FileVideo, FileAudio } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -23,7 +23,7 @@ import { generateUploadButton } from "@uploadthing/react";
 import type { MessageAttachmentRouter } from "@/app/api/uploadthing/core";
 
 interface MessageInputBarProps {
-  onSendMessage: (content: string, model: AIModel, webSearch?: boolean) => void;
+  onSendMessage: (content: string, model: AIModel, webSearch?: boolean, attachments?: Array<{ url: string; name: string; type: string; size?: number }>) => void;
   disabled?: boolean;
   placeholder?: string;
 }
@@ -93,7 +93,7 @@ export function MessageInputBar({
   placeholder = "Type your message here..." 
 }: MessageInputBarProps) {
   const [message, setMessage] = useState("");
-  const [attachments, setAttachments] = useState<Array<{ url: string; name: string }>>([]);
+  const [attachments, setAttachments] = useState<Array<{ url: string; name: string; type: string; size?: number }>>([]);
   const [selectedModel, setSelectedModel] = useState<AIModel>(() => storage.getSelectedModel());
   const [webSearchEnabled, setWebSearchEnabled] = useState(false);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -178,18 +178,7 @@ export function MessageInputBar({
     const hasContent = trimmed.length > 0 || attachments.length > 0;
     if (!hasContent) return;
 
-    let finalContent = trimmed;
-    attachments.forEach((file) => {
-      const lower = file.name.toLowerCase();
-      const isImage = [".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".svg"].some((ext) => lower.endsWith(ext));
-      if (isImage) {
-        finalContent += `\n\n![${file.name}](${file.url})`;
-      } else {
-        finalContent += `\n\n[${file.name}](${file.url})`;
-      }
-    });
-
-    onSendMessage(finalContent, selectedModel, webSearchEnabled);
+    onSendMessage(trimmed, selectedModel, webSearchEnabled, attachments);
     setMessage("");
     setAttachments([]);
   };
@@ -218,12 +207,42 @@ export function MessageInputBar({
 
   const providerIcon = getProviderIcon(selectedModel.provider);
 
+  const removeAttachment = (index: number) => {
+    setAttachments(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const getFileIcon = (fileName: string) => {
+    const lower = fileName.toLowerCase();
+    if ([".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".svg"].some(ext => lower.endsWith(ext))) {
+      return <ImageIcon className="w-4 h-4" />;
+    }
+    if ([".mp4", ".mov", ".avi", ".webm", ".mkv"].some(ext => lower.endsWith(ext))) {
+      return <FileVideo className="w-4 h-4" />;
+    }
+    if ([".mp3", ".wav", ".flac", ".aac", ".ogg"].some(ext => lower.endsWith(ext))) {
+      return <FileAudio className="w-4 h-4" />;
+    }
+    if (lower.endsWith(".pdf")) {
+      return <FileText className="w-4 h-4 text-red-600" />;
+    }
+    if ([".doc", ".docx", ".txt", ".rtf"].some(ext => lower.endsWith(ext))) {
+      return <FileText className="w-4 h-4 text-blue-600" />;
+    }
+    if ([".xls", ".xlsx", ".csv"].some(ext => lower.endsWith(ext))) {
+      return <FileText className="w-4 h-4 text-green-600" />;
+    }
+    if ([".ppt", ".pptx"].some(ext => lower.endsWith(ext))) {
+      return <FileText className="w-4 h-4 text-orange-600" />;
+    }
+    return <FileText className="w-4 h-4" />;
+  };
+
   return (
     <div className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container max-w-4xl mx-auto p-4">
         <div className="flex flex-col gap-3">
           {/* Model Selection and Web Search Row */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button 
@@ -312,6 +331,25 @@ export function MessageInputBar({
               </div>
             )}
 
+            {/* Upload Button */}
+            <AttachmentUploadButton
+              endpoint="messageAttachment"
+              onClientUploadComplete={(res: Array<{ url: string; name: string; type: string; size: number }>) => {
+                if (!res) return;
+                const files = res.map((f) => ({
+                  url: f.url,
+                  name: f.name,
+                  type: f.type,
+                  size: f.size,
+                }));
+                setAttachments((prev) => [...prev, ...files]);
+              }}
+              onUploadError={() => {}}
+              appearance={{
+                button: "h-9 px-3 bg-transparent hover:bg-muted/20 rounded-md border border-input text-sm font-medium",
+              }}
+            />
+
             {/* Model Capabilities */}
             <div className="flex items-center gap-1 ml-auto">
               {selectedModel.capabilities?.map((capability) => (
@@ -326,6 +364,29 @@ export function MessageInputBar({
             </div>
           </div>
 
+          {/* Attached Files Display */}
+          {attachments.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {attachments.map((file, index) => (
+                <div
+                  key={index}
+                  className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2 text-sm border"
+                >
+                  {getFileIcon(file.name)}
+                  <span className="truncate max-w-32">{file.name}</span>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-4 w-4 p-0 hover:bg-destructive/20"
+                    onClick={() => removeAttachment(index)}
+                  >
+                    <X className="w-3 h-3" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* Message Input Row */}
           <div className="flex items-end gap-2">
             <div className="flex-1 relative">
@@ -336,25 +397,10 @@ export function MessageInputBar({
                 onKeyDown={handleKeyDown}
                 placeholder={placeholder}
                 disabled={disabled}
-                className="min-h-[44px] max-h-[200px] resize-none pr-24"
+                className="min-h-[44px] max-h-[200px] resize-none pr-12"
                 rows={1}
               />
-              <div className="absolute right-2 top-2 flex items-center gap-1">
-                <AttachmentUploadButton
-                  endpoint="messageAttachment"
-                  onClientUploadComplete={(res: Array<{ url: string; name: string }>) => {
-                    if (!res) return;
-                    const files = res.map((f) => ({
-                      url: f.url,
-                      name: f.name,
-                    }));
-                    setAttachments((prev) => [...prev, ...files]);
-                  }}
-                  onUploadError={() => {}}
-                  appearance={{
-                    button: "h-8 w-8 p-0 bg-transparent hover:bg-muted/20 rounded-md",
-                  }}
-                />
+              <div className="absolute right-2 top-2">
                 <Button
                   size="sm"
                   onClick={handleSend}

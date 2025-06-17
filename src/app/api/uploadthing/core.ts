@@ -8,8 +8,9 @@ export const messageAttachmentRouter = {
     image: { maxFileSize: "4MB" },
     video: { maxFileSize: "32MB" },
     audio: { maxFileSize: "16MB" },
-    text: { maxFileSize: "4MB" },
-    application: { maxFileSize: "16MB" },
+    text: { maxFileSize: "8MB" },
+    pdf: { maxFileSize: "32MB" },
+    blob: { maxFileSize: "32MB" },
   })
     .middleware(async () => {
       const { userId } = await auth();

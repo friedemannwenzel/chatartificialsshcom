@@ -1,7 +1,7 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -13,7 +13,9 @@ import {
   Settings,
   Moon,
   Sun,
-  Monitor
+  Monitor,
+  X,
+  Search
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -25,6 +27,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 type SidebarState = "open" | "collapsed" | "hover";
 
@@ -49,6 +52,9 @@ export function Sidebar({
   const params = useParams();
   const currentChatId = params?.id as string;
   const { setTheme, theme } = useTheme();
+  const [search, setSearch] = useState("");
+  const [hoveredChat, setHoveredChat] = useState<string | null>(null);
+  const deleteChat = useMutation(api.chats.deleteChat);
 
   const chats = useQuery(
     api.chats.getChatsByUser,
@@ -108,7 +114,10 @@ export function Sidebar({
     return groups;
   };
 
-  const chatGroups = groupChatsByDate(chats || []);
+  const filteredChats = (chats || []).filter(chat =>
+    chat.title?.toLowerCase().includes(search.toLowerCase())
+  );
+  const chatGroups = groupChatsByDate(filteredChats);
 
   const getUserInitials = (name: string | null | undefined) => {
     if (!name) return "U";
@@ -234,6 +243,18 @@ export function Sidebar({
                 </div>
               </div>
 
+              {/* Search Bar */}
+              <div className="relative mb-3">
+                <input
+                  type="text"
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  placeholder="Search chats..."
+                  className="w-full rounded-lg border border-input bg-background px-3 py-2 pl-9 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+                <Search className="absolute left-2 top-2.5 w-4 h-4 text-muted-foreground" />
+              </div>
+
               {/* Chat History */}
               <ScrollArea className="flex-1 px-4">
                 <div className="space-y-4 py-3">
@@ -243,23 +264,46 @@ export function Sidebar({
                         {groupName}
                       </h3>
                       <div className="space-y-1">
-                        {groupChats.map((chat) => (
-                          <Link
+                        {groupChats.map((chat, idx) => (
+                          <div
                             key={chat._id}
-                            href={`/c/${chat.chatId}`}
-                            className={cn(
-                              "block rounded-2xl p-2.5 text-sm transition-all duration-200",
-                              "hover:bg-white/10 border border-transparent",
-                              "hover:border-white/10 hover:shadow-lg",
-                              currentChatId === chat.chatId 
-                                ? "bg-primary/20 border-primary/30 shadow-md" 
-                                : ""
-                            )}
+                            onMouseEnter={() => setHoveredChat(chat._id)}
+                            onMouseLeave={() => setHoveredChat(null)}
+                            className="relative group"
                           >
-                            <span className="truncate block">
-                              {chat.title || "New Chat"}
-                            </span>
-                          </Link>
+                            <Link
+                              href={`/c/${chat.chatId}`}
+                              className={cn(
+                                "flex items-center justify-between p-2.5 text-sm transition-all duration-200 border border-transparent",
+                                idx === 0 && groupChats.length === 1
+                                  ? "rounded-2xl"
+                                  : idx === 0
+                                  ? "rounded-t-2xl"
+                                  : idx === groupChats.length - 1
+                                  ? "rounded-b-2xl"
+                                  : "",
+                                "hover:bg-white/10 hover:border-white/10 hover:shadow-lg",
+                                currentChatId === chat.chatId 
+                                  ? "bg-primary/20 border-primary/30 shadow-md" 
+                                  : ""
+                              )}
+                            >
+                              <span className="truncate block flex-1">
+                                {chat.title || "New Chat"}
+                              </span>
+                              {hoveredChat === chat._id && (
+                                <button
+                                  onClick={async e => {
+                                    e.preventDefault();
+                                    await deleteChat({ chatId: chat.chatId });
+                                  }}
+                                  className="ml-2 p-1 rounded hover:bg-destructive/20"
+                                >
+                                  <X className="w-4 h-4 text-destructive" />
+                                </button>
+                              )}
+                            </Link>
+                          </div>
                         ))}
                       </div>
                     </div>
@@ -282,7 +326,7 @@ export function Sidebar({
               </ScrollArea>
 
               {/* User Profile */}
-              <div className="p-4 border-t border-white/10">
+              <div className="fixed bottom-0 left-0 w-80 p-4 z-50 bg-card/70 backdrop-blur-2xl border-t border-white/20">
                 <Link href="/settings">
                   <Button
                     variant="ghost"
@@ -401,6 +445,18 @@ export function Sidebar({
           </div>
         </div>
 
+        {/* Search Bar */}
+        <div className="relative mb-3">
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search chats..."
+            className="w-full rounded-lg border border-input bg-background px-3 py-2 pl-9 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+          <Search className="absolute left-2 top-2.5 w-4 h-4 text-muted-foreground" />
+        </div>
+
         {/* Chat History */}
         <ScrollArea className="flex-1 px-4">
           <div className="space-y-4 py-3">
@@ -410,23 +466,46 @@ export function Sidebar({
                   {groupName}
                 </h3>
                 <div className="space-y-1">
-                  {groupChats.map((chat) => (
-                    <Link
+                  {groupChats.map((chat, idx) => (
+                    <div
                       key={chat._id}
-                      href={`/c/${chat.chatId}`}
-                      className={cn(
-                        "block rounded-2xl p-2.5 text-sm transition-all duration-200",
-                        "hover:bg-white/10 border border-transparent",
-                        "hover:border-white/10 hover:shadow-lg",
-                        currentChatId === chat.chatId 
-                          ? "bg-primary/20 border-primary/30 shadow-md" 
-                          : ""
-                      )}
+                      onMouseEnter={() => setHoveredChat(chat._id)}
+                      onMouseLeave={() => setHoveredChat(null)}
+                      className="relative group"
                     >
-                      <span className="truncate block">
-                        {chat.title || "New Chat"}
-                      </span>
-                    </Link>
+                      <Link
+                        href={`/c/${chat.chatId}`}
+                        className={cn(
+                          "flex items-center justify-between p-2.5 text-sm transition-all duration-200 border border-transparent",
+                          idx === 0 && groupChats.length === 1
+                            ? "rounded-2xl"
+                            : idx === 0
+                            ? "rounded-t-2xl"
+                            : idx === groupChats.length - 1
+                            ? "rounded-b-2xl"
+                            : "",
+                          "hover:bg-white/10 hover:border-white/10 hover:shadow-lg",
+                          currentChatId === chat.chatId 
+                            ? "bg-primary/20 border-primary/30 shadow-md" 
+                            : ""
+                        )}
+                      >
+                        <span className="truncate block flex-1">
+                          {chat.title || "New Chat"}
+                        </span>
+                        {hoveredChat === chat._id && (
+                          <button
+                            onClick={async e => {
+                              e.preventDefault();
+                              await deleteChat({ chatId: chat.chatId });
+                            }}
+                            className="ml-2 p-1 rounded hover:bg-destructive/20"
+                          >
+                            <X className="w-4 h-4 text-destructive" />
+                          </button>
+                        )}
+                      </Link>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -449,7 +528,7 @@ export function Sidebar({
         </ScrollArea>
 
         {/* User Profile */}
-        <div className="p-4 border-t border-white/10">
+        <div className="fixed bottom-0 left-0 w-80 p-4 z-50 bg-card/70 backdrop-blur-2xl border-t border-white/20">
           <Link href="/settings">
             <Button
               variant="ghost"

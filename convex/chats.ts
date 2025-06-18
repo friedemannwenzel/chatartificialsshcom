@@ -144,4 +144,27 @@ export const deleteMessagesFromIndex = mutation({
     
     return messagesToDelete.length;
   },
+});
+
+export const deleteChat = mutation({
+  args: { chatId: v.string() },
+  handler: async (ctx, args) => {
+    // Find the chat by chatId
+    const chat = await ctx.db
+      .query("chats")
+      .withIndex("by_chatId", (q) => q.eq("chatId", args.chatId))
+      .first();
+    if (!chat) throw new Error("Chat not found");
+    // Delete all messages for this chat
+    const messages = await ctx.db
+      .query("messages")
+      .withIndex("by_chatId", (q) => q.eq("chatId", args.chatId))
+      .collect();
+    for (const message of messages) {
+      await ctx.db.delete(message._id);
+    }
+    // Delete the chat itself
+    await ctx.db.delete(chat._id);
+    return true;
+  },
 }); 

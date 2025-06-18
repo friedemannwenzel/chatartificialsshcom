@@ -184,9 +184,9 @@ export function Sidebar({
               "flex flex-col overflow-hidden",
               "transition-all duration-300 ease-out"
             )}>
-              {/* Header */}
+              {/* Header with Search Bar */}
               <div className="p-4 border-b border-white/10">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mb-3">
                   <h2 className="text-lg font-semibold tracking-tight">T3 Chat</h2>
                   <div className="flex items-center gap-2">
                     <DropdownMenu>
@@ -241,22 +241,22 @@ export function Sidebar({
                     </Button>
                   </div>
                 </div>
-              </div>
-
-              {/* Search Bar */}
-              <div className="relative mb-3">
-                <input
-                  type="text"
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  placeholder="Search chats..."
-                  className="w-full rounded-lg border border-input bg-background px-3 py-2 pl-9 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-                <Search className="absolute left-2 top-2.5 w-4 h-4 text-muted-foreground" />
+                
+                {/* Search Bar moved to header */}
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    placeholder="Search chats..."
+                    className="w-full rounded-lg border border-input bg-background px-3 py-2 pl-9 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                  <Search className="absolute left-2 top-2.5 w-4 h-4 text-muted-foreground" />
+                </div>
               </div>
 
               {/* Chat History */}
-              <ScrollArea className="flex-1 px-4">
+              <ScrollArea className="flex-1 h-full px-4">
                 <div className="space-y-4 py-3">
                   {Object.entries(chatGroups).map(([groupName, groupChats]) => (
                     <div key={groupName}>
@@ -274,14 +274,8 @@ export function Sidebar({
                             <Link
                               href={`/c/${chat.chatId}`}
                               className={cn(
-                                "flex items-center justify-between p-2.5 text-sm transition-all duration-200 border border-transparent",
-                                idx === 0 && groupChats.length === 1
-                                  ? "rounded-2xl"
-                                  : idx === 0
-                                  ? "rounded-t-2xl"
-                                  : idx === groupChats.length - 1
-                                  ? "rounded-b-2xl"
-                                  : "",
+                                "flex items-center justify-between px-4 py-2.5 text-sm transition-all duration-200 border border-transparent w-full",
+                                "rounded-xl", // Fixed border radius for all chat buttons
                                 "hover:bg-white/10 hover:border-white/10 hover:shadow-lg",
                                 currentChatId === chat.chatId 
                                   ? "bg-primary/20 border-primary/30 shadow-md" 
@@ -325,8 +319,8 @@ export function Sidebar({
                 </div>
               </ScrollArea>
 
-              {/* User Profile */}
-              <div className="fixed bottom-0 left-0 w-80 p-4 z-50 bg-card/70 backdrop-blur-2xl border-t border-white/20">
+              {/* User Profile - fixed at bottom */}
+              <div className="sticky bottom-0 left-0 w-full p-4 bg-card/70 backdrop-blur-2xl border-t border-white/20">
                 <Link href="/settings">
                   <Button
                     variant="ghost"
@@ -373,9 +367,9 @@ export function Sidebar({
         "flex flex-col overflow-hidden",
         "transition-all duration-300 ease-out"
       )}>
-        {/* Header */}
+        {/* Header with Search Bar */}
         <div className="p-4 border-b border-white/10">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg font-semibold tracking-tight">T3 Chat</h2>
             <div className="flex items-center gap-2">
               <Button
@@ -443,22 +437,22 @@ export function Sidebar({
               </Button>
             </div>
           </div>
-        </div>
-
-        {/* Search Bar */}
-        <div className="relative mb-3">
-          <input
-            type="text"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Search chats..."
-            className="w-full rounded-lg border border-input bg-background px-3 py-2 pl-9 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-          />
-          <Search className="absolute left-2 top-2.5 w-4 h-4 text-muted-foreground" />
+          
+          {/* Search Bar moved to header */}
+          <div className="relative">
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search chats..."
+              className="w-full rounded-lg border border-input bg-background px-3 py-2 pl-9 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+            <Search className="absolute left-2 top-2.5 w-4 h-4 text-muted-foreground" />
+          </div>
         </div>
 
         {/* Chat History */}
-        <ScrollArea className="flex-1 px-4">
+        <ScrollArea className="flex-1 h-full px-4">
           <div className="space-y-4 py-3">
             {Object.entries(chatGroups).map(([groupName, groupChats]) => (
               <div key={groupName}>
@@ -476,14 +470,8 @@ export function Sidebar({
                       <Link
                         href={`/c/${chat.chatId}`}
                         className={cn(
-                          "flex items-center justify-between p-2.5 text-sm transition-all duration-200 border border-transparent",
-                          idx === 0 && groupChats.length === 1
-                            ? "rounded-2xl"
-                            : idx === 0
-                            ? "rounded-t-2xl"
-                            : idx === groupChats.length - 1
-                            ? "rounded-b-2xl"
-                            : "",
+                          "flex items-center justify-between px-4 py-2.5 text-sm transition-all duration-200 border border-transparent w-full",
+                          "rounded-xl", // Fixed border radius for all chat buttons
                           "hover:bg-white/10 hover:border-white/10 hover:shadow-lg",
                           currentChatId === chat.chatId 
                             ? "bg-primary/20 border-primary/30 shadow-md" 
@@ -527,8 +515,8 @@ export function Sidebar({
           </div>
         </ScrollArea>
 
-        {/* User Profile */}
-        <div className="fixed bottom-0 left-0 w-80 p-4 z-50 bg-card/70 backdrop-blur-2xl border-t border-white/20">
+        {/* User Profile - fixed at bottom */}
+        <div className="sticky bottom-0 left-0 w-full p-4 bg-card/70 backdrop-blur-2xl border-t border-white/20">
           <Link href="/settings">
             <Button
               variant="ghost"

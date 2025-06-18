@@ -29,11 +29,9 @@ export default function SettingsPage() {
         </div>
 
         <Tabs defaultValue="account" className="w-full flex flex-col flex-1 overflow-hidden px-6">
-          <TabsList className="grid w-full grid-cols-5 mb-6">
+          <TabsList className="grid w-full grid-cols-3 mb-6">
             <TabsTrigger value="account">Account</TabsTrigger>
-            <TabsTrigger value="customization">Customization</TabsTrigger>
             <TabsTrigger value="themes">Themes</TabsTrigger>
-            <TabsTrigger value="models">Models</TabsTrigger>
             <TabsTrigger value="contact">Contact Us</TabsTrigger>
           </TabsList>
 
@@ -122,26 +120,6 @@ export default function SettingsPage() {
             </div>
           </TabsContent>
 
-          <TabsContent value="customization" className="flex-1 overflow-auto">
-            <div className="space-y-6 pb-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Palette className="h-5 w-5" />
-                  Interface Customization
-                </CardTitle>
-                <CardDescription>
-                  Customize the look and feel of your chat interface
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-sm text-muted-foreground">
-                  Customization options coming soon...
-                </div>
-              </CardContent>
-            </Card>
-            </div>
-          </TabsContent>
 
           <TabsContent value="themes" className="flex-1 overflow-auto">
             <div className="space-y-6 pb-6">
@@ -161,28 +139,6 @@ export default function SettingsPage() {
             </Card>
             </div>
           </TabsContent>
-
-          <TabsContent value="models" className="flex-1 overflow-auto">
-            <div className="space-y-6 pb-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Bot className="h-5 w-5" />
-                  AI Models
-                </CardTitle>
-                <CardDescription>
-                  Configure your preferred AI models and settings
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-sm text-muted-foreground">
-                  Model configuration coming soon...
-                </div>
-              </CardContent>
-            </Card>
-            </div>
-          </TabsContent>
-
           <TabsContent value="contact" className="flex-1 overflow-auto">
             <div className="space-y-6 pb-6">
             <Card>

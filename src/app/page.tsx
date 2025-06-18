@@ -11,6 +11,7 @@ import { MessageInputBar } from "@/components/MessageInputBar";
 import { AIModel } from "@/lib/models";
 import { useRouter } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
+import { generateChatTitle } from "@/lib/generateChatTitle";
 
 export default function HomePage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -67,15 +68,13 @@ export default function HomePage() {
       });
 
       // Generate title from first message
-      const titleSource = finalContent || "New chat";
-      const title = titleSource.length > 40 
-        ? titleSource.substring(0, 40) + "..."
-        : titleSource;
-      
-      await updateChatTitle({
-        chatId: newChatId,
-        title,
-      });
+      const generatedTitle = await generateChatTitle(finalContent);
+      if (generatedTitle) {
+        await updateChatTitle({
+          chatId: newChatId,
+          title: generatedTitle,
+        });
+      }
 
       // Redirect to the new chat
       router.push(`/c/${newChatId}`);

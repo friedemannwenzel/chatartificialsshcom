@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { generateChatTitle } from "@/lib/generateChatTitle";
 
 interface GroundingChunk {
   web?: {
@@ -384,13 +385,13 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
         // Auto-generate title if this is the first message
         if (messages.length === 1) {
           const firstUserMessage = messages[0];
-          const title = firstUserMessage.content.length > 40 
-            ? firstUserMessage.content.substring(0, 40) + "..."
-            : firstUserMessage.content;
-          await updateChatTitle({
-            chatId,
-            title,
-          });
+          const generatedTitle = await generateChatTitle(firstUserMessage.content);
+          if (generatedTitle) {
+            await updateChatTitle({
+              chatId,
+              title: generatedTitle,
+            });
+          }
         }
       }
 

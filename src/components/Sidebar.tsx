@@ -256,7 +256,7 @@ export function Sidebar({
               </div>
 
               {/* Chat History */}
-              <ScrollArea className="flex-1 h-full px-4">
+              <ScrollArea className="flex-1 h-full px-2">
                 <div className="space-y-4 py-3">
                   {Object.entries(chatGroups).map(([groupName, groupChats]) => (
                     <div key={groupName}>
@@ -274,7 +274,7 @@ export function Sidebar({
                             <Link
                               href={`/c/${chat.chatId}`}
                               className={cn(
-                                "flex items-center justify-between px-4 py-2.5 text-sm transition-all duration-200 border border-transparent w-full",
+                                "flex items-center justify-between px-2 py-2 text-sm transition-all duration-200 border border-transparent w-full",
                                 "rounded-xl", // Fixed border radius for all chat buttons
                                 "hover:bg-white/10 hover:border-white/10 hover:shadow-lg",
                                 currentChatId === chat.chatId 
@@ -452,7 +452,7 @@ export function Sidebar({
         </div>
 
         {/* Chat History */}
-        <ScrollArea className="flex-1 h-full px-4">
+        <ScrollArea className="flex-1 h-full px-2">
           <div className="space-y-4 py-3">
             {Object.entries(chatGroups).map(([groupName, groupChats]) => (
               <div key={groupName}>
@@ -470,7 +470,7 @@ export function Sidebar({
                       <Link
                         href={`/c/${chat.chatId}`}
                         className={cn(
-                          "flex items-center justify-between px-4 py-2.5 text-sm transition-all duration-200 border border-transparent w-full",
+                          "flex items-center justify-between px-2 py-2 text-sm transition-all duration-200 border border-transparent w-full",
                           "rounded-xl", // Fixed border radius for all chat buttons
                           "hover:bg-white/10 hover:border-white/10 hover:shadow-lg",
                           currentChatId === chat.chatId 
@@ -522,7 +522,7 @@ export function Sidebar({
               variant="ghost"
               className={cn(
                 "w-full justify-start gap-3 h-auto p-3 rounded-2xl",
-                "hover:bg-white/10 border border-white/10",
+                "hover:bg-white/10 border border-white/10 hover:cursor-pointer",
                 "transition-all duration-200"
               )}
             >
@@ -536,9 +536,6 @@ export function Sidebar({
               <div className="flex flex-col items-start text-left flex-1">
                 <span className="text-sm font-medium truncate max-w-[160px]">
                   {user?.fullName || user?.emailAddresses[0]?.emailAddress || "User"}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  Free Plan
                 </span>
               </div>
               

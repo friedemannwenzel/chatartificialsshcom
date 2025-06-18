@@ -175,7 +175,20 @@ export function Sidebar({
         />
         
         {/* Floating Sidebar Panel */}
-        <div className="fixed inset-y-0 left-0 z-40 transition-all duration-300 ease-out">
+        <div 
+          className="fixed inset-y-0 left-0 z-40 transition-all duration-300 ease-out"
+          onMouseLeave={(e) => {
+            // Add delay before closing to allow cursor to reach delete button
+            setTimeout(() => {
+              // Check if cursor is still outside the sidebar area
+              const rect = e.currentTarget.getBoundingClientRect();
+              if (e.clientX < rect.left || e.clientX > rect.right || 
+                  e.clientY < rect.top || e.clientY > rect.bottom) {
+                onClose();
+              }
+            }, 200);
+          }}
+        >
           <div className="h-full p-4 flex items-center">
             <div className={cn(
               "w-full h-[calc(100vh-2rem)] rounded-[var(--radius)]",
@@ -274,26 +287,27 @@ export function Sidebar({
                             <Link
                               href={`/c/${chat.chatId}`}
                               className={cn(
-                                "flex items-center justify-between px-2 py-2 text-sm transition-all duration-200 border border-transparent w-full",
-                                "rounded-xl", // Fixed border radius for all chat buttons
+                                "flex items-center px-3 py-2 text-sm transition-all duration-200 border border-transparent w-full relative",
+                                "rounded-lg min-h-[36px]",
                                 "hover:bg-white/10 hover:border-white/10 hover:shadow-lg",
                                 currentChatId === chat.chatId 
                                   ? "bg-primary/20 border-primary/30 shadow-md" 
                                   : ""
                               )}
                             >
-                              <span className="truncate block flex-1">
+                              <span className="truncate block flex-1 pr-8">
                                 {chat.title || "New Chat"}
                               </span>
                               {hoveredChat === chat._id && (
                                 <button
                                   onClick={async e => {
                                     e.preventDefault();
+                                    e.stopPropagation();
                                     await deleteChat({ chatId: chat.chatId });
                                   }}
-                                  className="ml-2 p-1 rounded hover:bg-destructive/20"
+                                  className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 rounded bg-card/90 hover:bg-destructive/20 transition-colors duration-200 border border-white/20 shadow-sm"
                                 >
-                                  <X className="w-4 h-4 text-destructive" />
+                                  <X className="w-3 h-3 text-destructive" />
                                 </button>
                               )}
                             </Link>
@@ -470,26 +484,27 @@ export function Sidebar({
                       <Link
                         href={`/c/${chat.chatId}`}
                         className={cn(
-                          "flex items-center justify-between px-2 py-2 text-sm transition-all duration-200 border border-transparent w-full",
-                          "rounded-xl", // Fixed border radius for all chat buttons
+                          "flex items-center px-3 py-2 text-sm transition-all duration-200 border border-transparent w-full relative",
+                          "rounded-lg min-h-[36px]",
                           "hover:bg-white/10 hover:border-white/10 hover:shadow-lg",
                           currentChatId === chat.chatId 
                             ? "bg-primary/20 border-primary/30 shadow-md" 
                             : ""
                         )}
                       >
-                        <span className="truncate block flex-1">
+                        <span className="truncate block flex-1 pr-8">
                           {chat.title || "New Chat"}
                         </span>
                         {hoveredChat === chat._id && (
                           <button
                             onClick={async e => {
                               e.preventDefault();
+                              e.stopPropagation();
                               await deleteChat({ chatId: chat.chatId });
                             }}
-                            className="ml-2 p-1 rounded hover:bg-destructive/20"
+                            className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 rounded bg-card/90 hover:bg-destructive/20 transition-colors duration-200 border border-white/20 shadow-sm"
                           >
-                            <X className="w-4 h-4 text-destructive" />
+                            <X className="w-3 h-3 text-destructive" />
                           </button>
                         )}
                       </Link>

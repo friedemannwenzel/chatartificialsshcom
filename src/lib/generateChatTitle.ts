@@ -7,11 +7,11 @@ export async function generateChatTitle(firstMessage: string): Promise<string> {
         messages: [
           {
             role: "system",
-            content: "You generate concise titles (max 40 chars) for conversations based on the first user message. Return only the title without quotes.",
+            content: "You generate concise titles (max 32 chars) for conversations based on the first user message. Return only the title without quotes.",
           },
           {
             role: "user",
-            content: `Generate a short, descriptive title (max 40 chars) for a chat that starts with this message: "${firstMessage}"`,
+            content: `Generate a short, descriptive title (max 32 chars) for a chat that starts with this message: "${firstMessage}"`,
           },
         ],
         model: "gemini-2.0-flash",

@@ -10,52 +10,10 @@ interface CustomThemeProviderProps {
 export function CustomThemeProvider({ children }: CustomThemeProviderProps) {
   const { currentTheme, isInitialized } = useCustomTheme();
 
-  // Ensure theme is applied on every render
+  // The theme is fully managed inside useCustomTheme, so nothing else is needed here.
+  // We just ensure the hook is initialized.
   useEffect(() => {
-    if (isInitialized && typeof window !== "undefined") {
-      const applyStoredTheme = async () => {
-        const savedTheme = localStorage.getItem("custom-theme");
-        if (savedTheme && savedTheme !== "default") {
-          // Re-apply the theme to ensure it persists
-          const { themePresets } = await import("@/hooks/useCustomTheme");
-          const theme = themePresets.find((t) => t.id === savedTheme);
-          if (theme) {
-            const isDark = document.documentElement.classList.contains("dark");
-            const variables = isDark ? theme.variables.dark : theme.variables.light;
-            const root = document.documentElement;
-            Object.entries(variables).forEach(([property, value]) => {
-              root.style.setProperty(property, value as string);
-            });
-          }
-        }
-      };
-
-              // Apply theme immediately
-        applyStoredTheme().catch(console.error);
-
-              // Also apply on route changes (for Next.js navigation)
-        const handleRouteChange = () => {
-          setTimeout(() => applyStoredTheme(), 50);
-        };
-
-      // Listen for navigation events
-      window.addEventListener("popstate", handleRouteChange);
-      
-              // For Next.js App Router, we need to listen for DOM changes
-        const observer = new MutationObserver(() => {
-          setTimeout(() => applyStoredTheme(), 50);
-        });
-
-      observer.observe(document.body, {
-        childList: true,
-        subtree: true,
-      });
-
-      return () => {
-        window.removeEventListener("popstate", handleRouteChange);
-        observer.disconnect();
-      };
-    }
+    /* No extra side-effects required */
   }, [isInitialized, currentTheme]);
 
   return <>{children}</>;

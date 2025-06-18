@@ -756,7 +756,14 @@ export function useCustomTheme() {
       if (userPreferences) {
         // User has preferences in database
         themeToApply = userPreferences.theme || "default";
-        syncEnabled = false; // Remove sync feature for now since it's not in the schema
+        // Determine whether syncing is currently enabled based on localStorage flag.
+        // If no local flag is present, assume syncing is enabled because a preference record exists.
+        const localSyncSetting = localStorage.getItem("theme-sync-enabled");
+        if (localSyncSetting !== null) {
+          syncEnabled = localSyncSetting === "true";
+        } else {
+          syncEnabled = true;
+        }
         
         if (syncEnabled) {
           // If sync is enabled, use database theme and update localStorage

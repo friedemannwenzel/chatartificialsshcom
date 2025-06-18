@@ -375,6 +375,10 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
       }
 
       if (assistantMessage) {
+        // Hide the streaming preview before persisting the final message to prevent duplicate bubbles
+        setStreamingMessage("");
+        setStreamingGroundingMetadata(null);
+
         await addMessage({
           chatId,
           content: assistantMessage,
@@ -394,9 +398,6 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
           }
         }
       }
-
-      setStreamingMessage("");
-      setStreamingGroundingMetadata(null);
     } catch (error) {
       console.error("Error getting AI response:", error);
     } finally {

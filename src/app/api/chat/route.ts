@@ -47,76 +47,70 @@ function markdownToOpenAIParts(md: string): ({ type: 'text'; text: string } | { 
 
 export async function POST(req: NextRequest) {
   try {
+    // Parse body early to inspect skipRateLimit flag
+    const {
+      messages,
+      model = 'gemini-2.0-flash',
+      webSearch = false,
+      skipRateLimit = false,
+    } = await req.json();
+
+    // Authenticate user (still required for all requests)
     const { userId } = await auth();
-    
     if (!userId) {
       return NextResponse.json(
-        { error: 'Unauthorized' }, 
-        { 
-          status: 401,
-          headers: {
+        { error: 'Unauthorized' },
+        { status: 401, headers: {
             'Cache-Control': 'no-cache, no-store, must-revalidate, private',
             'Pragma': 'no-cache',
             'Expires': '0',
-          }
-        }
+          } }
       );
     }
 
-    // Check rate limit before processing the message
-    const rateLimitResponse = await fetch(`${req.nextUrl.origin}/api/rate-limit`, {
-      method: 'GET',
-      headers: {
-        'Authorization': req.headers.get('Authorization') || '',
-        'Cookie': req.headers.get('Cookie') || '',
-      },
-    });
-
-    if (!rateLimitResponse.ok) {
-      return NextResponse.json(
-        { error: 'Rate limit check failed' },
-        { status: 500 }
-      );
-    }
-
-    const rateLimit = await rateLimitResponse.json();
-    
-    if (!rateLimit.canSendMessage) {
-      const resetDate = new Date(rateLimit.resetDate).toLocaleDateString();
-      return NextResponse.json(
-        { 
-          error: `Rate limit exceeded. You have used ${rateLimit.currentCount}/${rateLimit.limit} messages this week. Your limit resets on ${resetDate}.` 
+    // Only perform rate-limit checks and increments for *real* chat completions.
+    if (!skipRateLimit) {
+      // Check rate limit before processing the message
+      const rateLimitResponse = await fetch(`${req.nextUrl.origin}/api/rate-limit`, {
+        method: 'GET',
+        headers: {
+          Authorization: req.headers.get('Authorization') || '',
+          Cookie: req.headers.get('Cookie') || '',
         },
-        { status: 429 }
-      );
+      });
+
+      if (!rateLimitResponse.ok) {
+        return NextResponse.json({ error: 'Rate limit check failed' }, { status: 500 });
+      }
+
+      const rateLimit = await rateLimitResponse.json();
+      if (!rateLimit.canSendMessage) {
+        const resetDate = new Date(rateLimit.resetDate).toLocaleDateString();
+        return NextResponse.json(
+          { error: `Rate limit exceeded. You have used ${rateLimit.currentCount}/${rateLimit.limit} messages this week. Your limit resets on ${resetDate}.` },
+          { status: 429 }
+        );
+      }
+
+      // Increment message count
+      const incrementResponse = await fetch(`${req.nextUrl.origin}/api/rate-limit`, {
+        method: 'POST',
+        headers: {
+          Authorization: req.headers.get('Authorization') || '',
+          Cookie: req.headers.get('Cookie') || '',
+        },
+      });
+
+      if (!incrementResponse.ok) {
+        return NextResponse.json({ error: 'Failed to update rate limit' }, { status: 500 });
+      }
     }
 
-    // Increment message count
-    const incrementResponse = await fetch(`${req.nextUrl.origin}/api/rate-limit`, {
-      method: 'POST',
-      headers: {
-        'Authorization': req.headers.get('Authorization') || '',
-        'Cookie': req.headers.get('Cookie') || '',
-      },
-    });
-
-    if (!incrementResponse.ok) {
-      return NextResponse.json(
-        { error: 'Failed to update rate limit' },
-        { status: 500 }
-      );
-    }
-
-    const { messages, model = 'gemini-2.0-flash', webSearch = false } = await req.json();
-
+    // Validate model/provider after rate-limit logic
     const isOpenAI = model.startsWith('gpt') || model.startsWith('o1');
     const isGemini = model.startsWith('gemini');
-
     if (!isOpenAI && !isGemini) {
-      return NextResponse.json(
-        { error: 'Only OpenAI and Gemini models are supported' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Only OpenAI and Gemini models are supported' }, { status: 400 });
     }
 
     const encoder = new TextEncoder();

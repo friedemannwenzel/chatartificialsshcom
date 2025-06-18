@@ -15,6 +15,7 @@ export async function generateChatTitle(firstMessage: string): Promise<string> {
           },
         ],
         model: "gemini-2.0-flash",
+        skipRateLimit: true,
       }),
     });
 

@@ -156,6 +156,8 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const { user } = useUser();
   const router = useRouter();
+  const [pendingModel, setPendingModel] = useState<AIModel | undefined>();
+  const [pendingWebSearch, setPendingWebSearch] = useState<boolean | undefined>();
 
   const addMessage = useMutation(api.chats.addMessage);
   const updateChatTitle = useMutation(api.chats.updateChatTitle);
@@ -414,10 +416,10 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
       const needsResponse = messages.length % 2 === 1;
       
       if (needsResponse) {
-        handleAIResponse();
+        handleAIResponse(pendingModel, pendingWebSearch);
       }
     }
-  }, [messages, isLoading, streamingMessage, handleAIResponse]);
+  }, [messages, isLoading, streamingMessage, handleAIResponse, pendingModel, pendingWebSearch]);
 
   const handleSendMessage = async (content: string, model: AIModel, webSearch?: boolean, attachments?: Array<{ url: string; name: string; type: string; size?: number }>) => {
     if (isLoading || !user?.id) return;
@@ -457,10 +459,11 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
         attachments,
       });
 
-      // Store the model and web search preference for the AI response
-      setTimeout(() => {
-        handleAIResponse(model, webSearch);
-      }, 100);
+      // Remember model & web search preference for upcoming AI response
+      setPendingModel(model);
+      setPendingWebSearch(webSearch);
+
+      // Removed manual handleAIResponse call to avoid duplicate responses
     } catch (error) {
       console.error("Error sending message:", error);
     }

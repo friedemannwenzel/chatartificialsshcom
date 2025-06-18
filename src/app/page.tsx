@@ -21,8 +21,32 @@ export default function HomePage() {
   const addMessage = useMutation(api.chats.addMessage);
   const updateChatTitle = useMutation(api.chats.updateChatTitle);
 
-  const handleSendMessage = async (content: string, model: AIModel, webSearch?: boolean) => {
-    if (!content.trim() || isLoading || !user?.id) return;
+  const handleSendMessage = async (
+    content: string,
+    model: AIModel,
+    webSearch?: boolean,
+    attachments?: Array<{ url: string; name: string; type: string; size?: number }>
+  ) => {
+    if (isLoading || !user?.id) return;
+
+    // Combine text content with attachments as markdown, mirroring ChatInterface behavior
+    let finalContent = content.trim();
+    if (attachments && attachments.length > 0) {
+      attachments.forEach((file) => {
+        const isImage = file.type?.startsWith("image/") ||
+          (!file.type && [".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".svg"].some(ext => 
+            file.name.toLowerCase().endsWith(ext)
+          ));
+        if (isImage) {
+          finalContent += `\n\n![${file.name}](${file.url})`;
+        } else {
+          finalContent += `\n\n[${file.name}](${file.url})`;
+        }
+      });
+    }
+
+    const hasContent = finalContent.length > 0 || (attachments && attachments.length > 0);
+    if (!hasContent) return;
 
     const newChatId = uuidv4();
     setIsLoading(true);
@@ -37,14 +61,16 @@ export default function HomePage() {
       // Add user message
       await addMessage({
         chatId: newChatId,
-        content: content.trim(),
+        content: finalContent,
         role: "user",
+        attachments,
       });
 
       // Generate title from first message
-      const title = content.length > 40 
-        ? content.substring(0, 40) + "..."
-        : content;
+      const titleSource = finalContent || "New chat";
+      const title = titleSource.length > 40 
+        ? titleSource.substring(0, 40) + "..."
+        : titleSource;
       
       await updateChatTitle({
         chatId: newChatId,

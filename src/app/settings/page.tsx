@@ -131,7 +131,7 @@ export default function SettingsPage() {
                   Contact Support
                 </CardTitle>
                 <CardDescription>
-                  Get help or provide feedback about T3 Chat
+                  Get help or provide feedback about ArtificialSSH Chat
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">

@@ -97,7 +97,7 @@ export default function HomePage() {
                     <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                       <MessageSquare className="w-10 h-10 text-primary" />
                     </div>
-                    <h1 className="text-3xl font-bold mb-2">Welcome to T3 Chat</h1>
+                    <h1 className="text-3xl font-bold mb-2">Welcome to ArtificialSSH Chat</h1>
                     <p className="text-muted-foreground">
                       Start a conversation with AI and unlock new possibilities.
                     </p>
@@ -151,7 +151,7 @@ export default function HomePage() {
               <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <MessageSquare className="w-10 h-10 text-primary" />
               </div>
-              <h1 className="text-4xl font-bold mb-2">T3 Chat</h1>
+              <h1 className="text-4xl font-bold mb-2">ArtificialSSH Chat</h1>
               <p className="text-muted-foreground text-lg">
                 The ultimate AI chat experience
               </p>

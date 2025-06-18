@@ -24,8 +24,8 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'chat.artificialssh.com',
-  description: 'AI-powered chat application with file upload support for ChatGPT and Gemini',
+  title: 'ArtificialSSH Chat',
+  description: 'Modern AI chat application featuring multiple providers, beautiful UI, and comprehensive rate limiting - chat.artificialssh.com',
 }
 
 export default function RootLayout({

@@ -1,6 +1,6 @@
 {
-  "name": "t3chatclone",
-  "version": "0.1.0",
+  "name": "artificialssh-chat",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",

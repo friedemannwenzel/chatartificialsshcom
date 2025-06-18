@@ -1,4 +1,4 @@
-# 🏆 T3 ChatCloneathon - Victory Plan (FINAL SPRINT)
+# 🏆 ArtificialSSH Chat - Victory Plan (FINAL SPRINT)
 
 ## Mission: Win with 8 Days Left
 **Goal:** Win 1st place ($5,000) with limited time but maximum commitment

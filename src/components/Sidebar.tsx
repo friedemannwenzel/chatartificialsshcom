@@ -201,7 +201,7 @@ export function Sidebar({
               {/* Header with Search Bar */}
               <div className="p-4 border-b border-white/10">
                 <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-lg font-semibold tracking-tight">T3 Chat</h2>
+                  <h2 className="text-lg font-semibold tracking-tight">ArtificialSSH</h2>
                   <div className="flex items-center gap-2">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -385,7 +385,7 @@ export function Sidebar({
         {/* Header with Search Bar */}
         <div className="p-4 border-b border-white/10">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-semibold tracking-tight">T3 Chat</h2>
+            <h2 className="text-lg font-semibold tracking-tight">ArtificialSSH</h2>
             <div className="flex items-center gap-2">
               <Button
                 onClick={onToggle}

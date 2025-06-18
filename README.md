@@ -141,12 +141,7 @@ By default, users can send 15 messages per week. To modify this:
 
 ### AI Models
 
-Add or remove AI models by editing `src/lib/models.ts`. The app supports:
-
-- OpenAI: GPT-4, GPT-3.5-turbo, O1 models
-- Google: Gemini 2.0, Gemini 1.5 Pro
-- Anthropic: Claude (via OpenAI-compatible API)
-- xAI: Grok models
+Add or remove AI models by editing `src/lib/models.ts`. 
 
 ### Themes
 
@@ -156,58 +151,9 @@ Customize themes in `src/components/ThemeSelector.tsx`. The app includes:
 - Light/dark mode variants
 - Custom CSS variables for easy theming
 
-## 📱 Deployment
-
-### Vercel (Recommended)
-
-1. Push your code to GitHub
-2. Connect your repo to [Vercel](https://vercel.com)
-3. Add environment variables in Vercel dashboard
-4. Deploy!
-
-### Other Platforms
-
-The app works on any platform supporting Next.js:
-- Netlify
-- Railway
-- Docker
-- Self-hosted servers
-
-## 🔒 Security Features
-
-- **Authentication**: Secure user sessions with Clerk
-- **Rate Limiting**: Prevents API abuse with weekly limits
-- **API Protection**: All endpoints require authentication
-- **CORS**: Proper cross-origin request handling
-- **Environment Isolation**: Secure environment variable handling
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature-name`
-3. Commit changes: `git commit -am 'Add feature'`
-4. Push to branch: `git push origin feature-name`
-5. Submit a Pull Request
-
 ## 📄 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🆘 Support
-
-- 📚 [Documentation](https://your-docs-url)
-- 💬 [Discord Community](https://your-discord-url)
-- 🐛 [Report Issues](https://github.com/your-repo/issues)
-- 📧 [Email Support](mailto:your-email@domain.com)
-
-## 🙏 Acknowledgments
-
-- [Next.js](https://nextjs.org) - React framework
-- [Convex](https://convex.dev) - Real-time database
-- [Clerk](https://clerk.com) - User authentication
-- [Tailwind CSS](https://tailwindcss.com) - Styling
-- [Shadcn/ui](https://ui.shadcn.com) - UI components
-- [UploadThing](https://uploadthing.com) - File uploads
 
 ---
 

@@ -8,10 +8,10 @@ A modern, full-stack AI chat application built with Next.js 15, featuring multip
 
 ## ✨ Features
 
-- 🤖 **Multiple AI Providers**: OpenAI (GPT-4, GPT-3.5, O1), Google Gemini, Anthropic Claude, xAI
+- 🤖 **Multiple AI Providers**: OpenAI (GPT-4o mini), Google Gemini (Gemini 2.0 flash)
 - 🔐 **Authentication**: Secure user management with Clerk
 - 📊 **Real-time Database**: Powered by Convex for instant data synchronization
-- 📎 **File Attachments**: Upload and share images, documents, and media
+- 📎 **File Attachments**: Upload and share images, documents, and media (via uploadthing)
 - 🌐 **Web Search**: Integrated web search for Gemini models
 - 🎨 **Beautiful Themes**: Multiple theme presets with light/dark mode
 - ⚡ **Rate Limiting**: 15 messages per week with usage tracking

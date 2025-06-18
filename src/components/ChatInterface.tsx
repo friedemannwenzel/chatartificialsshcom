@@ -643,7 +643,7 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
                           )}
                         </>
                       ) : (
-                        <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
+                        <MessageContent content={message.content} />
                       )}
                     </>
                   )}

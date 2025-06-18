@@ -6,7 +6,7 @@ import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark, oneLight } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
-import { Copy, Check } from 'lucide-react';
+import { Copy, Check, FileText } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -175,13 +175,15 @@ export function MessageContent({ content, className }: MessageContentProps) {
           },
 
           a({ href, children }) {
+            const isFile = href && /\.(pdf|docx?|txt|rtf|xls[x]?|csv|pptx?)(\?.*)?$/i.test(href);
             return (
               <a
                 href={href}
-                className="text-primary hover:text-primary/80 underline underline-offset-2"
+                className="text-primary hover:text-primary/80 underline underline-offset-2 inline-flex items-center gap-1"
                 target="_blank"
                 rel="noopener noreferrer"
               >
+                {isFile && <FileText className="w-4 h-4" />}
                 {children}
               </a>
             );

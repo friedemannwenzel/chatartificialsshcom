@@ -12,7 +12,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
 import { models, AIModel } from "@/lib/models";
 import { storage, CloudSyncOptions, UserPreferences } from "@/lib/storage";
 import { useUser } from "@clerk/nextjs";
@@ -345,23 +344,14 @@ export function MessageInputBar({
                 setAttachments((prev) => [...prev, ...files]);
               }}
               onUploadError={() => {}}
+              className="ut-button:h-9 ut-button:w-9 ut-button:p-0 ut-button:bg-muted ut-button:hover:bg-muted/70 ut-button:rounded-md ut-button:text-foreground"
               appearance={{
-                button: "h-9 px-3 bg-transparent hover:bg-muted/20 rounded-md border border-input text-sm font-medium",
+                allowedContent: "hidden",
+              }}
+              content={{
+                button: () => <Paperclip className="w-4 h-4" />,
               }}
             />
-
-            {/* Model Capabilities */}
-            <div className="flex items-center gap-1 ml-auto">
-              {selectedModel.capabilities?.map((capability) => (
-                <Badge
-                  key={capability}
-                  variant="secondary"
-                  className={`text-xs px-2 py-0.5 ${getProviderColor(selectedModel.provider)}`}
-                >
-                  {capability}
-                </Badge>
-              ))}
-            </div>
           </div>
 
           {/* Attached Files Display */}

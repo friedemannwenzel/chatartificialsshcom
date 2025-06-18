@@ -179,7 +179,12 @@ export function MessageContent({ content, className }: MessageContentProps) {
             return (
               <a
                 href={href}
-                className="text-primary hover:text-primary/80 underline underline-offset-2 inline-flex items-center gap-1"
+                className={cn(
+                  "inline-flex items-center gap-2 px-2 py-1 rounded-md font-medium transition-colors",
+                  isFile
+                    ? "bg-muted text-foreground hover:bg-muted/80"
+                    : "text-primary hover:text-primary/80 underline underline-offset-2"
+                )}
                 target="_blank"
                 rel="noopener noreferrer"
               >

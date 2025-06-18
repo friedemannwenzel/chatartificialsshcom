@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, Globe, ChevronDown, Sparkles, Brain, Eye, X, Paperclip, FileText, Image as ImageIcon, FileVideo, FileAudio } from "lucide-react";
+import { Send, Globe, ChevronDown, Sparkles, Brain, Eye, X, Paperclip, FileText, Image as ImageIcon, FileVideo, FileAudio, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -12,6 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { models, AIModel } from "@/lib/models";
 import { storage, CloudSyncOptions, UserPreferences } from "@/lib/storage";
 import { useUser } from "@clerk/nextjs";
@@ -55,20 +56,7 @@ const getModelIcon = (model: AIModel) => {
   return <Sparkles className="w-4 h-4" />;
 };
 
-const getProviderColor = (provider: string) => {
-  switch (provider) {
-    case 'openai':
-      return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
-    case 'google':
-      return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
-    case 'anthropic':
-      return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400';
-    case 'xai':
-      return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400';
-    default:
-      return 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400';
-  }
-};
+
 
 // Auto-resize textarea hook
 const useAutoSizeTextArea = (
@@ -95,6 +83,7 @@ export function MessageInputBar({
   const [attachments, setAttachments] = useState<Array<{ url: string; name: string; type: string; size?: number }>>([]);
   const [selectedModel, setSelectedModel] = useState<AIModel>(() => storage.getSelectedModel());
   const [webSearchEnabled, setWebSearchEnabled] = useState(false);
+  const [rateLimitError, setRateLimitError] = useState<string>("");
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const { user } = useUser();
 
@@ -120,7 +109,7 @@ export function MessageInputBar({
             theme: preferences.theme,
           });
         },
-        getCloudPreferences: async (userId: string) => {
+        getCloudPreferences: async () => {
           return null;
         },
       };
@@ -131,7 +120,7 @@ export function MessageInputBar({
         }
       });
     }
-  }, [user?.id, setUserPreferences]);
+  }, [user?.id, setUserPreferences, selectedModel.id]);
 
   // Sync cloud preferences when they're loaded
   useEffect(() => {
@@ -170,16 +159,41 @@ export function MessageInputBar({
     }
   };
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (disabled) return;
 
     const trimmed = message.trim();
     const hasContent = trimmed.length > 0 || attachments.length > 0;
     if (!hasContent) return;
 
-    onSendMessage(trimmed, selectedModel, webSearchEnabled, attachments);
-    setMessage("");
-    setAttachments([]);
+    // Clear any previous rate limit error
+    setRateLimitError("");
+
+    // Check rate limit before sending
+    try {
+      const response = await fetch('/api/rate-limit', {
+        method: 'GET',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to check rate limit');
+      }
+
+      const rateLimit = await response.json();
+      
+      if (!rateLimit.canSendMessage) {
+        const resetDate = new Date(rateLimit.resetDate).toLocaleDateString();
+        setRateLimitError(`Rate limit exceeded. You have used ${rateLimit.currentCount}/${rateLimit.limit} messages this week. Your limit resets on ${resetDate}.`);
+        return;
+      }
+
+      onSendMessage(trimmed, selectedModel, webSearchEnabled, attachments);
+      setMessage("");
+      setAttachments([]);
+    } catch (error) {
+      console.error('Rate limit check failed:', error);
+      setRateLimitError("Failed to check rate limit. Please try again.");
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -240,6 +254,13 @@ export function MessageInputBar({
     <div className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container max-w-4xl mx-auto p-4">
         <div className="flex flex-col gap-3">
+          {/* Rate Limit Error Alert */}
+          {rateLimitError && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>{rateLimitError}</AlertDescription>
+            </Alert>
+          )}
           {/* Model Selection and Web Search Row */}
           <div className="flex items-center gap-3 flex-wrap">
             <DropdownMenu>

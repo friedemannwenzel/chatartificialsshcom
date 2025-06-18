@@ -28,6 +28,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { QuickUsageIndicator } from "./QuickUsageIndicator";
 
 type SidebarState = "open" | "collapsed" | "hover";
 
@@ -277,7 +278,7 @@ export function Sidebar({
                         {groupName}
                       </h3>
                       <div className="space-y-1">
-                        {groupChats.map((chat, idx) => (
+                        {groupChats.map((chat) => (
                           <div
                             key={chat._id}
                             onMouseEnter={() => setHoveredChat(chat._id)}
@@ -474,7 +475,7 @@ export function Sidebar({
                   {groupName}
                 </h3>
                 <div className="space-y-1">
-                  {groupChats.map((chat, idx) => (
+                  {groupChats.map((chat) => (
                     <div
                       key={chat._id}
                       onMouseEnter={() => setHoveredChat(chat._id)}
@@ -548,10 +549,11 @@ export function Sidebar({
                 </AvatarFallback>
               </Avatar>
               
-              <div className="flex flex-col items-start text-left flex-1">
+              <div className="flex flex-col items-start text-left flex-1 gap-1">
                 <span className="text-sm font-medium truncate max-w-[160px]">
                   {user?.fullName || user?.emailAddresses[0]?.emailAddress || "User"}
                 </span>
+                <QuickUsageIndicator />
               </div>
               
               <Settings className="h-4 w-4 opacity-60" />

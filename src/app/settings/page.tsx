@@ -5,9 +5,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings, User, CreditCard, Shield, Palette, Bot, Mail, LogOut } from "lucide-react";
+import { Settings, User, Shield, Palette, Mail, LogOut } from "lucide-react";
 import { ThemeSelector } from "@/components/ThemeSelector";
 import { useSecureLogout } from "@/hooks/useSecureLogout";
+import { MessageUsageBar } from "@/components/MessageUsageBar";
 
 export default function SettingsPage() {
   const { openUserProfile } = useClerk();
@@ -80,25 +81,7 @@ export default function SettingsPage() {
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <CreditCard className="h-5 w-5" />
-                    Subscription
-                  </CardTitle>
-                  <CardDescription>
-                    Upgrade to unlock more features
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="text-sm text-muted-foreground">
-                    You&apos;re currently on the Free plan
-                  </div>
-                  <Button className="w-full">
-                    Upgrade to Pro
-                  </Button>
-                </CardContent>
-              </Card>
+              <MessageUsageBar />
 
               <Card>
                 <CardHeader>

@@ -15,6 +15,7 @@ import type {
 } from "convex/server";
 import type * as chats from "../chats.js";
 import type * as preferences from "../preferences.js";
+import type * as rateLimiting from "../rateLimiting.js";
 import type * as userPreferences from "../userPreferences.js";
 
 /**
@@ -28,6 +29,7 @@ import type * as userPreferences from "../userPreferences.js";
 declare const fullApi: ApiFromModules<{
   chats: typeof chats;
   preferences: typeof preferences;
+  rateLimiting: typeof rateLimiting;
   userPreferences: typeof userPreferences;
 }>;
 export declare const api: FilterApi<

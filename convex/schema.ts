@@ -63,4 +63,13 @@ export default defineSchema({
     lastUsed: v.number(),
   })
     .index("by_userId", ["userId"]),
+
+  userMessageUsage: defineTable({
+    userId: v.string(),
+    weekStartDate: v.number(),
+    messageCount: v.number(),
+    lastUpdated: v.number(),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_userId_week", ["userId", "weekStartDate"]),
 }); 

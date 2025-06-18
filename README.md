@@ -15,7 +15,6 @@ A modern, full-stack AI chat application built with Next.js 15, featuring multip
 - 🌐 **Web Search**: Integrated web search for Gemini models
 - 🎨 **Beautiful Themes**: Multiple theme presets with light/dark mode
 - ⚡ **Rate Limiting**: 15 messages per week with usage tracking
-- 📱 **Responsive Design**: Works perfectly on desktop and mobile
 - 🗂️ **Chat Organization**: Organized chat history with search functionality
 - 🔄 **Real-time Streaming**: Live AI responses as they generate
 

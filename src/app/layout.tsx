@@ -9,8 +9,6 @@ import './globals.css'
 import ConvexClientProvider from '@/components/ConvexClientProvider'
 import { SidebarLayout } from '@/components/SidebarLayout'
 import { ThemeProvider } from "@/components/theme-provider"
-import { CustomThemeProvider } from "@/components/CustomThemeProvider"
-import { ThemeScript } from "@/components/ThemeScript"
 import { SecurityProvider } from "@/components/SecurityProvider"
 
 const geistSans = Geist({
@@ -36,9 +34,6 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
-        <head>
-          <ThemeScript />
-        </head>
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
           <ThemeProvider
             attribute="class"
@@ -47,18 +42,16 @@ export default function RootLayout({
             disableTransitionOnChange
           >
           <ConvexClientProvider>
-            <CustomThemeProvider>
-              <SecurityProvider>
-                <SignedIn>
-                  <SidebarLayout>
-                    {children}
-                  </SidebarLayout>
-                </SignedIn>
-                <SignedOut>
+            <SecurityProvider>
+              <SignedIn>
+                <SidebarLayout>
                   {children}
-                </SignedOut>
-              </SecurityProvider>
-            </CustomThemeProvider>
+                </SidebarLayout>
+              </SignedIn>
+              <SignedOut>
+                {children}
+              </SignedOut>
+            </SecurityProvider>
           </ConvexClientProvider>
           </ThemeProvider>
         </body>

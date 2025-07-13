@@ -59,7 +59,6 @@ export default defineSchema({
       supportsWebSearch: v.optional(v.boolean()),
       capabilities: v.optional(v.array(v.string())),
     }),
-    theme: v.optional(v.string()),
     lastUsed: v.number(),
   })
     .index("by_userId", ["userId"]),

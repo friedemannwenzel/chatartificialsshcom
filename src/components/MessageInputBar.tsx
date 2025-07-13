@@ -106,7 +106,6 @@ export function MessageInputBar({
           await setUserPreferences({
             userId,
             selectedModel: preferences.selectedModel,
-            theme: preferences.theme,
           });
         },
         getCloudPreferences: async () => {
@@ -143,7 +142,6 @@ export function MessageInputBar({
         await setUserPreferences({
           userId,
           selectedModel: preferences.selectedModel,
-          theme: preferences.theme,
         });
       },
     } : undefined;

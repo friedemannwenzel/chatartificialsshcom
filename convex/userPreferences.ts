@@ -26,7 +26,6 @@ export const setUserPreferences = mutation({
       supportsWebSearch: v.optional(v.boolean()),
       capabilities: v.optional(v.array(v.string())),
     }),
-    theme: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
@@ -39,14 +38,12 @@ export const setUserPreferences = mutation({
     if (existing) {
       await ctx.db.patch(existing._id, {
         selectedModel: args.selectedModel,
-        theme: args.theme,
         lastUsed: now,
       });
     } else {
       await ctx.db.insert("userPreferences", {
         userId: args.userId,
         selectedModel: args.selectedModel,
-        theme: args.theme,
         lastUsed: now,
       });
     }

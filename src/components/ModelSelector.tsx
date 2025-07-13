@@ -1,144 +1,123 @@
 "use client";
 
 import { useState } from "react";
-import { Check, ChevronDown, Zap, Brain, Eye, Sparkles } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Badge } from "@/components/ui/badge";
 import { models, AIModel } from "@/lib/models";
+import Image from "next/image";
 
 interface ModelSelectorProps {
   selectedModel: AIModel;
   onModelChange: (model: AIModel) => void;
+  className?: string;
 }
 
-const getModelIcon = (model: AIModel) => {
-  if (model.provider === 'google') {
-    return <Sparkles className="w-4 h-4" />;
-  }
-  if (model.id.includes('4o')) {
-    return <Eye className="w-4 h-4" />;
-  }
-  if (model.id.includes('mini')) {
-    return <Zap className="w-4 h-4" />;
-  }
-  return <Brain className="w-4 h-4" />;
-};
-
-const getProviderColor = (provider: string) => {
+const getProviderIcon = (provider: string) => {
   switch (provider) {
     case 'openai':
-      return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+      return "/OpenAI.svg";
     case 'google':
-      return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+      return "/Gemini.svg";
+    case 'anthropic':
+      return "/Anthropic.svg";
+    case 'xai':
+      return "/Xai.svg";
     default:
-      return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+      return null;
   }
 };
 
-export function ModelSelector({ selectedModel, onModelChange }: ModelSelectorProps) {
-  const [open, setOpen] = useState(false);
+export function ModelSelector({ selectedModel, onModelChange, className = "" }: ModelSelectorProps) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const groupedModels = models.reduce((acc, model) => {
+    if (!acc[model.provider]) {
+      acc[model.provider] = [];
+    }
+    acc[model.provider].push(model);
+    return acc;
+  }, {} as Record<string, AIModel[]>);
+
+  const providerLabels = {
+    openai: "OpenAI",
+    google: "Google",
+    anthropic: "Anthropic",
+    xai: "xAI",
+  };
+
+  const handleModelSelect = (model: AIModel) => {
+    onModelChange(model);
+    setIsOpen(false);
+  };
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className="w-[280px] justify-between"
-        >
-          <div className="flex items-center gap-2">
-            {getModelIcon(selectedModel)}
-            <span className="truncate">{selectedModel.name}</span>
-            <Badge 
-              variant="secondary" 
-              className={`text-xs ${getProviderColor(selectedModel.provider)}`}
-            >
-              {selectedModel.provider.toUpperCase()}
-            </Badge>
+    <div className={`relative ${className}`}>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => setIsOpen(!isOpen)}
+        className="h-8 px-3 text-sm font-medium hover:bg-muted/50 justify-between min-w-[120px]"
+      >
+        <div className="flex items-center gap-2">
+          {getProviderIcon(selectedModel.provider) && (
+            <Image
+              src={getProviderIcon(selectedModel.provider)!}
+              alt={selectedModel.provider}
+              width={16}
+              height={16}
+              className="w-4 h-4"
+            />
+          )}
+          <span>{selectedModel.name}</span>
+        </div>
+        <ChevronDown className="w-4 h-4 opacity-50" />
+      </Button>
+
+      {isOpen && (
+        <>
+          <div 
+            className="fixed inset-0 z-40" 
+            onClick={() => setIsOpen(false)}
+          />
+          <div className="absolute bottom-full left-0 mb-2 w-80 bg-popover border border-border rounded-md shadow-lg z-50">
+            <div className="max-h-64 overflow-y-auto">
+              {Object.entries(groupedModels).map(([provider, providerModels]) => (
+                <div key={provider} className="p-2">
+                  <div className="flex items-center gap-2 px-2 py-1 text-sm font-medium text-muted-foreground">
+                    {getProviderIcon(provider) && (
+                      <Image
+                        src={getProviderIcon(provider)!}
+                        alt={provider}
+                        width={16}
+                        height={16}
+                        className="w-4 h-4"
+                      />
+                    )}
+                    {providerLabels[provider as keyof typeof providerLabels]}
+                  </div>
+                  {providerModels.map((model) => (
+                    <button
+                      key={model.id}
+                      onClick={() => handleModelSelect(model)}
+                      className="w-full flex items-center justify-between p-2 hover:bg-muted/50 rounded-md text-left transition-colors"
+                    >
+                      <div className="flex flex-col">
+                        <span className="font-medium text-sm">{model.name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {model.description}
+                        </span>
+                      </div>
+                      {selectedModel.id === model.id && (
+                        <div className="w-2 h-2 bg-primary rounded-full" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              ))}
+            </div>
           </div>
-          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-[320px] p-0">
-        <Command>
-          <CommandInput placeholder="Search models..." />
-          <CommandList>
-            <CommandEmpty>No models found.</CommandEmpty>
-            <CommandGroup heading="OpenAI Models">
-              {models.filter((model: AIModel) => model.provider === 'openai').map((model: AIModel) => (
-                <CommandItem
-                  key={model.id}
-                  value={model.id}
-                  onSelect={() => {
-                    onModelChange(model);
-                    setOpen(false);
-                  }}
-                >
-                  <div className="flex items-center justify-between w-full">
-                    <div className="flex items-center gap-2">
-                      {getModelIcon(model)}
-                      <div className="flex flex-col">
-                        <span className="font-medium">{model.name}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {model.description}
-                        </span>
-                      </div>
-                    </div>
-                    <Check
-                      className={`ml-auto h-4 w-4 ${
-                        selectedModel.id === model.id ? "opacity-100" : "opacity-0"
-                      }`}
-                    />
-                  </div>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-            <CommandGroup heading="Google Models">
-              {models.filter((model: AIModel) => model.provider === 'google').map((model: AIModel) => (
-                <CommandItem
-                  key={model.id}
-                  value={model.id}
-                  onSelect={() => {
-                    onModelChange(model);
-                    setOpen(false);
-                  }}
-                >
-                  <div className="flex items-center justify-between w-full">
-                    <div className="flex items-center gap-2">
-                      {getModelIcon(model)}
-                      <div className="flex flex-col">
-                        <span className="font-medium">{model.name}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {model.description}
-                        </span>
-                      </div>
-                    </div>
-                    <Check
-                      className={`ml-auto h-4 w-4 ${
-                        selectedModel.id === model.id ? "opacity-100" : "opacity-0"
-                      }`}
-                    />
-                  </div>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
+        </>
+      )}
+    </div>
   );
 } 

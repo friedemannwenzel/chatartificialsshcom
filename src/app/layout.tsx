@@ -4,15 +4,15 @@ import {
   SignedIn,
   SignedOut,
 } from '@clerk/nextjs'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Inter, Geist_Mono } from 'next/font/google'
 import './globals.css'
 import ConvexClientProvider from '@/components/ConvexClientProvider'
 import { SidebarLayout } from '@/components/SidebarLayout'
 import { ThemeProvider } from "@/components/theme-provider"
 import { SecurityProvider } from "@/components/SecurityProvider"
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+const inter = Inter({
+  variable: '--font-inter',
   subsets: ['latin'],
 })
 
@@ -34,7 +34,7 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
-        <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <body className={`${inter.variable} ${geistMono.variable} antialiased`}>
           <ThemeProvider
             attribute="class"
             defaultTheme="system"

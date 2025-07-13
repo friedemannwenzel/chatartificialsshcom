@@ -10,22 +10,11 @@ import {
   Plus, 
   MessageSquare, 
   PanelLeft,
-  Settings,
-  Moon,
-  Sun,
-  Monitor,
   X,
   Search
 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { QuickUsageIndicator } from "./QuickUsageIndicator";
@@ -46,7 +35,6 @@ export function Sidebar({
   const router = useRouter();
   const params = useParams();
   const currentChatId = params?.id as string;
-  const { setTheme, theme } = useTheme();
   const [search, setSearch] = useState("");
   const [hoveredChat, setHoveredChat] = useState<string | null>(null);
   const deleteChat = useMutation(api.chats.deleteChat);

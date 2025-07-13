@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Sidebar } from "./Sidebar";
 
 interface SidebarLayoutProps {
@@ -22,7 +22,6 @@ export function SidebarLayout({ children }: SidebarLayoutProps) {
 
   // Determine if sidebar should be visible
   const shouldShowSidebar = sidebarState === "open";
-  const isFloating = false;
 
   return (
     <div className="flex h-screen bg-background">

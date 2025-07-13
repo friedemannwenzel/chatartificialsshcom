@@ -5,7 +5,7 @@ import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowDown, MoreHorizontal, RotateCcw, Edit, Copy, GitBranch, Check, ExternalLink, Globe, ChevronDown, ChevronRight } from "lucide-react";
+import { MoreHorizontal, RotateCcw, Edit, Copy, GitBranch, Check, ExternalLink, Globe, ChevronDown, ChevronRight } from "lucide-react";
 import { Doc } from "../../convex/_generated/dataModel";
 import { MessageInputBar } from "./MessageInputBar";
 import { AIModel } from "@/lib/models";

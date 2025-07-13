@@ -3,7 +3,6 @@
 import { useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { MessageSquare } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
 export function QuickUsageIndicator() {

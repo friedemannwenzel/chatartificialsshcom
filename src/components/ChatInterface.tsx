@@ -697,7 +697,7 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
 
 
       {/* Message Input Bar */}
-      <div className="absolute bottom-4 left-4 right-4">
+      <div className="absolute bottom-0 left-6 right-6">
         <MessageInputBar
           onSendMessage={handleSendMessage}
           disabled={isLoading}

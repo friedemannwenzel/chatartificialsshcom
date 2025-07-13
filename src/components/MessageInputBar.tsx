@@ -272,7 +272,7 @@ export function MessageInputBar({
           )}
 
           {/* Message Input Bar */}
-          <div className="relative w-full bg-[#151515] rounded-[20px] border border-[#2C2C2C] flex flex-col">
+          <div className="relative w-full bg-[#151515] rounded-t-[20px] border-t border-l border-r border-[#2C2C2C] flex flex-col">
             {/* Textarea */}
             <div className="w-full px-3 py-1">
               <Textarea

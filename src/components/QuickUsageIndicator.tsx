@@ -29,14 +29,13 @@ export function QuickUsageIndicator() {
 
   return (
     <div className="flex items-center gap-2 text-xs text-muted-foreground">
-      <MessageSquare className="h-3 w-3" />
       <span className={`font-medium ${getUsageColor(usagePercentage)}`}>
         {currentWeek.count}/{currentWeek.limit}
       </span>
       <div className="flex-1 min-w-[40px]">
         <Progress 
           value={usagePercentage} 
-          className="h-1.5"
+          className="h-1.5 bg-[#2C2C2C] rounded-[20px]"
         />
       </div>
     </div>

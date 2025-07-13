@@ -161,101 +161,49 @@ export function Sidebar({
 
   // Normal sidebar (when open)
   return (
-    <div className="w-80 h-full p-4 flex items-center">
+    <div className="w-80 h-full pr-6 flex items-center">
       <div className={cn(
-        "w-full h-[calc(100vh-2rem)] rounded-[var(--radius)]",
-        "bg-card/70 backdrop-blur-2xl border border-white/20",
+        "w-full h-[calc(100vh-4rem)] rounded-r-[20px]",
+        "bg-card/70 backdrop-blur-2xl border-r border-t border-b border-[#2C2C2C]",
         "shadow-[0_24px_64px_rgba(0,0,0,0.15)]",
         "flex flex-col overflow-hidden",
         "transition-all duration-300 ease-out"
       )}>
         {/* Header with Search Bar */}
-        <div className="p-4 border-b border-white/10">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-semibold tracking-tight">ArtificialSSH</h2>
+        <div className="p-4 ">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Button
-                onClick={onToggle}
-                variant="ghost"
-                size="sm"
-                className={cn(
-                  "h-8 w-8 rounded-full",
-                  "hover:bg-white/10 border border-white/10",
-                  "transition-all duration-200"
-                )}
-              >
-                <PanelLeft className="h-4 w-4" />
-              </Button>
-              
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className={cn(
-                      "h-8 w-8 rounded-full",
-                      "hover:bg-white/10 border border-white/10",
-                      "transition-all duration-200"
-                    )}
-                  >
-                    {theme === "light" ? (
-                      <Sun className="h-4 w-4" />
-                    ) : theme === "dark" ? (
-                      <Moon className="h-4 w-4" />
-                    ) : (
-                      <Monitor className="h-4 w-4" />
-                    )}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent 
-                  align="end"
-                  className="backdrop-blur-xl bg-card/90 border border-white/20"
-                >
-                  <DropdownMenuItem onClick={() => setTheme("light")}>
-                    <Sun className="mr-2 h-4 w-4" />
-                    Light
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setTheme("dark")}>
-                    <Moon className="mr-2 h-4 w-4" />
-                    Dark
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setTheme("system")}>
-                    <Monitor className="mr-2 h-4 w-4" />
-                    System
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              
-              <Button
-                onClick={handleNewChat}
-                size="sm"
-                className={cn(
-                  "h-8 w-8 rounded-full",
-                  "bg-primary/20 hover:bg-primary/30",
-                  "border border-white/10"
-                )}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-          
-          {/* Search Bar moved to header */}
-          <div className="relative">
+            <div className="relative">
             <input
               type="text"
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search chats..."
-              className="w-full rounded-lg border border-input bg-background px-3 py-2 pl-9 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full rounded-[20px] border border-[#2C2C2C] bg-[#151515] px-3 py-1.5 pl-9 text-sm text-[#A7A7A7] hover:cursor-pointer focus:outline-none"
             />
-            <Search className="absolute left-2 top-2.5 w-4 h-4 text-muted-foreground" />
+            <Search className="absolute left-4 top-2.5 w-4 h-4 text-[#5D5D5D]" />
           </div>
+              
+              
+              <Button
+                onClick={handleNewChat}
+                size="sm"
+                className={cn(
+                  "h-8 w-8 rounded-full hover:cursor-pointer",
+                  "bg-[#151515] hover:bg-[#2C2C2C]",
+                  "border border-[#2C2C2C]"
+                )}
+              >
+                <Plus className="h-5 w-5 text-[#5D5D5D]" />
+              </Button>
+            </div>
+          </div>
+  
         </div>
 
         {/* Chat History */}
-        <ScrollArea className="flex-1 h-full px-2">
-          <div className="space-y-4 py-3">
+        <ScrollArea className="flex-1 h-full px-4">
+          <div className="space-y-4 py-1">
             {Object.entries(chatGroups).map(([groupName, groupChats]) => (
               <div key={groupName}>
                 <h3 className="text-xs font-medium text-muted-foreground mb-2 px-2 uppercase tracking-wider">
@@ -273,14 +221,19 @@ export function Sidebar({
                         href={`/c/${chat.chatId}`}
                         className={cn(
                           "flex items-center px-3 py-2 text-sm transition-all duration-200 border border-transparent w-full relative",
-                          "rounded-lg min-h-[36px]",
-                          "hover:bg-white/10 hover:border-white/10 hover:shadow-lg",
+                          "rounded-[20px] min-h-[36px]",
+                          "hover:bg-[#2C2C2C] hover:border-[#2C2C2C] hover:text-[#A7A7A7] hover:cursor-pointer",
                           currentChatId === chat.chatId 
-                            ? "bg-primary/20 border-primary/30 shadow-md" 
+                            ? "bg-[#2C2C2C] border-[#2C2C2C] shadow-md" 
                             : ""
                         )}
                       >
-                        <span className="truncate block flex-1 pr-8">
+                        <span className={cn(
+                          "truncate block flex-1 pr-8",
+                          currentChatId === chat.chatId 
+                            ? "text-[#A7A7A7]" 
+                            : "text-[#5D5D5D]"
+                        )}>
                           {chat.title || "New Chat"}
                         </span>
                         {hoveredChat === chat._id && (
@@ -290,9 +243,9 @@ export function Sidebar({
                               e.stopPropagation();
                               await deleteChat({ chatId: chat.chatId });
                             }}
-                            className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 rounded bg-card/90 hover:bg-destructive/20 transition-colors duration-200 border border-white/20 shadow-sm"
+                            className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 transition-colors duration-200 hover:cursor-pointer text-[#A7A7A7]"
                           >
-                            <X className="w-3 h-3 text-destructive" />
+                            <X className="w-4 h-4 text-[#5D5D5D] hover:text-red-500" />
                           </button>
                         )}
                       </Link>
@@ -305,8 +258,8 @@ export function Sidebar({
             {Object.keys(chatGroups).length === 0 && (
               <div className="text-center text-muted-foreground py-8">
                 <div className={cn(
-                  "h-12 w-12 mx-auto mb-3 rounded-2xl",
-                  "bg-white/5 border border-white/10",
+                  "h-12 w-12 mx-auto mb-3 rounded-[20px]",
+                  "bg-[#151515] border border-[#2C2C2C]",
                   "flex items-center justify-center"
                 )}>
                   <MessageSquare className="h-6 w-6 opacity-50" />
@@ -319,19 +272,19 @@ export function Sidebar({
         </ScrollArea>
 
         {/* User Profile - fixed at bottom */}
-        <div className="sticky bottom-0 left-0 w-full p-4 bg-card/70 backdrop-blur-2xl border-t border-white/20">
+        <div className="sticky bottom-0 left-0 w-full p-4">
           <Link href="/settings">
             <Button
               variant="ghost"
               className={cn(
                 "w-full justify-start gap-3 h-auto p-3 rounded-2xl",
-                "hover:bg-white/10 border border-white/10 hover:cursor-pointer",
+                "hover:bg-[#2C2C2C] border border-[#2C2C2C] hover:cursor-pointer text-[#A7A7A7]",
                 "transition-all duration-200"
               )}
             >
               <Avatar className="h-8 w-8 ring-2 ring-white/20">
                 <AvatarImage src={user?.imageUrl} />
-                <AvatarFallback className="text-xs bg-primary/20">
+                <AvatarFallback className="text-xs bg-[#151515]">
                   {getUserInitials(user?.fullName)}
                 </AvatarFallback>
               </Avatar>
@@ -342,8 +295,6 @@ export function Sidebar({
                 </span>
                 <QuickUsageIndicator />
               </div>
-              
-              <Settings className="h-4 w-4 opacity-60" />
             </Button>
           </Link>
         </div>

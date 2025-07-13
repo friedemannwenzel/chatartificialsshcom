@@ -694,20 +694,7 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
         </div>
       </div>
 
-      {/* Scroll to bottom button */}
-      {showScrollButton && (
-        <div className="absolute bottom-34 left-1/2 transform -translate-x-1/2">
-          <Button
-            onClick={scrollToBottom}
-            size="sm"
-            className="h-10 px-4 rounded-[var(--radius)] bg-card/80 backdrop-blur-xl border border-white/20 shadow-lg hover:bg-card/90 transition-all duration-200 hover:cursor-pointer flex items-center gap-2"
-            variant="secondary"
-          >
-            <span className="text-sm">Scroll to bottom</span>
-            <ArrowDown className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
+
 
       {/* Message Input Bar */}
       <div className="absolute bottom-4 left-4 right-4">
@@ -715,6 +702,8 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
           onSendMessage={handleSendMessage}
           disabled={isLoading}
           placeholder="Type your message..."
+          showScrollButton={showScrollButton}
+          onScrollToBottom={scrollToBottom}
         />
       </div>
     </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Globe, ChevronDown, Paperclip, X, AlertTriangle, ArrowUp } from "lucide-react";
+import { Globe, ChevronDown, Paperclip, X, AlertTriangle, ArrowUp, ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -18,6 +18,8 @@ interface MessageInputBarProps {
   onSendMessage: (content: string, model: AIModel, webSearch?: boolean, attachments?: Array<{ url: string; name: string; type: string; size?: number }>) => void;
   disabled?: boolean;
   placeholder?: string;
+  showScrollButton?: boolean;
+  onScrollToBottom?: () => void;
 }
 
 const getProviderIcon = (provider: string) => {
@@ -53,7 +55,9 @@ const AttachmentUploadButton = generateUploadButton<MessageAttachmentRouter>();
 export function MessageInputBar({ 
   onSendMessage, 
   disabled = false, 
-  placeholder = "Type your message here..." 
+  placeholder = "Type your message here...",
+  showScrollButton = false,
+  onScrollToBottom
 }: MessageInputBarProps) {
   const [message, setMessage] = useState("");
   const [attachments, setAttachments] = useState<Array<{ url: string; name: string; type: string; size?: number }>>([]);
@@ -204,9 +208,9 @@ export function MessageInputBar({
             </Alert>
           )}
 
-          {/* Attachments bar - flush, dark, rounded, minimal */}
-          {(attachments.length > 0 || uploadingFiles.length > 0) && (
-            <div className="flex flex-wrap gap-2 py-2">
+          {/* Attachments and scroll button bar */}
+          {(attachments.length > 0 || uploadingFiles.length > 0 || showScrollButton) && (
+            <div className="flex flex-wrap items-center gap-2 py-2">
               {/* Completed attachments */}
               {attachments.map((file, index) => (
                 <div
@@ -248,6 +252,22 @@ export function MessageInputBar({
                   </div>
                 </div>
               ))}
+
+              {/* Scroll to bottom button */}
+              {showScrollButton && (
+                <div className="flex-1 flex justify-end">
+                  <Button
+                    onClick={onScrollToBottom}
+                    size="sm"
+                    className="py-3 px-4 rounded-[20px] bg-[#151515] text-[#5D5D5D] hover:text-[#A7A7A7] border border-[#2C2C2C] shadow-lg hover:bg-[#2C2C2C] transition-all duration-200 hover:cursor-pointer flex items-center gap-2"
+                    variant="secondary"
+                    type="button"
+                  >
+                    <span className="text-sm">Scroll to bottom</span>
+                    <ArrowDown className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
             </div>
           )}
 

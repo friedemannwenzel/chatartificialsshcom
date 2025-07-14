@@ -14,6 +14,7 @@ import type {
   FunctionReference,
 } from "convex/server";
 import type * as chats from "../chats.js";
+import type * as migrations from "../migrations.js";
 import type * as preferences from "../preferences.js";
 import type * as rateLimiting from "../rateLimiting.js";
 import type * as userPreferences from "../userPreferences.js";
@@ -28,6 +29,7 @@ import type * as userPreferences from "../userPreferences.js";
  */
 declare const fullApi: ApiFromModules<{
   chats: typeof chats;
+  migrations: typeof migrations;
   preferences: typeof preferences;
   rateLimiting: typeof rateLimiting;
   userPreferences: typeof userPreferences;

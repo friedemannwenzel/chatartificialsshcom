@@ -60,7 +60,6 @@ export default defineSchema({
       capabilities: v.optional(v.array(v.string())),
     }),
     lastUsed: v.number(),
-    theme: v.optional(v.string()),
   })
     .index("by_userId", ["userId"]),
 

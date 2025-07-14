@@ -505,13 +505,13 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
               <MoreHorizontal className="h-3 w-3 text-[#A7A7A7]" />
             </Button>
           ) : (
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 text-[#5D5D5D] hover:text-[#A7A7A7]">
               {role === "user" ? (
                 <>
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-6 w-6 p-0 hover:bg-white/10 transition-colors cursor-pointer"
+                    className="h-6 w-6 p-0  hover:text-[#A7A7A7]  transition-colors cursor-pointer"
                     onClick={() => handleRetry(messageIndex)}
                     title="Retry"
                   >
@@ -520,7 +520,7 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-6 w-6 p-0 hover:bg-white/10 transition-colors cursor-pointer"
+                    className="h-6 w-6 p-0  hover:text-[#A7A7A7]  transition-colors cursor-pointer"
                     onClick={() => handleEdit(messageId, content)}
                     title="Edit"
                   >
@@ -529,7 +529,7 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-6 w-6 p-0 hover:bg-white/10 transition-colors cursor-pointer"
+                    className="h-6 w-6 p-0  hover:text-[#A7A7A7]  transition-colors cursor-pointer"
                     onClick={() => copyToClipboard(content, messageId)}
                     title="Copy"
                   >
@@ -545,7 +545,7 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-6 w-6 p-0 hover:bg-white/10 transition-colors cursor-pointer"
+                    className="h-6 w-6 p-0 hover:text-[#A7A7A7]  transition-colors cursor-pointer"
                     onClick={() => handleRetry(messageIndex)}
                     title="Retry"
                   >
@@ -554,7 +554,7 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-6 w-6 p-0 hover:bg-white/10 transition-colors cursor-pointer"
+                    className="h-6 w-6 p-0 hover:text-[#A7A7A7]  transition-colors cursor-pointer"
                     onClick={() => copyToClipboard(content, messageId)}
                     title="Copy"
                   >
@@ -567,7 +567,7 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-6 w-6 p-0 hover:bg-white/10 transition-colors cursor-pointer"
+                    className="h-6 w-6 p-0 hover:text-[#A7A7A7]  transition-colors cursor-pointer"
                     onClick={() => handleBranch(messageIndex)}
                     title="Branch"
                   >
@@ -603,9 +603,9 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
                 onMouseLeave={() => setHoveredMessage(null)}
               >
                 <div
-                  className={` rounded-[20px] px-4 pt-3 relative group flex items-center justify-center ${
+                  className={` rounded-[20px] pt-3 relative group flex items-center justify-center ${
                     message.role === "user"
-                      ? "bg-[#2C2C2C] text-[#A7A7A7]"
+                      ? "bg-[#2C2C2C] text-[#A7A7A7] px-4"
                       : "text-[#A7A7A7]"
                   }`}
                 >

@@ -62,3 +62,28 @@ export async function POST() {
     );
   }
 } 
+
+export async function DELETE() {
+  try {
+    const { userId } = await auth();
+    
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const newCount = await convex.mutation(api.rateLimiting.decrementMessageCount, {
+      userId,
+    });
+
+    return NextResponse.json({ messageCount: newCount });
+  } catch (error) {
+    console.error('Rate limit decrement error:', error);
+    return NextResponse.json(
+      { error: 'Internal Server Error' },
+      { status: 500 }
+    );
+  }
+} 

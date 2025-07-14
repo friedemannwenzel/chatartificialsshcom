@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Globe, ChevronDown, Paperclip, X, AlertTriangle, ArrowUp, ArrowDown } from "lucide-react";
+import { Globe, ChevronDown, Paperclip, X, AlertTriangle, ArrowUp, ArrowDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -31,7 +31,7 @@ const getProviderIcon = (provider: string) => {
     case 'anthropic':
       return "/Anthropic.svg";
     case 'xai':
-      return "/Xai.svg";
+      return "/Grok_dark.svg";
     default:
       return null;
   }
@@ -67,6 +67,7 @@ export function MessageInputBar({
   const [rateLimitError, setRateLimitError] = useState<string>("");
   const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
+  const modelSelectorRef = useRef<HTMLDivElement>(null);
   const { user } = useUser();
 
   const updateSelectedModel = useMutation(api.preferences.updateSelectedModel);
@@ -111,6 +112,25 @@ export function MessageInputBar({
       }
     }
   }, [getUserPreferences, selectedModel.id, user?.id]);
+
+  // Handle closing the model selector when clicking outside
+  useEffect(() => {
+    if (!modelSelectorOpen) return;
+
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        modelSelectorRef.current &&
+        !modelSelectorRef.current.contains(event.target as Node)
+      ) {
+        setModelSelectorOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside, true);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside, true);
+    };
+  }, [modelSelectorOpen]);
 
   const handleModelChange = (model: AIModel) => {
     setSelectedModel(model);
@@ -194,7 +214,7 @@ export function MessageInputBar({
     openai: "OpenAI",
     google: "Google",
     anthropic: "Anthropic",
-    xai: "xAI",
+    xai: "Grok",
   };
 
   return (
@@ -295,7 +315,7 @@ export function MessageInputBar({
             </div>
             <div className="flex items-center w-full px-3 py-1 gap-2">
               {/* Model Selector */}
-              <div className="relative">
+              <div className="relative" ref={modelSelectorRef}>
                 <button
                   type="button"
                   onClick={() => setModelSelectorOpen(!modelSelectorOpen)}
@@ -312,7 +332,11 @@ export function MessageInputBar({
                     />
                   )}
                   <span className="truncate max-w-[100px]">{selectedModel.name}</span>
-                  <ChevronDown className="w-4 h-4" />
+                  {modelSelectorOpen ? (
+                    <ChevronUp className="w-4 h-4" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4" />
+                  )}
                 </button>
                 {/* Model Dropdown */}
                 {modelSelectorOpen && (
@@ -342,9 +366,6 @@ export function MessageInputBar({
                             >
                               <div className="flex flex-col">
                                 <span className="font-medium text-xs">{model.name}</span>
-                                <span className="text-[10px] text-muted-foreground">
-                                  {model.description}
-                                </span>
                               </div>
                               {selectedModel.id === model.id && (
                                 <div className="w-2 h-2 bg-primary rounded-full" />

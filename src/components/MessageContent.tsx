@@ -4,10 +4,27 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/cjs/styles/prism';
+import jsx from 'react-syntax-highlighter/dist/cjs/languages/prism/jsx';
+import typescript from 'react-syntax-highlighter/dist/cjs/languages/prism/typescript';
+import javascript from 'react-syntax-highlighter/dist/cjs/languages/prism/javascript';
+import python from 'react-syntax-highlighter/dist/cjs/languages/prism/python';
+import css from 'react-syntax-highlighter/dist/cjs/languages/prism/css';
+import bash from 'react-syntax-highlighter/dist/cjs/languages/prism/bash';
+import json from 'react-syntax-highlighter/dist/cjs/languages/prism/json';
 import { Button } from '@/components/ui/button';
 import { Copy, Check, FileText } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+
+// Register languages
+SyntaxHighlighter.registerLanguage('jsx', jsx);
+SyntaxHighlighter.registerLanguage('tsx', jsx);
+SyntaxHighlighter.registerLanguage('typescript', typescript);
+SyntaxHighlighter.registerLanguage('javascript', javascript);
+SyntaxHighlighter.registerLanguage('python', python);
+SyntaxHighlighter.registerLanguage('css', css);
+SyntaxHighlighter.registerLanguage('bash', bash);
+SyntaxHighlighter.registerLanguage('json', json);
 
 interface MessageContentProps {
   content: string;
@@ -34,7 +51,7 @@ export function MessageContent({ content, className }: MessageContentProps) {
   };
 
   return (
-    <div className={cn("prose prose-sm max-w-none dark:prose-invert", className)}>
+    <div className={cn("prose prose-sm max-w-none dark:prose-invert text-base text-[#A7A7A7] text-left", className)}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
@@ -46,36 +63,19 @@ export function MessageContent({ content, className }: MessageContentProps) {
             const blockId = `${language}-${code.slice(0, 20)}`;
 
             if (!inline && language) {
-              const customDarkStyle = {
-                ...oneDark,
-                'pre[class*="language-"]': {
-                  ...oneDark['pre[class*="language-"]'],
-                  background: 'hsl(var(--card) / 0.85)',
-                  margin: 0,
-                  padding: 0,
-                  borderRadius: 'var(--radius)',
-                },
-                'code[class*="language-"]': {
-                  ...oneDark['code[class*="language-"]'],
-                  background: 'transparent',
-                }
-              };
-
               return (
                 <div className="relative group my-2">
                   <SyntaxHighlighter
-                    style={customDarkStyle}
+                    style={oneDark}
                     language={language}
                     PreTag="div"
-                    className="!m-0 !border-0"
+                    className="!m-0 !border-0 rounded-[20px]"
                     customStyle={{
-                      margin: '0',
-                      padding: '1rem',
-                      fontSize: '0.875rem',
-                      lineHeight: '1.5',
+                      margin: 0,
+                      padding: '1.5rem',
+                      fontSize: '1rem',
+                      lineHeight: '1.4',
                       borderRadius: '20px',
-                      backgroundColor: '#151515',
-                      position: 'relative',
                     }}
                     showLineNumbers={false}
                     wrapLines={true}
@@ -83,7 +83,7 @@ export function MessageContent({ content, className }: MessageContentProps) {
                   >
                     {code}
                   </SyntaxHighlighter>
-                  <div className="absolute top-0 right-0 flex items-center gap-2">
+                  <div className="absolute top-2 right-2 flex items-center gap-2">
                     <span className="text-xs font-medium text-muted-foreground/70 uppercase tracking-wide px-2 py-1 bg-background/20 rounded-[20px] backdrop-blur-sm">
                       {language}
                     </span>
@@ -106,10 +106,10 @@ export function MessageContent({ content, className }: MessageContentProps) {
             return (
               <code
                 className={cn(
-                  "relative rounded-[var(--radius)] bg-muted px-1.5 py-0.5 font-mono text-sm",
-                  "border border-border/50"
+                  "bg-[#151515] font-mono text-[#A7A7A7] text-base px-1 py-0.5",
+                  className
                 )}
-                style={{ borderRadius: 'var(--radius)' }}
+                style={{ borderRadius: '10px' }}
                 {...restProps}
               >
                 {children}
@@ -119,7 +119,7 @@ export function MessageContent({ content, className }: MessageContentProps) {
 
           blockquote({ children }) {
             return (
-              <blockquote className="border-l-4 border-primary/30 bg-muted/20 pl-4 py-2 my-4 italic rounded-[var(--radius)]">
+              <blockquote className="border-l-4 border-primary/30 bg-muted/20 pl-4 py-2 my-4 italic rounded-[var(--radius)] text-base">
                 {children}
               </blockquote>
             );
@@ -128,7 +128,7 @@ export function MessageContent({ content, className }: MessageContentProps) {
           table({ children }) {
             return (
               <div className="overflow-x-auto my-4">
-                <table className="w-full border-collapse border border-border rounded-[var(--radius)]">
+                <table className="w-full border-collapse border border-border rounded-[var(--radius)] text-base">
                   {children}
                 </table>
               </div>
@@ -137,7 +137,7 @@ export function MessageContent({ content, className }: MessageContentProps) {
 
           th({ children }) {
             return (
-              <th className="border border-border bg-muted/50 px-3 py-2 text-left font-medium">
+              <th className="border border-border bg-muted/50 px-3 py-2 text-left font-medium text-base">
                 {children}
               </th>
             );
@@ -145,7 +145,7 @@ export function MessageContent({ content, className }: MessageContentProps) {
 
           td({ children }) {
             return (
-              <td className="border border-border px-3 py-2">
+              <td className="border border-border px-3 py-2 text-base">
                 {children}
               </td>
             );
@@ -157,7 +157,7 @@ export function MessageContent({ content, className }: MessageContentProps) {
               <a
                 href={href}
                 className={cn(
-                  "inline-flex items-center gap-2 px-2 py-1 rounded-md font-medium transition-colors",
+                  "inline-flex items-center gap-2 px-2 py-1 rounded-md font-medium transition-colors text-base",
                   isFile
                     ? "bg-muted text-foreground hover:bg-muted/80"
                     : "text-primary hover:text-primary/80 underline underline-offset-2"
@@ -188,7 +188,7 @@ export function MessageContent({ content, className }: MessageContentProps) {
 
           ul({ children }) {
             return (
-              <ul className="list-disc list-outside space-y-1 my-2 ml-6">
+              <ul className="list-disc list-outside space-y-1 my-2 ml-6 text-base">
                 {children}
               </ul>
             );
@@ -196,7 +196,7 @@ export function MessageContent({ content, className }: MessageContentProps) {
 
           ol({ children }) {
             return (
-              <ol className="list-decimal list-outside space-y-1 my-2 ml-6">
+              <ol className="list-decimal list-outside space-y-1 my-2 ml-6 text-base">
                 {children}
               </ol>
             );
@@ -204,7 +204,7 @@ export function MessageContent({ content, className }: MessageContentProps) {
 
           h1({ children }) {
             return (
-              <h1 className="text-xl font-bold mt-6 mb-3 border-b border-border pb-2">
+              <h1 className="text-2xl font-bold mt-6 mb-3 border-b border-border pb-2 text-[#A7A7A7]">
                 {children}
               </h1>
             );
@@ -212,7 +212,7 @@ export function MessageContent({ content, className }: MessageContentProps) {
 
           h2({ children }) {
             return (
-              <h2 className="text-lg font-semibold mt-5 mb-2">
+              <h2 className="text-xl font-semibold mt-5 mb-2 text-[#A7A7A7]">
                 {children}
               </h2>
             );
@@ -220,7 +220,7 @@ export function MessageContent({ content, className }: MessageContentProps) {
 
           h3({ children }) {
             return (
-              <h3 className="text-base font-medium mt-4 mb-2">
+              <h3 className="text-base font-medium mt-4 mb-2 text-[#A7A7A7]">
                 {children}
               </h3>
             );
@@ -228,7 +228,7 @@ export function MessageContent({ content, className }: MessageContentProps) {
 
           p({ children }) {
             return (
-              <p className="mb-3 leading-relaxed">
+              <p className="mb-3 leading-relaxed text-[#A7A7A7] text-base">
                 {children}
               </p>
             );
@@ -236,18 +236,14 @@ export function MessageContent({ content, className }: MessageContentProps) {
 
           li({ children }) {
             return (
-              <li className="text-sm leading-relaxed">
+              <li className="text-sm leading-relaxed text-[#A7A7A7] text-base">
                 {children}
               </li>
             );
           },
 
           pre({ children }) {
-            return (
-              <pre className="overflow-x-auto rounded-[var(--radius)] bg-muted p-4 my-4">
-                {children}
-              </pre>
-            );
+            return <>{children}</>;
           },
 
           hr() {
@@ -258,7 +254,7 @@ export function MessageContent({ content, className }: MessageContentProps) {
 
           em({ children }) {
             return (
-              <em className="italic text-muted-foreground">
+              <em className="italic text-[#A7A7A7] text-base">
                 {children}
               </em>
             );
@@ -266,7 +262,7 @@ export function MessageContent({ content, className }: MessageContentProps) {
 
           strong({ children }) {
             return (
-              <strong className="font-semibold">
+              <strong className="font-semibold text-[#d5d5d5] text-base">
                 {children}
               </strong>
             );

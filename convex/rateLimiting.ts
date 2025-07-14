@@ -75,6 +75,32 @@ export const incrementMessageCount = mutation({
   },
 });
 
+export const decrementMessageCount = mutation({
+  args: { userId: v.string() },
+  handler: async (ctx, args) => {
+    const weekStart = getWeekStartDate();
+    const now = Date.now();
+    
+    const existing = await ctx.db
+      .query("userMessageUsage")
+      .withIndex("by_userId_week", (q) => 
+        q.eq("userId", args.userId).eq("weekStartDate", weekStart)
+      )
+      .first();
+
+    if (existing && existing.messageCount > 0) {
+      await ctx.db.patch(existing._id, {
+        messageCount: existing.messageCount - 1,
+        lastUpdated: now,
+      });
+      
+      return existing.messageCount - 1;
+    }
+    
+    return 0;
+  },
+});
+
 export const getUserUsageStats = query({
   args: { userId: v.string() },
   handler: async (ctx, args) => {

@@ -21,7 +21,7 @@ const getProviderIcon = (provider: string) => {
     case 'anthropic':
       return "/Anthropic.svg";
     case 'xai':
-      return "/Xai.svg";
+      return "/Grok_dark.svg";
     default:
       return null;
   }

@@ -88,53 +88,12 @@ export default function HomePage() {
     <>
       <SignedIn>
         <div className="flex flex-col h-full relative">
-          {/* Main content area */}
-          <div className="flex-1 overflow-hidden">
-            <div className="h-full overflow-y-auto pb-40">
-              <div className="flex items-center justify-center h-full">
-                <div className="text-center max-w-md mx-auto p-8">
-                  <div className="mb-8">
-                    <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <MessageSquare className="w-10 h-10 text-primary" />
-                    </div>
-                    <h1 className="text-3xl font-bold mb-2">Welcome to ArtificialSSH Chat</h1>
-                    <p className="text-muted-foreground">
-                      Start a conversation with AI and unlock new possibilities.
-                    </p>
-                  </div>
-
-                  <div className="grid gap-4 text-left">
-                    <div className="flex items-start gap-3 p-4 border rounded-lg">
-                      <Sparkles className="w-5 h-5 text-primary mt-0.5" />
-                      <div>
-                        <h3 className="font-medium">AI-Powered Conversations</h3>
-                        <p className="text-sm text-muted-foreground">
-                          Chat with advanced language models for any task
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start gap-3 p-4 border rounded-lg">
-                      <Zap className="w-5 h-5 text-primary mt-0.5" />
-                      <div>
-                        <h3 className="font-medium">Real-time Responses</h3>
-                        <p className="text-sm text-muted-foreground">
-                          Get instant, streaming responses to your questions
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <p className="text-sm text-muted-foreground mt-6">
-                    Type your message below to start a new conversation
-                  </p>
-                </div>
-              </div>
-            </div>
+          <div className="flex-1 flex items-center justify-center">
+            <span className="text-6xl font-semibold text-center text-[#A7A7A7]">Here to help!</span>
           </div>
 
           {/* Message Input Bar */}
-          <div className="absolute bottom-0 left-0 right-0">
+          <div className="absolute bottom-0 max-w-4xl mx-auto left-0 right-0">
             <MessageInputBar
               onSendMessage={handleSendMessage}
               disabled={isLoading}

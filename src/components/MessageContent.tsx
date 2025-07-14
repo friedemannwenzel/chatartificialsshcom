@@ -3,8 +3,7 @@
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { oneDark, oneLight } from 'react-syntax-highlighter/dist/cjs/styles/prism';
-import { useTheme } from 'next-themes';
+import { oneDark } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 import { Button } from '@/components/ui/button';
 import { Copy, Check, FileText } from 'lucide-react';
 import { useState } from 'react';
@@ -22,7 +21,6 @@ interface CodeComponentProps {
 }
 
 export function MessageContent({ content, className }: MessageContentProps) {
-  const { theme } = useTheme();
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
   const copyToClipboard = async (code: string, blockId: string) => {
@@ -52,9 +50,7 @@ export function MessageContent({ content, className }: MessageContentProps) {
                 ...oneDark,
                 'pre[class*="language-"]': {
                   ...oneDark['pre[class*="language-"]'],
-                  background: theme === 'dark' 
-                    ? 'hsl(var(--card) / 0.85)' 
-                    : 'hsl(var(--card) / 0.95)',
+                  background: 'hsl(var(--card) / 0.85)',
                   margin: 0,
                   padding: 0,
                   borderRadius: 'var(--radius)',
@@ -65,27 +61,10 @@ export function MessageContent({ content, className }: MessageContentProps) {
                 }
               };
 
-              const customLightStyle = {
-                ...oneLight,
-                'pre[class*="language-"]': {
-                  ...oneLight['pre[class*="language-"]'],
-                  background: theme === 'dark' 
-                    ? 'hsl(var(--card) / 0.85)' 
-                    : 'hsl(var(--card) / 0.95)',
-                  margin: 0,
-                  padding: 0,
-                  borderRadius: 'var(--radius)',
-                },
-                'code[class*="language-"]': {
-                  ...oneLight['code[class*="language-"]'],
-                  background: 'transparent',
-                }
-              };
-
               return (
                 <div className="relative group my-2">
                   <SyntaxHighlighter
-                    style={theme === 'dark' ? customDarkStyle : customLightStyle}
+                    style={customDarkStyle}
                     language={language}
                     PreTag="div"
                     className="!m-0 !border-0"
@@ -94,10 +73,8 @@ export function MessageContent({ content, className }: MessageContentProps) {
                       padding: '1rem',
                       fontSize: '0.875rem',
                       lineHeight: '1.5',
-                      borderRadius: 'var(--radius)',
-                      backgroundColor: theme === 'dark' 
-                        ? 'hsl(var(--card) / 0.85)' 
-                        : 'hsl(var(--card) / 0.95)',
+                      borderRadius: '20px',
+                      backgroundColor: '#151515',
                       position: 'relative',
                     }}
                     showLineNumbers={false}
@@ -107,7 +84,7 @@ export function MessageContent({ content, className }: MessageContentProps) {
                     {code}
                   </SyntaxHighlighter>
                   <div className="absolute top-0 right-0 flex items-center gap-2">
-                    <span className="text-xs font-medium text-muted-foreground/70 uppercase tracking-wide px-2 py-1 bg-background/20 rounded-[var(--radius)] backdrop-blur-sm">
+                    <span className="text-xs font-medium text-muted-foreground/70 uppercase tracking-wide px-2 py-1 bg-background/20 rounded-[20px] backdrop-blur-sm">
                       {language}
                     </span>
                     <Button
@@ -211,7 +188,7 @@ export function MessageContent({ content, className }: MessageContentProps) {
 
           ul({ children }) {
             return (
-              <ul className="list-disc list-inside space-y-1 my-2">
+              <ul className="list-disc list-outside space-y-1 my-2 ml-6">
                 {children}
               </ul>
             );
@@ -219,7 +196,7 @@ export function MessageContent({ content, className }: MessageContentProps) {
 
           ol({ children }) {
             return (
-              <ol className="list-decimal list-inside space-y-1 my-2">
+              <ol className="list-decimal list-outside space-y-1 my-2 ml-6">
                 {children}
               </ol>
             );

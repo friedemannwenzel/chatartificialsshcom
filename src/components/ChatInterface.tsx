@@ -500,9 +500,9 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-white/10 cursor-pointer"
+              className="h-6 w-6 p-0  transition-opacity duration-200 hover:bg-[#2C2C2C] cursor-pointer text-[#A7A7A7]"
             >
-              <MoreHorizontal className="h-3 w-3" />
+              <MoreHorizontal className="h-3 w-3 text-[#A7A7A7]" />
             </Button>
           ) : (
             <div className="flex items-center gap-1">
@@ -574,7 +574,7 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
                     <GitBranch className="h-3 w-3" />
                   </Button>
                   {model && (
-                    <span className="text-xs text-muted-foreground px-2 py-1 bg-white/5 rounded ml-2">
+                    <span className="text-xs text-muted-foreground px-2 py-1 bg-white/5 rounded-[20px] ml-2">
                       {model}
                     </span>
                   )}
@@ -603,10 +603,10 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
                 onMouseLeave={() => setHoveredMessage(null)}
               >
                 <div
-                  className={`max-w-[80%] rounded-2xl p-4 relative group ${
+                  className={` rounded-[20px] px-4 pt-3 relative group flex items-center justify-center ${
                     message.role === "user"
-                      ? "bg-primary/90 text-primary-foreground shadow-lg"
-                      : "bg-card/70 backdrop-blur-xl border border-white/20 shadow-md"
+                      ? "bg-[#2C2C2C] text-[#A7A7A7]"
+                      : "text-[#A7A7A7]"
                   }`}
                 >
                   {editingMessage === message._id ? (
@@ -697,7 +697,7 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
 
 
       {/* Message Input Bar */}
-      <div className="absolute bottom-0 left-6 right-6">
+      <div className="absolute bottom-0 max-w-4xl mx-auto left-0 right-0">
         <MessageInputBar
           onSendMessage={handleSendMessage}
           disabled={isLoading}

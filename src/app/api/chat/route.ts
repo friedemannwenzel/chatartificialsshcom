@@ -3,13 +3,33 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import OpenAI from 'openai';
 import { auth } from '@clerk/nextjs/server';
 
-
 interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
 }
 
+interface GeminiMessage {
+  role: 'user' | 'model';
+  parts: Array<{ text: string }>;
+}
 
+interface APIError {
+  status?: number;
+  message?: string;
+  error?: string;
+}
+
+interface GroundingMetadata {
+  groundingChunks?: Array<{
+    web?: {
+      uri: string;
+      title: string;
+    };
+  }>;
+  groundingSupports?: unknown[];
+  webSearchQueries?: unknown[];
+  searchEntryPoint?: unknown;
+}
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!);
 const openai = new OpenAI({
@@ -21,12 +41,10 @@ const xaiClient = new OpenAI({
   baseURL: "https://api.x.ai/v1",
 });
 
-// helper to split markdown into text/image parts for OpenAI vision models
 const imageRegex = /!\[[^\]]*\]\(([^)]+)\)/g;
 
-function markdownToOpenAIParts(md: string): ({ type: 'text'; text: string } | { type: 'image_url'; image_url: { url: string } })[] {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const parts: Array<any> = [];
+function markdownToOpenAIParts(md: string): Array<{ type: 'text'; text: string } | { type: 'image_url'; image_url: { url: string } }> {
+  const parts: Array<{ type: 'text'; text: string } | { type: 'image_url'; image_url: { url: string } }> = [];
   let lastIndex = 0;
   let match: RegExpExecArray | null;
   while ((match = imageRegex.exec(md)) !== null) {
@@ -43,7 +61,6 @@ function markdownToOpenAIParts(md: string): ({ type: 'text'; text: string } | { 
     const textRemainder = md.slice(lastIndex);
     if (textRemainder.trim()) parts.push({ type: 'text', text: textRemainder });
   }
-  // fallback to entire text part if nothing parsed
   if (parts.length === 0) return [{ type: 'text', text: md }];
   return parts;
 }
@@ -122,15 +139,21 @@ export async function POST(req: NextRequest) {
         const client = isXAI ? xaiClient : openai;
         const providerName = isXAI ? 'xAI' : 'OpenAI';
         
-        const openaiMessages = messages.map((msg: ChatMessage) => {
+        const openaiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = messages.map((msg: ChatMessage): OpenAI.Chat.ChatCompletionMessageParam => {
           if (msg.role === 'user') {
             return {
               role: 'user',
               content: markdownToOpenAIParts(msg.content),
-            } as any;
+            };
+          }
+          if (msg.role === 'assistant') {
+            return {
+              role: 'assistant',
+              content: msg.content,
+            };
           }
           return {
-            role: msg.role,
+            role: 'system',
             content: msg.content,
           };
         });
@@ -138,7 +161,7 @@ export async function POST(req: NextRequest) {
         const isO1Model = model.startsWith('o1');
         
         if (isO1Model) {
-          const config: any = {
+          const config: OpenAI.Chat.ChatCompletionCreateParams = {
             model,
             messages: openaiMessages,
           };
@@ -167,16 +190,16 @@ export async function POST(req: NextRequest) {
                 'Referrer-Policy': 'strict-origin-when-cross-origin',
               },
             });
-          } catch (apiError: any) {
+          } catch (apiError) {
             console.error(`${providerName} API error:`, apiError);
             await rollbackRateLimit(req, rateLimitIncremented);
             
-            const errorMessage = getProviderErrorMessage(apiError, providerName);
+            const errorMessage = getProviderErrorMessage(apiError as APIError, providerName);
             return NextResponse.json({ error: errorMessage }, { status: 503 });
           }
         }
 
-        const streamConfig: any = {
+        const streamConfig: OpenAI.Chat.ChatCompletionCreateParams & { stream: true } = {
           model,
           messages: openaiMessages,
           stream: true,
@@ -188,7 +211,7 @@ export async function POST(req: NextRequest) {
           const readableStream = new ReadableStream({
             async start(controller) {
               try {
-                for await (const chunk of stream as any) {
+                for await (const chunk of stream) {
                   const content = chunk.choices[0]?.delta?.content || '';
                   if (content) {
                     controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content })}\n\n`));
@@ -215,11 +238,11 @@ export async function POST(req: NextRequest) {
               'Referrer-Policy': 'strict-origin-when-cross-origin',
             },
           });
-        } catch (apiError: any) {
+        } catch (apiError) {
           console.error(`${providerName} API error:`, apiError);
           await rollbackRateLimit(req, rateLimitIncremented);
           
-          const errorMessage = getProviderErrorMessage(apiError, providerName);
+          const errorMessage = getProviderErrorMessage(apiError as APIError, providerName);
           return NextResponse.json({ error: errorMessage }, { status: 503 });
         }
       }
@@ -228,7 +251,7 @@ export async function POST(req: NextRequest) {
         const isGemini15 = model.startsWith('gemini-1.5');
         const toolKey = isGemini15 ? 'googleSearchRetrieval' : 'googleSearch';
 
-        const modelConfig: any = { 
+        const modelConfig = { 
           model,
           ...(webSearch && {
             tools: [{ [toolKey]: {} }]
@@ -238,7 +261,7 @@ export async function POST(req: NextRequest) {
         try {
           const geminiModel = genAI.getGenerativeModel(modelConfig);
           
-          const geminiMessages = messages
+          const geminiMessages: GeminiMessage[] = messages
             .filter((msg: ChatMessage) => msg.role !== 'system')
             .map((msg: ChatMessage) => ({
               role: msg.role === 'assistant' ? 'model' : 'user',
@@ -248,7 +271,7 @@ export async function POST(req: NextRequest) {
           const systemMessages = messages.filter((msg: ChatMessage) => msg.role === 'system');
           if (systemMessages.length > 0 && geminiMessages.length > 0) {
             const systemContent = systemMessages.map((msg: ChatMessage) => msg.content).join('\n\n');
-            const firstUserIndex = geminiMessages.findIndex((msg: any) => msg.role === 'user');
+            const firstUserIndex = geminiMessages.findIndex((msg: GeminiMessage) => msg.role === 'user');
             if (firstUserIndex !== -1) {
               geminiMessages[firstUserIndex].parts[0].text = 
                 systemContent + '\n\n' + geminiMessages[firstUserIndex].parts[0].text;
@@ -262,7 +285,7 @@ export async function POST(req: NextRequest) {
           const stream = new ReadableStream({
             async start(controller) {
               try {
-                let groundingMetadata: any = null;
+                let groundingMetadata: GroundingMetadata | null = null;
 
                 for await (const chunk of result.stream) {
                   const content = chunk.text();
@@ -276,7 +299,7 @@ export async function POST(req: NextRequest) {
                 
                 if (candidates && candidates[0]) {
                   if (candidates[0].groundingMetadata) {
-                    groundingMetadata = candidates[0].groundingMetadata;
+                    groundingMetadata = candidates[0].groundingMetadata as GroundingMetadata;
                     controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
                       groundingMetadata: {
                         groundingChunks: groundingMetadata.groundingChunks || [],
@@ -287,15 +310,24 @@ export async function POST(req: NextRequest) {
                     })}\n\n`));
                   }
 
-                  if ((candidates[0] as any).groundingAttributions) {
-                    const attributions = (candidates[0] as any).groundingAttributions;
-                    const convertedMetadata = {
-                      groundingChunks: attributions.map((attr: any) => ({
+                  const candidateWithAttributions = candidates[0] as typeof candidates[0] & {
+                    groundingAttributions?: Array<{
+                      web?: {
+                        uri: string;
+                        title: string;
+                      };
+                    }>;
+                  };
+
+                  if (candidateWithAttributions.groundingAttributions) {
+                    const attributions = candidateWithAttributions.groundingAttributions;
+                    const convertedMetadata: GroundingMetadata = {
+                      groundingChunks: attributions.map((attr) => ({
                         web: attr.web ? {
                           uri: attr.web.uri,
                           title: attr.web.title
                         } : undefined
-                      })).filter((chunk: any) => chunk.web),
+                      })).filter((chunk): chunk is { web: { uri: string; title: string } } => !!chunk.web),
                       groundingSupports: [],
                       webSearchQueries: [],
                       searchEntryPoint: undefined
@@ -328,11 +360,11 @@ export async function POST(req: NextRequest) {
               'Referrer-Policy': 'strict-origin-when-cross-origin',
             },
           });
-        } catch (apiError: any) {
+        } catch (apiError) {
           console.error('Gemini API error:', apiError);
           await rollbackRateLimit(req, rateLimitIncremented);
           
-          const errorMessage = getProviderErrorMessage(apiError, 'Google Gemini');
+          const errorMessage = getProviderErrorMessage(apiError as APIError, 'Google Gemini');
           return NextResponse.json({ error: errorMessage }, { status: 503 });
         }
       }
@@ -374,7 +406,7 @@ async function rollbackRateLimit(req: NextRequest, wasIncremented: boolean) {
   }
 }
 
-function getProviderErrorMessage(error: any, providerName: string): string {
+function getProviderErrorMessage(error: APIError, providerName: string): string {
   if (error?.status === 403) {
     if (providerName === 'xAI') {
       return 'xAI API access denied. Please check your credits and API key at https://console.x.ai/';
@@ -390,7 +422,7 @@ function getProviderErrorMessage(error: any, providerName: string): string {
     return `${providerName} authentication failed. Please check your API key.`;
   }
   
-  if (error?.status >= 500) {
+  if (error?.status && error.status >= 500) {
     return `${providerName} service is temporarily unavailable. Please try again later.`;
   }
   

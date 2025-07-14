@@ -2,7 +2,7 @@
 
 import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Sparkles, Zap } from "lucide-react";
+import { MessageSquare} from "lucide-react";
 import { useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useMutation } from "convex/react";

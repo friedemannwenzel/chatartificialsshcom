@@ -8,6 +8,7 @@ import jsx from 'react-syntax-highlighter/dist/cjs/languages/prism/jsx';
 import typescript from 'react-syntax-highlighter/dist/cjs/languages/prism/typescript';
 import javascript from 'react-syntax-highlighter/dist/cjs/languages/prism/javascript';
 import python from 'react-syntax-highlighter/dist/cjs/languages/prism/python';
+import Image from 'next/image';
 import css from 'react-syntax-highlighter/dist/cjs/languages/prism/css';
 import bash from 'react-syntax-highlighter/dist/cjs/languages/prism/bash';
 import json from 'react-syntax-highlighter/dist/cjs/languages/prism/json';
@@ -176,9 +177,11 @@ export function MessageContent({ content, className }: MessageContentProps) {
             
             return (
               <div className="my-4">
-                <img
+                <Image
                   src={src as string}
                   alt={alt || 'Uploaded image'}
+                  width={800}
+                  height={600}
                   className="rounded-lg border max-w-full h-auto max-h-96"
                   style={{ objectFit: 'contain' }}
                 />

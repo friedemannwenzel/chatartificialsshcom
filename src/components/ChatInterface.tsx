@@ -280,7 +280,7 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
                 groundingMetadata = parsed.groundingMetadata;
                 setStreamingGroundingMetadata(groundingMetadata);
               }
-            } catch (e) {
+            } catch {
               // Ignore parsing errors for partial JSON
             }
           }

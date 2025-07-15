@@ -89,7 +89,7 @@ export function MessageInputBar({
         storage.setSelectedModel(validCloudModel);
       }
     }
-  }, [getUserPreferences?.selectedModel?.id, user?.id]);
+  }, [getUserPreferences, user?.id, selectedModel.id]);
 
   // Handle closing the model selector when clicking outside
   useEffect(() => {

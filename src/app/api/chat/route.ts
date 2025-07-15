@@ -255,14 +255,14 @@ export async function POST(req: NextRequest) {
                       }
                       
                       // Handle different reasoning formats
-                      if ((delta as any)?.reasoning) {
+                      if ((delta as unknown as { reasoning?: string })?.reasoning) {
                         // OpenAI o1 style reasoning
-                        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ thinking: (delta as any).reasoning })}\n\n`));
+                        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ thinking: (delta as unknown as { reasoning: string }).reasoning })}\n\n`));
                       }
                       
-                      if (isGrokModel && (chunk as any)?.reasoning) {
+                      if (isGrokModel && (chunk as unknown as { reasoning?: string })?.reasoning) {
                         // Grok style reasoning
-                        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ thinking: (chunk as any).reasoning })}\n\n`));
+                        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ thinking: (chunk as unknown as { reasoning: string }).reasoning })}\n\n`));
                       }
                     }
                     controller.enqueue(encoder.encode('data: [DONE]\n\n'));
@@ -305,7 +305,7 @@ export async function POST(req: NextRequest) {
             try {
               const response = await client.chat.completions.create(config) as OpenAI.Chat.ChatCompletion;
               const content = response.choices[0]?.message?.content || '';
-              const reasoning = (response.choices[0]?.message as any)?.reasoning || '';
+              const reasoning = (response.choices[0]?.message as unknown as { reasoning?: string })?.reasoning || '';
               
               const stream = new ReadableStream({
                 start(controller) {
@@ -391,8 +391,6 @@ export async function POST(req: NextRequest) {
       if (isGemini) {
         const isGemini15 = model.startsWith('gemini-1.5');
         const toolKey = isGemini15 ? 'googleSearchRetrieval' : 'googleSearch';
-        const modelInfo = getModelById(model);
-        const supportsThinking = modelInfo?.supportsThinkingStream || false;
 
         const modelConfig = { 
           model,

@@ -236,7 +236,7 @@ export function MessageContent({ content, className }: MessageContentProps) {
 
           li({ children }) {
             return (
-              <li className="text-sm leading-relaxed text-[#A7A7A7] text-base">
+              <li className=" leading-relaxed text-[#A7A7A7] text-base">
                 {children}
               </li>
             );

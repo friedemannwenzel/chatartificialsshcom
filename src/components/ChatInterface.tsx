@@ -5,39 +5,35 @@ import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { MoreHorizontal, RotateCcw, Edit, Copy, GitBranch, Check, ExternalLink, Globe, ChevronDown, ChevronRight } from "lucide-react";
+import { Brain } from "lucide-react";
 import { Doc } from "../../convex/_generated/dataModel";
 import { MessageInputBar } from "./MessageInputBar";
+import { MessageActions } from "./MessageActions";
+import { SearchGroundingDetails } from "./SearchGroundingDetails";
 import { AIModel } from "@/lib/models";
 import { storage } from "@/lib/storage";
 import { MessageContent } from "./MessageContent";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
-import { Badge } from "@/components/ui/badge";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { generateChatTitle } from "@/lib/generateChatTitle";
 
-interface GroundingChunk {
-  web?: {
-    uri: string;
-    title: string;
-  };
-}
-
-interface GroundingSupport {
-  segment: {
-    startIndex: number;
-    endIndex: number;
-    text: string;
-  };
-  groundingChunkIndices: number[];
-  confidenceScores: number[];
-}
-
 interface GroundingMetadata {
-  groundingChunks: GroundingChunk[];
-  groundingSupports: GroundingSupport[];
+  groundingChunks: Array<{
+    web?: {
+      uri: string;
+      title: string;
+    };
+  }>;
+  groundingSupports: Array<{
+    segment: {
+      startIndex: number;
+      endIndex: number;
+      text: string;
+    };
+    groundingChunkIndices: number[];
+    confidenceScores: number[];
+  }>;
   webSearchQueries: string[];
   searchEntryPoint?: {
     renderedContent: string;
@@ -50,104 +46,10 @@ interface ChatInterfaceProps {
   chatExists?: boolean;
 }
 
-// Search Grounding Details component with collapsible dropdown
-const SearchGroundingDetails = ({ groundingMetadata }: { groundingMetadata: GroundingMetadata }) => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  if (!groundingMetadata || !groundingMetadata.groundingChunks || groundingMetadata.groundingChunks.length === 0) {
-    return null;
-  }
-
-  const webSources = groundingMetadata.groundingChunks
-    .filter(chunk => chunk && chunk.web)
-    .map(chunk => chunk.web!)
-    .filter((source, index, self) => 
-      index === self.findIndex(s => s.uri === source.uri)
-    );
-
-  if (webSources.length === 0) {
-    return null;
-  }
-
-  return (
-    <div className="mt-3">
-      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <CollapsibleTrigger asChild>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 px-3 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2"
-          >
-            {isOpen ? (
-              <ChevronDown className="w-3 h-3" />
-            ) : (
-              <ChevronRight className="w-3 h-3" />
-            )}
-            <Globe className="w-3 h-3" />
-            Search Grounding Details
-            <Badge variant="secondary" className="text-xs ml-1">
-              {webSources.length}
-            </Badge>
-          </Button>
-        </CollapsibleTrigger>
-        <CollapsibleContent className="mt-2">
-          <div className="p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
-            <div className="flex items-center gap-2 mb-3">
-              <Globe className="w-4 h-4 text-blue-600" />
-              <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                Search Queries:
-              </span>
-              <div className="flex flex-wrap gap-1">
-                {groundingMetadata.webSearchQueries.map((query, index) => (
-                  <Badge key={index} variant="secondary" className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
-                    {query}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">
-                Sources ({webSources.length}):
-              </div>
-              {webSources.map((source, index) => (
-                <a
-                  key={index}
-                  href={source.uri}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-start gap-2 p-2 rounded-md hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors group"
-                >
-                  <span className="text-xs font-mono text-blue-600 dark:text-blue-400 mt-0.5 min-w-[1.5rem]">
-                    [{index + 1}]
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-blue-800 dark:text-blue-200 truncate group-hover:text-blue-900 dark:group-hover:text-blue-100">
-                      {source.title}
-                    </div>
-                    <div className="text-xs text-blue-600 dark:text-blue-400 truncate">
-                      {source.uri}
-                    </div>
-                  </div>
-                  <ExternalLink className="w-3 h-3 text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity mt-0.5" />
-                </a>
-              ))}
-              {groundingMetadata.searchEntryPoint?.renderedContent && (
-                <div
-                  className="mt-3"
-                  dangerouslySetInnerHTML={{ __html: groundingMetadata.searchEntryPoint.renderedContent }}
-                />
-              )}
-            </div>
-          </div>
-        </CollapsibleContent>
-      </Collapsible>
-    </div>
-  );
-};
-
 export function ChatInterface({ chatId, messages, chatExists = true }: ChatInterfaceProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [streamingMessage, setStreamingMessage] = useState("");
+  const [streamingThinking, setStreamingThinking] = useState("");
   const [streamingGroundingMetadata, setStreamingGroundingMetadata] = useState<GroundingMetadata | null>(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [hoveredMessage, setHoveredMessage] = useState<string | null>(null);
@@ -315,6 +217,7 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
     
     setIsLoading(true);
     setStreamingMessage("");
+    setStreamingThinking("");
 
     // Use provided model or get from storage
     const selectedModel = model || storage.getSelectedModel();
@@ -329,6 +232,7 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
           messages: messages.map(msg => ({
             role: msg.role,
             content: msg.content,
+            attachments: msg.attachments,
           })),
           model: selectedModel.id,
           webSearch,
@@ -342,18 +246,23 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let assistantMessage = "";
+      let currentThinking = "";
       let groundingMetadata: GroundingMetadata | null = null;
+      let buffer = "";
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
-        const chunk = decoder.decode(value);
-        const lines = chunk.split("\n");
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        
+        // Keep the last incomplete line in the buffer
+        buffer = lines.pop() || "";
 
         for (const line of lines) {
           if (line.startsWith("data: ")) {
-            const data = line.slice(6);
+            const data = line.slice(6).trim();
             if (data === "[DONE]") {
               break;
             }
@@ -363,12 +272,16 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
                 assistantMessage += parsed.content;
                 setStreamingMessage(assistantMessage);
               }
+              if (parsed.thinking) {
+                currentThinking += parsed.thinking;
+                setStreamingThinking(currentThinking);
+              }
               if (parsed.groundingMetadata) {
                 groundingMetadata = parsed.groundingMetadata;
                 setStreamingGroundingMetadata(groundingMetadata);
               }
-            } catch {
-              // Ignore parsing errors
+            } catch (e) {
+              // Ignore parsing errors for partial JSON
             }
           }
         }
@@ -377,6 +290,7 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
       if (assistantMessage) {
         // Hide the streaming preview before persisting the final message to prevent duplicate bubbles
         setStreamingMessage("");
+        setStreamingThinking("");
         setStreamingGroundingMetadata(null);
 
         await addMessage({
@@ -411,7 +325,8 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
       messages.length > 0 && 
       messages[messages.length - 1].role === "user" &&
       !isLoading &&
-      !streamingMessage;
+      !streamingMessage &&
+      !streamingThinking;
     
     if (shouldTriggerResponse) {
       // Check if this is an odd number of messages (user message without response)
@@ -421,7 +336,7 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
         handleAIResponse(pendingModel, pendingWebSearch);
       }
     }
-  }, [messages, isLoading, streamingMessage, handleAIResponse, pendingModel, pendingWebSearch]);
+  }, [messages, isLoading, streamingMessage, streamingThinking, handleAIResponse, pendingModel, pendingWebSearch]);
 
   const handleSendMessage = async (content: string, model: AIModel, webSearch?: boolean, attachments?: Array<{ url: string; name: string; type: string; size?: number }>) => {
     if (isLoading || !user?.id) return;
@@ -471,121 +386,7 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
     }
   };
 
-  // Message Actions Component
-  const MessageActions = ({ 
-    messageId, 
-    messageIndex, 
-    role, 
-    content, 
-    model 
-  }: { 
-    messageId: string; 
-    messageIndex: number; 
-    role: "user" | "assistant"; 
-    content: string; 
-    model?: string;
-  }) => {
-    const isHovered = hoveredMessage === messageId;
-    const showActions = isHovered;
-    const isCopied = copiedMessage === messageId;
 
-    return (
-      <div className={`flex ${role === "user" ? "justify-end" : "justify-start"} mt-2`}>
-        <div 
-          className="flex items-center gap-1"
-          onMouseEnter={() => setHoveredMessage(messageId)}
-          onMouseLeave={() => setHoveredMessage(null)}
-        >
-          {!showActions ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 w-6 p-0  transition-opacity duration-200 hover:bg-[#2C2C2C] cursor-pointer text-[#A7A7A7]"
-            >
-              <MoreHorizontal className="h-3 w-3 text-[#A7A7A7]" />
-            </Button>
-          ) : (
-            <div className="flex items-center gap-1 text-[#5D5D5D] hover:text-[#A7A7A7]">
-              {role === "user" ? (
-                <>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0  hover:text-[#A7A7A7]  transition-colors cursor-pointer"
-                    onClick={() => handleRetry(messageIndex)}
-                    title="Retry"
-                  >
-                    <RotateCcw className="h-3 w-3" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0  hover:text-[#A7A7A7]  transition-colors cursor-pointer"
-                    onClick={() => handleEdit(messageId, content)}
-                    title="Edit"
-                  >
-                    <Edit className="h-3 w-3" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0  hover:text-[#A7A7A7]  transition-colors cursor-pointer"
-                    onClick={() => copyToClipboard(content, messageId)}
-                    title="Copy"
-                  >
-                    {isCopied ? (
-                      <Check className="h-3 w-3 text-green-500" />
-                    ) : (
-                      <Copy className="h-3 w-3" />
-                    )}
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0 hover:text-[#A7A7A7]  transition-colors cursor-pointer"
-                    onClick={() => handleRetry(messageIndex)}
-                    title="Retry"
-                  >
-                    <RotateCcw className="h-3 w-3" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0 hover:text-[#A7A7A7]  transition-colors cursor-pointer"
-                    onClick={() => copyToClipboard(content, messageId)}
-                    title="Copy"
-                  >
-                    {isCopied ? (
-                      <Check className="h-3 w-3 text-green-500" />
-                    ) : (
-                      <Copy className="h-3 w-3" />
-                    )}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0 hover:text-[#A7A7A7]  transition-colors cursor-pointer"
-                    onClick={() => handleBranch(messageIndex)}
-                    title="Branch"
-                  >
-                    <GitBranch className="h-3 w-3" />
-                  </Button>
-                  {model && (
-                    <span className="text-xs text-muted-foreground px-2 py-1 bg-white/5 rounded-[20px] ml-2">
-                      {model}
-                    </span>
-                  )}
-                </>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
 
   return (
     <div className="flex flex-col h-full relative">
@@ -636,20 +437,12 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
                       </div>
                     </div>
                   ) : (
-                    <>
-                      {message.role === "assistant" ? (
-                        <>
-                          <MessageContent content={message.content} />
-                          {message.groundingMetadata && (
-                            <SearchGroundingDetails groundingMetadata={message.groundingMetadata} />
-                          )}
-                        </>
-                      ) : (
-                        <MessageContent content={message.content} />
-                      )}
-                    </>
+                    <MessageContent content={message.content} />
                   )}
                 </div>
+                {message.role === "assistant" && message.groundingMetadata && (
+                  <SearchGroundingDetails groundingMetadata={message.groundingMetadata} />
+                )}
                 {editingMessage !== message._id && (
                   <MessageActions
                     messageId={message._id}
@@ -657,10 +450,52 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
                     role={message.role}
                     content={message.content}
                     model={message.role === "assistant" ? storage.getSelectedModel().name : undefined}
+                    onRetry={handleRetry}
+                    onEdit={handleEdit}
+                    onCopy={copyToClipboard}
+                    onBranch={handleBranch}
+                    hoveredMessage={hoveredMessage}
+                    setHoveredMessage={setHoveredMessage}
+                    copiedMessage={copiedMessage}
                   />
                 )}
               </div>
             ))}
+
+            {isLoading && !streamingMessage && !streamingThinking && (
+              <div 
+                className="flex flex-col items-start"
+                onMouseEnter={() => setHoveredMessage("loading")}
+                onMouseLeave={() => setHoveredMessage(null)}
+              >
+                <div className="rounded-[20px] pt-3 relative group flex items-center justify-center text-[#A7A7A7]">
+                  <div className="flex items-center gap-3 p-4">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#A7A7A7] border-t-transparent" />
+                    <span className="text-sm text-[#5D5D5D]">Thinking...</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {streamingThinking && (
+              <div 
+                className="flex flex-col items-start"
+                onMouseEnter={() => setHoveredMessage("thinking")}
+                onMouseLeave={() => setHoveredMessage(null)}
+              >
+                <div className="rounded-[20px] pt-3 relative group flex items-center justify-start text-[#A7A7A7] max-w-[80%]">
+                  <div className="w-full">
+                    <div className="flex items-center gap-2 mb-3 text-blue-400">
+                      <Brain className="w-4 h-4" />
+                      <span className="text-sm font-medium">Thinking</span>
+                    </div>
+                    <div className="text-sm text-[#5D5D5D] bg-[#0A0A0A] p-3 rounded-[15px] border border-[#2C2C2C]/50">
+                      <MessageContent content={streamingThinking} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {streamingMessage && (
               <div 
@@ -668,18 +503,25 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
                 onMouseEnter={() => setHoveredMessage("streaming")}
                 onMouseLeave={() => setHoveredMessage(null)}
               >
-                <div className="max-w-[80%] rounded-2xl p-4 bg-card/70 backdrop-blur-xl border border-white/20 shadow-md relative group">
+                <div className="rounded-[20px] pt-3 relative group flex items-center justify-center text-[#A7A7A7]">
                   <MessageContent content={streamingMessage} />
-                  {streamingGroundingMetadata && (
-                    <SearchGroundingDetails groundingMetadata={streamingGroundingMetadata} />
-                  )}
                 </div>
+                {streamingGroundingMetadata && (
+                  <SearchGroundingDetails groundingMetadata={streamingGroundingMetadata} />
+                )}
                 <MessageActions
                   messageId="streaming"
                   messageIndex={messages.length}
                   role="assistant"
                   content={streamingMessage}
                   model={storage.getSelectedModel().name}
+                  onRetry={handleRetry}
+                  onEdit={handleEdit}
+                  onCopy={copyToClipboard}
+                  onBranch={handleBranch}
+                  hoveredMessage={hoveredMessage}
+                  setHoveredMessage={setHoveredMessage}
+                  copiedMessage={copiedMessage}
                 />
               </div>
             )}

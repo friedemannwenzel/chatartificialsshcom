@@ -2,15 +2,22 @@ import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import OpenAI from 'openai';
 import { auth } from '@clerk/nextjs/server';
+import { getModelById } from '@/lib/models';
 
 interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
+  attachments?: Array<{
+    url: string;
+    name: string;
+    type: string;
+    size?: number;
+  }>;
 }
 
 interface GeminiMessage {
   role: 'user' | 'model';
-  parts: Array<{ text: string }>;
+  parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }>;
 }
 
 interface APIError {
@@ -62,6 +69,65 @@ function markdownToOpenAIParts(md: string): Array<{ type: 'text'; text: string }
     if (textRemainder.trim()) parts.push({ type: 'text', text: textRemainder });
   }
   if (parts.length === 0) return [{ type: 'text', text: md }];
+  return parts;
+}
+
+async function convertImageToBase64(url: string): Promise<string> {
+  try {
+    const response = await fetch(url);
+    const buffer = await response.arrayBuffer();
+    const base64 = Buffer.from(buffer).toString('base64');
+    return base64;
+  } catch (error) {
+    console.error('Error converting image to base64:', error);
+    throw error;
+  }
+}
+
+async function messageToGeminiParts(message: ChatMessage): Promise<Array<{ text: string } | { inlineData: { mimeType: string; data: string } }>> {
+  const parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [];
+  
+  // Handle text content (remove markdown images since we'll handle attachments separately)
+  let textContent = message.content;
+  if (message.attachments && message.attachments.length > 0) {
+    // Remove markdown images from text content
+    textContent = textContent.replace(imageRegex, '').trim();
+  }
+  
+  if (textContent) {
+    parts.push({ text: textContent });
+  }
+  
+  // Handle attachments
+  if (message.attachments && message.attachments.length > 0) {
+    for (const attachment of message.attachments) {
+      const isImage = attachment.type?.startsWith("image/") || 
+        (!attachment.type && [".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp"].some(ext => 
+          attachment.name.toLowerCase().endsWith(ext)
+        ));
+      
+      if (isImage) {
+        try {
+          const base64Data = await convertImageToBase64(attachment.url);
+          const mimeType = attachment.type || 'image/jpeg';
+          parts.push({
+            inlineData: {
+              mimeType,
+              data: base64Data
+            }
+          });
+        } catch (error) {
+          console.error('Failed to process image attachment:', error);
+          // Add as text fallback
+          parts.push({ text: `[Image: ${attachment.name}]` });
+        }
+      } else {
+        // Non-image files as text reference
+        parts.push({ text: `[File: ${attachment.name}](${attachment.url})` });
+      }
+    }
+  }
+  
   return parts;
 }
 
@@ -158,44 +224,119 @@ export async function POST(req: NextRequest) {
           };
         });
 
-        const isO1Model = model.startsWith('o1');
+        const modelInfo = getModelById(model);
+        const isReasoningModel = modelInfo?.isReasoningModel || model.startsWith('o1') || model.startsWith('o4');
+        const supportsThinkingStream = modelInfo?.supportsThinkingStream || false;
+        const isGrokModel = model.startsWith('grok');
         
-        if (isO1Model) {
-          const config: OpenAI.Chat.ChatCompletionCreateParams = {
-            model,
-            messages: openaiMessages,
-          };
-          
-          try {
-            const response = await client.chat.completions.create(config);
-            const content = response.choices[0]?.message?.content || '';
-            
-            const stream = new ReadableStream({
-              start(controller) {
-                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content })}\n\n`));
-                controller.enqueue(encoder.encode('data: [DONE]\n\n'));
-                controller.close();
-              },
-            });
+        if (isReasoningModel) {
+          if (supportsThinkingStream) {
+            const streamConfig: OpenAI.Chat.ChatCompletionCreateParams & { stream: true; stream_options?: { include_usage?: boolean } } = {
+              model,
+              messages: openaiMessages,
+              stream: true,
+              ...(isGrokModel && {
+                reasoning_effort: "medium"  // Grok-specific parameter
+              }),
+              stream_options: { include_usage: true },
+            };
 
-            return new Response(stream, {
-              headers: {
-                'Content-Type': 'text/plain; charset=utf-8',
-                'Cache-Control': 'no-cache, no-store, must-revalidate, private',
-                'Pragma': 'no-cache',
-                'Expires': '0',
-                'Connection': 'keep-alive',
-                'X-Content-Type-Options': 'nosniff',
-                'X-Frame-Options': 'DENY',
-                'Referrer-Policy': 'strict-origin-when-cross-origin',
-              },
-            });
-          } catch (apiError) {
-            console.error(`${providerName} API error:`, apiError);
-            await rollbackRateLimit(req, rateLimitIncremented);
+            try {
+              const stream = await client.chat.completions.create(streamConfig);
+
+              const readableStream = new ReadableStream({
+                async start(controller) {
+                  try {
+                    for await (const chunk of stream) {
+                      const delta = chunk.choices[0]?.delta;
+                      
+                      if (delta?.content) {
+                        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content: delta.content })}\n\n`));
+                      }
+                      
+                      // Handle different reasoning formats
+                      if ((delta as any)?.reasoning) {
+                        // OpenAI o1 style reasoning
+                        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ thinking: (delta as any).reasoning })}\n\n`));
+                      }
+                      
+                      if (isGrokModel && (chunk as any)?.reasoning) {
+                        // Grok style reasoning
+                        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ thinking: (chunk as any).reasoning })}\n\n`));
+                      }
+                    }
+                    controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+                    controller.close();
+                  } catch (streamError) {
+                    console.error(`${providerName} reasoning streaming error:`, streamError);
+                    controller.error(streamError);
+                  }
+                },
+              });
+
+              return new Response(readableStream, {
+                headers: {
+                  'Content-Type': 'text/plain; charset=utf-8',
+                  'Cache-Control': 'no-cache, no-store, must-revalidate, private',
+                  'Pragma': 'no-cache',
+                  'Expires': '0',
+                  'Connection': 'keep-alive',
+                  'X-Content-Type-Options': 'nosniff',
+                  'X-Frame-Options': 'DENY',
+                  'Referrer-Policy': 'strict-origin-when-cross-origin',
+                },
+              });
+            } catch (apiError) {
+              console.error(`${providerName} API error:`, apiError);
+              await rollbackRateLimit(req, rateLimitIncremented);
+              
+              const errorMessage = getProviderErrorMessage(apiError as APIError, providerName);
+              return NextResponse.json({ error: errorMessage }, { status: 503 });
+            }
+          } else {
+            const config: OpenAI.Chat.ChatCompletionCreateParams = {
+              model,
+              messages: openaiMessages,
+              ...(isGrokModel && {
+                reasoning_effort: "medium"
+              }),
+            };
             
-            const errorMessage = getProviderErrorMessage(apiError as APIError, providerName);
-            return NextResponse.json({ error: errorMessage }, { status: 503 });
+            try {
+              const response = await client.chat.completions.create(config) as OpenAI.Chat.ChatCompletion;
+              const content = response.choices[0]?.message?.content || '';
+              const reasoning = (response.choices[0]?.message as any)?.reasoning || '';
+              
+              const stream = new ReadableStream({
+                start(controller) {
+                  if (reasoning) {
+                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ thinking: reasoning })}\n\n`));
+                  }
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content })}\n\n`));
+                  controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+                  controller.close();
+                },
+              });
+
+              return new Response(stream, {
+                headers: {
+                  'Content-Type': 'text/plain; charset=utf-8',
+                  'Cache-Control': 'no-cache, no-store, must-revalidate, private',
+                  'Pragma': 'no-cache',
+                  'Expires': '0',
+                  'Connection': 'keep-alive',
+                  'X-Content-Type-Options': 'nosniff',
+                  'X-Frame-Options': 'DENY',
+                  'Referrer-Policy': 'strict-origin-when-cross-origin',
+                },
+              });
+            } catch (apiError) {
+              console.error(`${providerName} API error:`, apiError);
+              await rollbackRateLimit(req, rateLimitIncremented);
+              
+              const errorMessage = getProviderErrorMessage(apiError as APIError, providerName);
+              return NextResponse.json({ error: errorMessage }, { status: 503 });
+            }
           }
         }
 
@@ -250,6 +391,8 @@ export async function POST(req: NextRequest) {
       if (isGemini) {
         const isGemini15 = model.startsWith('gemini-1.5');
         const toolKey = isGemini15 ? 'googleSearchRetrieval' : 'googleSearch';
+        const modelInfo = getModelById(model);
+        const supportsThinking = modelInfo?.supportsThinkingStream || false;
 
         const modelConfig = { 
           model,
@@ -261,20 +404,29 @@ export async function POST(req: NextRequest) {
         try {
           const geminiModel = genAI.getGenerativeModel(modelConfig);
           
-          const geminiMessages: GeminiMessage[] = messages
-            .filter((msg: ChatMessage) => msg.role !== 'system')
-            .map((msg: ChatMessage) => ({
+          const geminiMessages: GeminiMessage[] = [];
+          
+          // Process messages and handle attachments
+          for (const msg of messages.filter((msg: ChatMessage) => msg.role !== 'system')) {
+            const parts = await messageToGeminiParts(msg);
+            geminiMessages.push({
               role: msg.role === 'assistant' ? 'model' : 'user',
-              parts: [{ text: msg.content }],
-            }));
+              parts: parts,
+            });
+          }
 
+          // Handle system messages by prepending to first user message
           const systemMessages = messages.filter((msg: ChatMessage) => msg.role === 'system');
           if (systemMessages.length > 0 && geminiMessages.length > 0) {
             const systemContent = systemMessages.map((msg: ChatMessage) => msg.content).join('\n\n');
             const firstUserIndex = geminiMessages.findIndex((msg: GeminiMessage) => msg.role === 'user');
             if (firstUserIndex !== -1) {
-              geminiMessages[firstUserIndex].parts[0].text = 
-                systemContent + '\n\n' + geminiMessages[firstUserIndex].parts[0].text;
+              const firstTextPart = geminiMessages[firstUserIndex].parts.find(part => 'text' in part);
+              if (firstTextPart && 'text' in firstTextPart) {
+                firstTextPart.text = systemContent + '\n\n' + firstTextPart.text;
+              } else {
+                geminiMessages[firstUserIndex].parts.unshift({ text: systemContent });
+              }
             }
           }
 

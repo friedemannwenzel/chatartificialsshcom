@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Globe, ChevronDown, Paperclip, X, AlertTriangle, ArrowUp, ArrowDown, ChevronUp } from "lucide-react";
+import { Globe, ChevronDown, Paperclip, X, AlertTriangle, ArrowUp, ArrowDown, ChevronUp, Brain, Eye, FileText } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -80,29 +81,6 @@ export function MessageInputBar({
   useAutoSizeTextArea(textAreaRef.current, message);
 
   useEffect(() => {
-    if (user?.id) {
-      const cloudSync: CloudSyncOptions = {
-        userId: user.id,
-        updateCloudPreferences: async (userId: string, preferences: UserPreferences) => {
-          await setUserPreferences({
-            userId,
-            selectedModel: preferences.selectedModel,
-          });
-        },
-        getCloudPreferences: async () => {
-          return null;
-        },
-      };
-
-      storage.loadFromCloud(cloudSync).then((preferences) => {
-        if (preferences.selectedModel.id !== selectedModel.id) {
-          setSelectedModel(preferences.selectedModel);
-        }
-      });
-    }
-  }, [user?.id, setUserPreferences, selectedModel.id]);
-
-  useEffect(() => {
     if (getUserPreferences && user?.id) {
       const cloudModel = getUserPreferences.selectedModel;
       if (cloudModel && cloudModel.id !== selectedModel.id) {
@@ -111,7 +89,7 @@ export function MessageInputBar({
         storage.setSelectedModel(validCloudModel);
       }
     }
-  }, [getUserPreferences, selectedModel.id, user?.id]);
+  }, [getUserPreferences?.selectedModel?.id, user?.id]);
 
   // Handle closing the model selector when clicking outside
   useEffect(() => {
@@ -319,7 +297,7 @@ export function MessageInputBar({
                 <button
                   type="button"
                   onClick={() => setModelSelectorOpen(!modelSelectorOpen)}
-                  className="flex items-center gap-2 h-8 px-3 text-xs font-medium rounded-full border border-[#A7A7A7] bg-[#151515] hover:bg-[#2C2C2C] focus:outline-none  transition hover:cursor-pointer text-[#A7A7A7]"
+                  className="flex items-center gap-2 h-8 px-3 text-xs font-medium rounded-full border border-[#A7A7A7] bg-[#151515] hover:bg-[#2C2C2C] focus:outline-none transition hover:cursor-pointer text-[#A7A7A7]"
                   style={{ minWidth: 0 }}
                 >
                   {getProviderIcon(selectedModel.provider) && (
@@ -357,20 +335,53 @@ export function MessageInputBar({
                             {providerLabels[provider as keyof typeof providerLabels]}
                           </div>
                           {providerModels.map((model) => (
-                            <button
-                              key={model.id}
-                              onClick={() => handleModelChange(model)}
-                              className={`w-full flex items-center justify-between p-2 hover:bg-muted/50 rounded-[20px] text-left hover:cursor-pointer ${
-                                selectedModel.id === model.id ? "bg-muted/30" : ""
-                              }`}
-                            >
-                              <div className="flex flex-col">
-                                <span className="font-medium text-xs">{model.name}</span>
-                              </div>
-                              {selectedModel.id === model.id && (
-                                <div className="w-2 h-2 bg-primary rounded-full" />
-                              )}
-                            </button>
+                            <TooltipProvider key={model.id}>
+                              <button
+                                onClick={() => handleModelChange(model)}
+                                className={`w-full flex items-center justify-between p-2 hover:bg-muted/50 rounded-[20px] text-left hover:cursor-pointer ${
+                                  selectedModel.id === model.id ? "bg-muted/30" : ""
+                                }`}
+                              >
+                                <div className="flex items-center justify-between w-full">
+                                  <span className="font-medium text-xs">{model.name}</span>
+                                  <div className="flex items-center gap-1 ml-2">
+                                    {model.isReasoningModel && (
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Brain className="w-3 h-3 text-blue-400" />
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>Reasoning Model</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    )}
+                                    {model.supportsVision && (
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Eye className="w-3 h-3 text-green-400" />
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>Vision Capabilities</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    )}
+                                    {model.supportsFileUpload && (
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <FileText className="w-3 h-3 text-purple-400" />
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>File Upload Support</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    )}
+                                    {selectedModel.id === model.id && (
+                                      <div className="w-2 h-2 bg-primary rounded-full ml-1" />
+                                    )}
+                                  </div>
+                                </div>
+                              </button>
+                            </TooltipProvider>
                           ))}
                         </div>
                       ))}
@@ -396,68 +407,77 @@ export function MessageInputBar({
               )}
 
               {/* Upload Button */}
-              <AttachmentUploadButton
-                endpoint="messageAttachment"
-                onUploadBegin={(name: string) => {
-                  setUploadingFiles((prev) => [...prev, { name, progress: 0 }]);
-                }}
-                onUploadProgress={(progress: number) => {
-                  setUploadingFiles((prev) => 
-                    prev.map((file, index) => 
-                      index === prev.length - 1 ? { ...file, progress } : file
-                    )
-                  );
-                }}
-                onClientUploadComplete={(res: Array<{ url: string; name: string; type: string; size: number }>) => {
-                  if (!res) return;
-                  const files = res.map((f) => ({
-                    url: f.url,
-                    name: f.name,
-                    type: f.type,
-                    size: f.size,
-                  }));
-                  setAttachments((prev) => [...prev, ...files]);
-                  setUploadingFiles([]);
-                }}
-                onUploadError={() => {
-                  setUploadingFiles([]);
-                }}
-                className=""
-                appearance={{
-                  allowedContent: "hidden",
-                  button: "",
-                }}
-                content={{
-                  button: ({ isUploading, uploadProgress }) => (
-                    <div
-                      className={`border rounded-[20px] transition-all duration-200 p-2 flex items-center justify-center relative overflow-hidden
-                        ${attachments.length > 0
-                          ? " border-[#A7A7A7] text-[#A7A7A7] hover:bg-[#2C2C2C]"
-                          : "bg-transparent border-[#2C2C2C] text-[#5D5D5D] hover:bg-[#2C2C2C] hover:text-[#A7A7A7]"
-                        }
-                        ${isUploading ? "border-[#A7A7A7] text-[#A7A7A7]" : ""}
-                        hover:cursor-pointer
-                      `}
-                    >
-                      {isUploading && (
-                        <div
-                          className="absolute inset-0 bg-blue-500/20 transition-all duration-300"
-                          style={{
-                            width: `${uploadProgress}%`,
-                          }}
-                        />
-                      )}
-                      <div className="relative z-10 flex items-center justify-center">
-                        {isUploading ? (
-                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#A7A7A7] border-t-transparent" />
-                        ) : (
-                          <Paperclip className="w-4 h-4" />
+              {(selectedModel.supportsVision || selectedModel.supportsFileUpload) ? (
+                <AttachmentUploadButton
+                  endpoint="messageAttachment"
+                  onUploadBegin={(name: string) => {
+                    setUploadingFiles((prev) => [...prev, { name, progress: 0 }]);
+                  }}
+                  onUploadProgress={(progress: number) => {
+                    setUploadingFiles((prev) => 
+                      prev.map((file, index) => 
+                        index === prev.length - 1 ? { ...file, progress } : file
+                      )
+                    );
+                  }}
+                  onClientUploadComplete={(res: Array<{ url: string; name: string; type: string; size: number }>) => {
+                    if (!res) return;
+                    const files = res.map((f) => ({
+                      url: f.url,
+                      name: f.name,
+                      type: f.type,
+                      size: f.size,
+                    }));
+                    setAttachments((prev) => [...prev, ...files]);
+                    setUploadingFiles([]);
+                  }}
+                  onUploadError={() => {
+                    setUploadingFiles([]);
+                  }}
+                  className=""
+                  appearance={{
+                    allowedContent: "hidden",
+                    button: "",
+                  }}
+                  content={{
+                    button: ({ isUploading, uploadProgress }) => (
+                      <div
+                        className={`border rounded-[20px] transition-all duration-200 p-2 flex items-center justify-center relative overflow-hidden
+                          ${attachments.length > 0
+                            ? " border-[#A7A7A7] text-[#A7A7A7] hover:bg-[#2C2C2C]"
+                            : "bg-transparent border-[#2C2C2C] text-[#5D5D5D] hover:bg-[#2C2C2C] hover:text-[#A7A7A7]"
+                          }
+                          ${isUploading ? "border-[#A7A7A7] text-[#A7A7A7]" : ""}
+                          hover:cursor-pointer
+                        `}
+                      >
+                        {isUploading && (
+                          <div
+                            className="absolute inset-0 bg-blue-500/20 transition-all duration-300"
+                            style={{
+                              width: `${uploadProgress}%`,
+                            }}
+                          />
                         )}
+                        <div className="relative z-10 flex items-center justify-center">
+                          {isUploading ? (
+                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#A7A7A7] border-t-transparent" />
+                          ) : (
+                            <Paperclip className="w-4 h-4" />
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ),
-                }}
-              />
+                    ),
+                  }}
+                />
+              ) : (
+                <div
+                  className="border rounded-[20px] transition-all duration-200 p-2 flex items-center justify-center bg-transparent border-[#2C2C2C] text-[#5D5D5D] opacity-50 cursor-not-allowed"
+                  title="This model doesn't support file uploads"
+                >
+                  <Paperclip className="w-4 h-4" />
+                </div>
+              )}
 
               {/* Spacer */}
               <div className="flex-1" />

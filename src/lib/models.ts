@@ -7,6 +7,10 @@ export interface AIModel {
   supportsStreaming: boolean;
   supportsWebSearch?: boolean;
   capabilities?: string[];
+  isReasoningModel?: boolean;
+  supportsVision?: boolean;
+  supportsFileUpload?: boolean;
+  supportsThinkingStream?: boolean;
 }
 
 export const models: AIModel[] = [
@@ -18,7 +22,11 @@ export const models: AIModel[] = [
     maxTokens: 1048576,
     supportsStreaming: true,
     supportsWebSearch: true,
-    capabilities: ["text", "vision", "audio", "web-search"]
+    capabilities: ["text", "vision", "audio", "web-search"],
+    isReasoningModel: true,
+    supportsVision: true,
+    supportsFileUpload: true,
+    supportsThinkingStream: true,
   },
   {
     id: "gemini-2.5-flash-lite-preview-06-17",
@@ -28,7 +36,11 @@ export const models: AIModel[] = [
     maxTokens: 1000000,
     supportsStreaming: true,
     supportsWebSearch: true,
-    capabilities: ["text", "vision", "audio", "web-search"]
+    capabilities: ["text", "vision", "audio", "web-search"],
+    isReasoningModel: false,
+    supportsVision: true,
+    supportsFileUpload: true,
+    supportsThinkingStream: false,
   },
   {
     id: "gemini-2.0-flash",
@@ -38,7 +50,11 @@ export const models: AIModel[] = [
     maxTokens: 1048576,
     supportsStreaming: true,
     supportsWebSearch: true,
-    capabilities: ["text", "vision", "audio", "web-search"]
+    capabilities: ["text", "vision", "audio", "web-search"],
+    isReasoningModel: false,
+    supportsVision: true,
+    supportsFileUpload: true,
+    supportsThinkingStream: false,
   },
   {
     id: "grok-3-mini",
@@ -48,7 +64,11 @@ export const models: AIModel[] = [
     maxTokens: 131072,
     supportsStreaming: true,
     supportsWebSearch: false,
-    capabilities: ["text", "vision", "code"]
+    capabilities: ["text", "vision", "code"],
+    isReasoningModel: true,
+    supportsVision: true,
+    supportsFileUpload: false,
+    supportsThinkingStream: true,
   },
   {
     id: "gpt-4o",
@@ -58,7 +78,11 @@ export const models: AIModel[] = [
     maxTokens: 128000,
     supportsStreaming: true,
     supportsWebSearch: false,
-    capabilities: ["text", "vision", "code"]
+    capabilities: ["text", "vision", "code"],
+    isReasoningModel: false,
+    supportsVision: true,
+    supportsFileUpload: true,
+    supportsThinkingStream: false,
   },
   {
     id: "gpt-4o-mini",
@@ -68,7 +92,11 @@ export const models: AIModel[] = [
     maxTokens: 128000,
     supportsStreaming: true,
     supportsWebSearch: false,
-    capabilities: ["text", "vision", "code"]
+    capabilities: ["text", "vision", "code"],
+    isReasoningModel: false,
+    supportsVision: true,
+    supportsFileUpload: true,
+    supportsThinkingStream: false,
   },
   {
     id: "gpt-4.1",
@@ -78,7 +106,11 @@ export const models: AIModel[] = [
     maxTokens: 1047576,
     supportsStreaming: true,
     supportsWebSearch: false,
-    capabilities: ["text", "vision", "code"]
+    capabilities: ["text", "vision", "code"],
+    isReasoningModel: false,
+    supportsVision: true,
+    supportsFileUpload: true,
+    supportsThinkingStream: false,
   },
   {
     id: "gpt-4.1-mini",
@@ -88,7 +120,11 @@ export const models: AIModel[] = [
     maxTokens: 1047576,
     supportsStreaming: true,
     supportsWebSearch: false,
-    capabilities: ["text", "vision", "code"]
+    capabilities: ["text", "vision", "code"],
+    isReasoningModel: false,
+    supportsVision: true,
+    supportsFileUpload: true,
+    supportsThinkingStream: false,
   },
   {
     id: "gpt-4.1-nano",
@@ -98,7 +134,11 @@ export const models: AIModel[] = [
     maxTokens: 1047576,
     supportsStreaming: true,
     supportsWebSearch: false,
-    capabilities: ["text", "vision", "code"]
+    capabilities: ["text", "vision", "code"],
+    isReasoningModel: false,
+    supportsVision: true,
+    supportsFileUpload: true,
+    supportsThinkingStream: false,
   },
   {
     id: "o4-mini",
@@ -108,7 +148,11 @@ export const models: AIModel[] = [
     maxTokens: 200000,
     supportsStreaming: true,
     supportsWebSearch: false,
-    capabilities: ["text", "vision", "code"]
+    capabilities: ["text", "vision", "code"],
+    isReasoningModel: true,
+    supportsVision: false,
+    supportsFileUpload: false,
+    supportsThinkingStream: true,
   }
 ];
 

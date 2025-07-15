@@ -184,6 +184,7 @@ export function MessageContent({ content, className }: MessageContentProps) {
                   height={600}
                   className="rounded-lg border max-w-full h-auto max-h-96"
                   style={{ objectFit: 'contain' }}
+                  unoptimized
                 />
               </div>
             );

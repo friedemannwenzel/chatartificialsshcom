@@ -1,0 +1,9 @@
+<svg width="400" height="300" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="300" fill="#151515"/>
+  <circle cx="200" cy="120" r="40" fill="#A7A7A7" opacity="0.3"/>
+  <rect x="160" y="100" width="80" height="8" rx="4" fill="#A7A7A7" opacity="0.6"/>
+  <rect x="140" y="115" width="120" height="6" rx="3" fill="#A7A7A7" opacity="0.4"/>
+  <rect x="170" y="130" width="60" height="6" rx="3" fill="#A7A7A7" opacity="0.4"/>
+  <text x="200" y="200" text-anchor="middle" fill="#A7A7A7" font-family="Arial" font-size="24" font-weight="600">ArtificialSSH Chat</text>
+  <text x="200" y="230" text-anchor="middle" fill="#5D5D5D" font-family="Arial" font-size="14">AI Chat Mini App</text>
+</svg> 

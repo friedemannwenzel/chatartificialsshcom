@@ -10,6 +10,8 @@ import ConvexClientProvider from '@/components/ConvexClientProvider'
 import { SidebarLayout } from '@/components/SidebarLayout'
 import { ThemeProvider } from "@/components/theme-provider"
 import { SecurityProvider } from "@/components/SecurityProvider"
+import { MiniKitContextProvider } from '@/components/MiniKitProvider'
+import { MiniKitWrapper } from '@/components/MiniKitWrapper'
 
 const inter = Inter({
   variable: '--font-inter',
@@ -21,9 +23,28 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 })
 
-export const metadata: Metadata = {
-  title: 'ArtificialSSH Chat',
-  description: 'Modern AI chat application featuring multiple providers, beautiful UI, and comprehensive rate limiting - chat.artificialssh.com',
+export async function generateMetadata(): Promise<Metadata> {
+  const URL = process.env.NEXT_PUBLIC_URL;
+  return {
+    title: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME || 'ArtificialSSH Chat',
+    description: process.env.NEXT_PUBLIC_APP_DESCRIPTION || 'Modern AI chat application featuring multiple providers, beautiful UI, and comprehensive rate limiting - chat.artificialssh.com',
+    other: {
+      "fc:frame": JSON.stringify({
+        version: "next",
+        imageUrl: process.env.NEXT_PUBLIC_APP_HERO_IMAGE,
+        button: {
+          title: `Launch ${process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME || 'ArtificialSSH Chat'}`,
+          action: {
+            type: "launch_frame",
+            name: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME || 'ArtificialSSH Chat',
+            url: URL,
+            splashImageUrl: process.env.NEXT_PUBLIC_APP_SPLASH_IMAGE,
+            splashBackgroundColor: process.env.NEXT_PUBLIC_SPLASH_BACKGROUND_COLOR,
+          },
+        },
+      }),
+    },
+  };
 }
 
 export default function RootLayout({
@@ -35,26 +56,30 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en" className="dark" suppressHydrationWarning>
         <body className={`${inter.variable} ${geistMono.variable} antialiased`}>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="dark"
-            forcedTheme="dark"
-            enableSystem={false}
-            disableTransitionOnChange
-          >
-          <ConvexClientProvider>
-            <SecurityProvider>
-              <SignedIn>
-                <SidebarLayout>
-                  {children}
-                </SidebarLayout>
-              </SignedIn>
-              <SignedOut>
-                {children}
-              </SignedOut>
-            </SecurityProvider>
-          </ConvexClientProvider>
-          </ThemeProvider>
+          <MiniKitContextProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="dark"
+              forcedTheme="dark"
+              enableSystem={false}
+              disableTransitionOnChange
+            >
+            <ConvexClientProvider>
+              <SecurityProvider>
+                <MiniKitWrapper>
+                  <SignedIn>
+                    <SidebarLayout>
+                      {children}
+                    </SidebarLayout>
+                  </SignedIn>
+                  <SignedOut>
+                    {children}
+                  </SignedOut>
+                </MiniKitWrapper>
+              </SecurityProvider>
+            </ConvexClientProvider>
+            </ThemeProvider>
+          </MiniKitContextProvider>
         </body>
       </html>
     </ClerkProvider>

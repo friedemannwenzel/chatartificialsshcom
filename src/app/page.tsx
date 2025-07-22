@@ -123,7 +123,7 @@ export default function HomePage() {
             </SignInButton>
 
             <p className="text-sm text-muted-foreground mt-4">
-              Sign in to start chatting with AI
+              Sign in to start
             </p>
           </div>
         </div>

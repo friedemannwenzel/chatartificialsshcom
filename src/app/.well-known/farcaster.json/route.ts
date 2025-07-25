@@ -12,7 +12,6 @@ function withValidProperties(
 }
 
 export async function GET() {
-  const URL = process.env.NEXT_PUBLIC_URL;
 
   return Response.json({
     accountAssociation: {

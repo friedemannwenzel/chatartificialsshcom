@@ -34,7 +34,7 @@ export async function GET() {
       primaryCategory: process.env.NEXT_PUBLIC_APP_PRIMARY_CATEGORY || "productivity",
       tags: [],
       heroImageUrl: process.env.NEXT_PUBLIC_APP_HERO_IMAGE || `${baseUrl}/hero.svg`,
-      tagline: process.env.NEXT_PUBLIC_APP_TAGLINE || "The ultimate AI chat experience",
+      tagline: process.env.NEXT_PUBLIC_APP_TAGLINE || "Ultimate AI chat experience",
       ogTitle: process.env.NEXT_PUBLIC_APP_OG_TITLE || "ArtificialSSH Chat - Mini App",
       ogDescription: process.env.NEXT_PUBLIC_APP_OG_DESCRIPTION || "Chat with AI in Base App",
       ogImageUrl: process.env.NEXT_PUBLIC_APP_OG_IMAGE || `${baseUrl}/og.svg`,

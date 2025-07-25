@@ -24,22 +24,22 @@ const geistMono = Geist_Mono({
 })
 
 export async function generateMetadata(): Promise<Metadata> {
-  const URL = process.env.NEXT_PUBLIC_URL;
+  const baseUrl = process.env.NEXT_PUBLIC_URL || 'http://localhost:3000';
   return {
     title: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME || 'ArtificialSSH Chat',
     description: process.env.NEXT_PUBLIC_APP_DESCRIPTION || 'Modern AI chat application featuring multiple providers, beautiful UI, and comprehensive rate limiting - chat.artificialssh.com',
     other: {
       "fc:frame": JSON.stringify({
         version: "next",
-        imageUrl: process.env.NEXT_PUBLIC_APP_HERO_IMAGE,
+        imageUrl: process.env.NEXT_PUBLIC_APP_HERO_IMAGE || `${baseUrl}/hero.svg`,
         button: {
           title: `Launch ${process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME || 'ArtificialSSH Chat'}`,
           action: {
             type: "launch_frame",
             name: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME || 'ArtificialSSH Chat',
-            url: URL,
-            splashImageUrl: process.env.NEXT_PUBLIC_APP_SPLASH_IMAGE,
-            splashBackgroundColor: process.env.NEXT_PUBLIC_SPLASH_BACKGROUND_COLOR,
+            url: baseUrl,
+            splashImageUrl: process.env.NEXT_PUBLIC_APP_SPLASH_IMAGE || `${baseUrl}/splash.svg`,
+            splashBackgroundColor: process.env.NEXT_PUBLIC_SPLASH_BACKGROUND_COLOR || '#151515',
           },
         },
       }),

@@ -12,6 +12,7 @@ export interface CloudSyncOptions {
 
 class Storage {
   private readonly SELECTED_MODEL_KEY = 'selectedModel';
+  private readonly PENDING_INITIAL_KEY_PREFIX = 'pendingInitialMessage:';
 
   getSelectedModel(): AIModel {
     if (typeof window === 'undefined') {
@@ -48,6 +49,46 @@ class Storage {
       }
     } catch (error) {
       console.error('Error saving selected model:', error);
+    }
+  }
+
+  setPendingInitialMessage(
+    chatId: string,
+    payload: {
+      content: string;
+      model: AIModel;
+      webSearch?: boolean;
+      attachments?: Array<{ url: string; name: string; type: string; size?: number }>
+    }
+  ): void {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.setItem(
+        this.PENDING_INITIAL_KEY_PREFIX + chatId,
+        JSON.stringify(payload)
+      );
+    } catch (error) {
+      console.error('Error saving pending initial message:', error);
+    }
+  }
+
+  consumePendingInitialMessage(chatId: string): {
+    content: string;
+    model: AIModel;
+    webSearch?: boolean;
+    attachments?: Array<{ url: string; name: string; type: string; size?: number }>
+  } | null {
+    if (typeof window === 'undefined') return null;
+    try {
+      const key = this.PENDING_INITIAL_KEY_PREFIX + chatId;
+      const stored = localStorage.getItem(key);
+      if (!stored) return null;
+      localStorage.removeItem(key);
+      const parsed = JSON.parse(stored);
+      return parsed;
+    } catch (error) {
+      console.error('Error loading pending initial message:', error);
+      return null;
     }
   }
 

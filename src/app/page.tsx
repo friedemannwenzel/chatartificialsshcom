@@ -5,22 +5,19 @@ import { Button } from "@/components/ui/button";
 import { MessageSquare} from "lucide-react";
 import { useState } from "react";
 import { useUser } from "@clerk/nextjs";
-import { useMutation } from "convex/react";
-import { api } from "../../convex/_generated/api";
+ 
 import { MessageInputBar } from "@/components/MessageInputBar";
 import { AIModel } from "@/lib/models";
+import { storage } from "@/lib/storage";
 import { useRouter } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
-import { generateChatTitle } from "@/lib/generateChatTitle";
 
 export default function HomePage() {
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useUser();
   const router = useRouter();
 
-  const createChat = useMutation(api.chats.createChat);
-  const addMessage = useMutation(api.chats.addMessage);
-  const updateChatTitle = useMutation(api.chats.updateChatTitle);
+  
 
   const handleSendMessage = async (
     content: string,
@@ -52,36 +49,15 @@ export default function HomePage() {
     const newChatId = uuidv4();
     setIsLoading(true);
 
-    try {
-      // Create new chat
-      await createChat({
-        chatId: newChatId,
-        userId: user.id,
-      });
+    // Persist the initial message locally and navigate immediately
+    storage.setPendingInitialMessage(newChatId, {
+      content: finalContent,
+      model,
+      webSearch,
+      attachments,
+    });
 
-      // Add user message
-      await addMessage({
-        chatId: newChatId,
-        content: finalContent,
-        role: "user",
-        attachments,
-      });
-
-      // Generate title from first message
-      const generatedTitle = await generateChatTitle(finalContent);
-      if (generatedTitle) {
-        await updateChatTitle({
-          chatId: newChatId,
-          title: generatedTitle,
-        });
-      }
-
-      // Redirect to the new chat
-      router.push(`/c/${newChatId}`);
-    } catch (error) {
-      console.error("Error creating chat:", error);
-      setIsLoading(false);
-    }
+    router.push(`/c/${newChatId}`);
   };
 
   return (

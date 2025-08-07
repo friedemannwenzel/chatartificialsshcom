@@ -67,6 +67,30 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
   const createChat = useMutation(api.chats.createChat);
   const deleteMessagesFromIndex = useMutation(api.chats.deleteMessagesFromIndex);
 
+  useEffect(() => {
+    if (!user?.id || !chatId) return;
+    const pending = storage.consumePendingInitialMessage(chatId);
+    if (!pending) return;
+    const run = async () => {
+      try {
+        if (!chatExists) {
+          await createChat({ chatId, userId: user.id });
+        }
+        await addMessage({
+          chatId,
+          content: pending.content,
+          role: "user",
+          attachments: pending.attachments,
+        });
+        setPendingModel(pending.model);
+        setPendingWebSearch(pending.webSearch);
+      } catch (e) {
+        console.error("Failed to persist pending initial message:", e);
+      }
+    };
+    run();
+  }, [user?.id, chatId, chatExists, createChat, addMessage]);
+
   // Message action functions
   const copyToClipboard = async (text: string, messageId: string) => {
     try {
@@ -249,6 +273,8 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
       let currentThinking = "";
       let groundingMetadata: GroundingMetadata | null = null;
       let buffer = "";
+      let lastTextFlush = 0;
+      let lastThinkingFlush = 0;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -270,11 +296,19 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
               const parsed = JSON.parse(data);
               if (parsed.content) {
                 assistantMessage += parsed.content;
-                setStreamingMessage(assistantMessage);
+                const now = Date.now();
+                if (now - lastTextFlush > 50) {
+                  setStreamingMessage(assistantMessage);
+                  lastTextFlush = now;
+                }
               }
               if (parsed.thinking) {
                 currentThinking += parsed.thinking;
-                setStreamingThinking(currentThinking);
+                const nowT = Date.now();
+                if (nowT - lastThinkingFlush > 80) {
+                  setStreamingThinking(currentThinking);
+                  lastThinkingFlush = nowT;
+                }
               }
               if (parsed.groundingMetadata) {
                 groundingMetadata = parsed.groundingMetadata;
@@ -288,17 +322,20 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
       }
 
       if (assistantMessage) {
-        // Hide the streaming preview before persisting the final message to prevent duplicate bubbles
-        setStreamingMessage("");
-        setStreamingThinking("");
-        setStreamingGroundingMetadata(null);
-
+        if (assistantMessage !== streamingMessage) {
+          setStreamingMessage(assistantMessage);
+        }
         await addMessage({
           chatId,
           content: assistantMessage,
           role: "assistant",
           groundingMetadata: groundingMetadata || undefined,
         });
+
+        // Clear streaming preview after persistence to avoid flicker
+        setStreamingMessage("");
+        setStreamingThinking("");
+        setStreamingGroundingMetadata(null);
 
         // Auto-generate title if this is the first message
         if (messages.length === 1) {
@@ -317,7 +354,7 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, messages, chatId, addMessage, updateChatTitle]);
+  }, [isLoading, messages, chatId, addMessage, updateChatTitle, streamingMessage]);
 
   // Trigger AI response if there's a user message without an assistant response
   useEffect(() => {
@@ -376,11 +413,8 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
         attachments,
       });
 
-      // Remember model & web search preference for upcoming AI response
       setPendingModel(model);
       setPendingWebSearch(webSearch);
-
-      // Removed manual handleAIResponse call to avoid duplicate responses
     } catch (error) {
       console.error("Error sending message:", error);
     }
@@ -468,12 +502,25 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
                 onMouseEnter={() => setHoveredMessage("loading")}
                 onMouseLeave={() => setHoveredMessage(null)}
               >
-                <div className="rounded-[20px] pt-3 relative group flex items-center justify-center text-[#A7A7A7]">
-                  <div className="flex items-center gap-3 p-4">
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#A7A7A7] border-t-transparent" />
-                    <span className="text-sm text-[#5D5D5D]">Thinking...</span>
+                {pendingModel?.isReasoningModel ? (
+                  <div className="rounded-[20px] pt-3 relative group flex items-center justify-center text-[#A7A7A7]">
+                    <div className="flex items-center gap-3 p-4">
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#A7A7A7] border-t-transparent" />
+                      <span className="text-sm text-[#5D5D5D]">Thinking...</span>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="rounded-[20px] pt-3 relative group flex items-center justify-center text-[#A7A7A7]">
+                    <div className="flex items-center gap-3 p-4">
+                      <span className="text-sm text-[#5D5D5D]">Typing</span>
+                      <span className="inline-flex gap-1 ml-1">
+                        <span className="h-2 w-2 bg-[#5D5D5D] rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                        <span className="h-2 w-2 bg-[#5D5D5D] rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                        <span className="h-2 w-2 bg-[#5D5D5D] rounded-full animate-bounce"></span>
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -489,9 +536,7 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
                       <Brain className="w-4 h-4" />
                       <span className="text-sm font-medium">Thinking</span>
                     </div>
-                    <div className="text-sm text-[#5D5D5D] bg-[#0A0A0A] p-3 rounded-[15px] border border-[#2C2C2C]/50">
-                      <MessageContent content={streamingThinking} />
-                    </div>
+                    <div className="text-sm text-[#5D5D5D] bg-[#0A0A0A] p-3 rounded-[15px] border border-[#2C2C2C]/50 whitespace-pre-wrap break-words">{streamingThinking}</div>
                   </div>
                 </div>
               </div>

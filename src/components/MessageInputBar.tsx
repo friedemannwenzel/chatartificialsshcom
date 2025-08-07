@@ -142,31 +142,9 @@ export function MessageInputBar({
     if (!hasContent) return;
 
     setRateLimitError("");
-
-    try {
-      const response = await fetch('/api/rate-limit', {
-        method: 'GET',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to check rate limit');
-      }
-
-      const rateLimit = await response.json();
-      
-      if (!rateLimit.canSendMessage) {
-        const resetDate = new Date(rateLimit.resetDate).toLocaleDateString();
-        setRateLimitError(`Rate limit exceeded. You have used ${rateLimit.currentCount}/${rateLimit.limit} messages this week. Your limit resets on ${resetDate}.`);
-        return;
-      }
-
-      onSendMessage(trimmed, selectedModel, webSearchEnabled, attachments);
-      setMessage("");
-      setAttachments([]);
-    } catch (error) {
-      console.error('Rate limit check failed:', error);
-      setRateLimitError("Failed to check rate limit. Please try again.");
-    }
+    onSendMessage(trimmed, selectedModel, webSearchEnabled, attachments);
+    setMessage("");
+    setAttachments([]);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

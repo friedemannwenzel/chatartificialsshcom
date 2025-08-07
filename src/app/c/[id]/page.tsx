@@ -21,7 +21,7 @@ export default function ChatPage() {
     chatId ? { chatId } : "skip"
   );
 
-  // Chat creation is now handled when the first message is sent
+  
 
   if (!user || !chatId) {
     return <div>Loading...</div>;
@@ -31,7 +31,7 @@ export default function ChatPage() {
     <ChatInterface 
       chatId={chatId}
       messages={messages || []}
-      chatExists={chat !== null}
+      chatExists={!!chat}
     />
   );
 } 

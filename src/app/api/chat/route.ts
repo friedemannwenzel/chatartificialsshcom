@@ -3,6 +3,8 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import OpenAI from 'openai';
 import { auth } from '@clerk/nextjs/server';
 import { getModelById } from '@/lib/models';
+import { ConvexHttpClient } from 'convex/browser';
+import { api } from '../../../../convex/_generated/api';
 
 interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
@@ -155,19 +157,8 @@ export async function POST(req: NextRequest) {
     let rateLimitIncremented = false;
 
     if (!skipRateLimit) {
-      const rateLimitResponse = await fetch(`${req.nextUrl.origin}/api/rate-limit`, {
-        method: 'GET',
-        headers: {
-          Authorization: req.headers.get('Authorization') || '',
-          Cookie: req.headers.get('Cookie') || '',
-        },
-      });
-
-      if (!rateLimitResponse.ok) {
-        return NextResponse.json({ error: 'Rate limit check failed' }, { status: 500 });
-      }
-
-      const rateLimit = await rateLimitResponse.json();
+      const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+      const rateLimit = await convex.query(api.rateLimiting.checkRateLimit, { userId });
       if (!rateLimit.canSendMessage) {
         const resetDate = new Date(rateLimit.resetDate).toLocaleDateString();
         return NextResponse.json(
@@ -175,22 +166,11 @@ export async function POST(req: NextRequest) {
           { status: 429 }
         );
       }
-
-      const incrementResponse = await fetch(`${req.nextUrl.origin}/api/rate-limit`, {
-        method: 'POST',
-        headers: {
-          Authorization: req.headers.get('Authorization') || '',
-          Cookie: req.headers.get('Cookie') || '',
-        },
-      });
-
-      if (!incrementResponse.ok) {
-        return NextResponse.json({ error: 'Failed to update rate limit' }, { status: 500 });
-      }
+      await convex.mutation(api.rateLimiting.incrementMessageCount, { userId });
       rateLimitIncremented = true;
     }
 
-    const isOpenAI = model.startsWith('gpt') || model.startsWith('o1') || model.startsWith('o4');
+    const isOpenAI = model.startsWith('gpt') || model.startsWith('o1') || model.startsWith('o4') || model.startsWith('gpt-5');
     const isGemini = model.startsWith('gemini');
     const isXAI = model.startsWith('grok');
     
@@ -542,15 +522,11 @@ export async function POST(req: NextRequest) {
 
 async function rollbackRateLimit(req: NextRequest, wasIncremented: boolean) {
   if (!wasIncremented) return;
-  
   try {
-    await fetch(`${req.nextUrl.origin}/api/rate-limit`, {
-      method: 'DELETE',
-      headers: {
-        Authorization: req.headers.get('Authorization') || '',
-        Cookie: req.headers.get('Cookie') || '',
-      },
-    });
+    const { userId } = await auth();
+    if (!userId) return;
+    const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+    await convex.mutation(api.rateLimiting.decrementMessageCount, { userId });
   } catch (rollbackError) {
     console.error('Failed to rollback rate limit:', rollbackError);
   }

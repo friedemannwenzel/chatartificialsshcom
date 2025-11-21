@@ -1,7 +1,7 @@
 "use client";
 
 import { HeroSection } from "./HeroSection";
-import { FeaturesSection } from "./FeaturesSection";
+import { PoweredBySection } from "./PoweredBySection";
 import { InteractiveDemoSection } from "./InteractiveDemoSection";
 import { ModelsSection } from "./ModelsSection";
 import { CTASection } from "./CTASection";
@@ -10,7 +10,7 @@ export function MarketingPage() {
   return (
     <div className="min-h-screen bg-background">
       <HeroSection />
-      <FeaturesSection />
+      <PoweredBySection />
       <InteractiveDemoSection />
       <ModelsSection />
       <CTASection />

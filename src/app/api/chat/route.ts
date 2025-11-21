@@ -208,15 +208,16 @@ export async function POST(req: NextRequest) {
         const isReasoningModel = modelInfo?.isReasoningModel || model.startsWith('o1') || model.startsWith('o4');
         const supportsThinkingStream = modelInfo?.supportsThinkingStream || false;
         const isGrokModel = model.startsWith('grok');
-        
+        const supportsReasoningEffort = model === 'grok-3-mini';
+
         if (isReasoningModel) {
           if (supportsThinkingStream) {
             const streamConfig: OpenAI.Chat.ChatCompletionCreateParams & { stream: true; stream_options?: { include_usage?: boolean } } = {
               model,
               messages: openaiMessages,
               stream: true,
-              ...(isGrokModel && {
-                reasoning_effort: "medium"  // Grok-specific parameter
+              ...(supportsReasoningEffort && {
+                reasoning_effort: "medium"
               }),
               stream_options: { include_usage: true },
             };
@@ -277,7 +278,7 @@ export async function POST(req: NextRequest) {
             const config: OpenAI.Chat.ChatCompletionCreateParams = {
               model,
               messages: openaiMessages,
-              ...(isGrokModel && {
+              ...(supportsReasoningEffort && {
                 reasoning_effort: "medium"
               }),
             };

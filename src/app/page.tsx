@@ -1,8 +1,6 @@
 "use client";
 
-import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
-import { Button } from "@/components/ui/button";
-import { MessageSquare} from "lucide-react";
+import { SignedIn, SignedOut } from "@clerk/nextjs";
 import { useState } from "react";
 import { useUser } from "@clerk/nextjs";
  
@@ -11,13 +9,12 @@ import { AIModel } from "@/lib/models";
 import { storage } from "@/lib/storage";
 import { useRouter } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
+import { MarketingPage } from "@/components/marketing/MarketingPage";
 
 export default function HomePage() {
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useUser();
   const router = useRouter();
-
-  
 
   const handleSendMessage = async (
     content: string,
@@ -80,29 +77,7 @@ export default function HomePage() {
       </SignedIn>
       
       <SignedOut>
-        <div className="min-h-screen flex items-center justify-center bg-background">
-          <div className="text-center max-w-md mx-auto p-8">
-            <div className="mb-8">
-              <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <MessageSquare className="w-10 h-10 text-primary" />
-              </div>
-              <h1 className="text-4xl font-bold mb-2">ArtificialSSH Chat</h1>
-              <p className="text-muted-foreground text-lg">
-                The ultimate AI chat experience
-              </p>
-            </div>
-
-            <SignInButton mode="modal">
-              <Button size="lg" className="w-full">
-                Get Started
-              </Button>
-            </SignInButton>
-
-            <p className="text-sm text-muted-foreground mt-4">
-              Sign in to start chatting with AI
-            </p>
-          </div>
-        </div>
+        <MarketingPage />
       </SignedOut>
     </>
   );

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { Brain, Eye, FileText, Check } from "lucide-react";
+import { Brain, Eye, FileText } from "lucide-react";
 import { models } from "@/lib/models";
 
 const getProviderIcon = (provider: string) => {
@@ -72,7 +72,7 @@ export function ModelsSection() {
             Choose your AI
           </h2>
           <p className="text-xl text-[#5D5D5D] max-w-2xl mx-auto">
-            Access the world's most advanced AI models from multiple providers
+            Access the world&apos;s most advanced AI models from multiple providers
           </p>
         </div>
 

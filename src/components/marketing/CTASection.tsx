@@ -36,7 +36,7 @@ export function CTASection() {
         {/* Description */}
         <p className={`text-xl text-[#5D5D5D] mb-12 max-w-2xl mx-auto transition-all duration-1000 delay-200 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           Join thousands of users who are already experiencing the future of AI chat. 
-          It's free to get started.
+          It&apos;s free to get started.
         </p>
 
         {/* CTA Buttons */}

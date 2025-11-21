@@ -45,7 +45,7 @@ export function PoweredBySection() {
             Powered by
           </p>
           <h2 className="text-4xl md:text-5xl font-bold text-[#A7A7A7] mb-4">
-            World's Leading AI Labs
+            World&apos;s Leading AI Labs
           </h2>
           <p className="text-lg text-[#5D5D5D] max-w-2xl mx-auto">
             Access the most advanced AI models from industry leaders

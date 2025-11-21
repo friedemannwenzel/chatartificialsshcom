@@ -47,7 +47,7 @@ export function HeroSection() {
 
         {/* Subheading */}
         <p className={`text-xl md:text-2xl text-[#5D5D5D] mb-4 max-w-3xl mx-auto transition-all duration-1000 delay-200 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-          Chat with the world's most advanced AI models. 
+          Chat with the world&apos;s most advanced AI models. 
           <span className="text-[#A7A7A7]"> Fast, intelligent, and beautifully designed.</span>
         </p>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { ArrowUp, Globe, Brain, Paperclip, ChevronDown, X } from "lucide-react";
 import Image from "next/image";
 import { Textarea } from "@/components/ui/textarea";
@@ -51,7 +51,6 @@ While quantum computers show great promise, they're still in early stages. Curre
 const thinkingText = "The user wants a simple explanation of quantum computing. I should break down complex concepts into digestible parts, use analogies where helpful, and structure the response clearly with key concepts highlighted. I'll explain superposition, entanglement, and practical applications.";
 
 export function InteractiveDemoSection() {
-  const [isStreaming, setIsStreaming] = useState(false);
   const [streamedContent, setStreamedContent] = useState("");
   const [showThinking, setShowThinking] = useState(false);
   const [hasPlayed, setHasPlayed] = useState(false);
@@ -61,16 +60,14 @@ export function InteractiveDemoSection() {
   const selectedModel = { provider: "google", name: "Gemini 2.5 Flash" };
   const sectionRef = useRef<HTMLDivElement>(null);
 
-  const startDemo = () => {
+  const startDemo = useCallback(() => {
     if (hasPlayed) return;
     setHasPlayed(true);
     setStreamedContent("");
     setShowThinking(false);
-    setIsStreaming(false);
 
     // Show user message, then start thinking
     setTimeout(() => {
-      setIsStreaming(true);
       setShowThinking(true);
       
       // Stream thinking
@@ -93,14 +90,13 @@ export function InteractiveDemoSection() {
                 responseIndex++;
               } else {
                 clearInterval(responseInterval);
-                setIsStreaming(false);
               }
             }, 15);
           }, 1000);
         }
       }, 30);
     }, 500);
-  };
+  }, [hasPlayed]);
 
   // Auto-play when section comes into view
   useEffect(() => {
@@ -120,7 +116,7 @@ export function InteractiveDemoSection() {
     observer.observe(sectionRef.current);
 
     return () => observer.disconnect();
-  }, [hasPlayed]);
+  }, [hasPlayed, startDemo]);
 
   return (
     <section id="demo" ref={sectionRef} className="py-32 px-6 relative overflow-hidden">

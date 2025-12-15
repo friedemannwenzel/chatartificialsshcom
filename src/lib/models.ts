@@ -57,11 +57,11 @@ export const models: AIModel[] = [
     supportsThinkingStream: false,
   },
   {
-    id: "gemini-2.5-flash-lite-preview-06-17",
+    id: "gemini-2.5-flash-lite",
     name: "Gemini 2.5 Flash Lite",
     provider: "google",
     description: "Latest Gemini model with enhanced capabilities",
-    maxTokens: 1000000,
+    maxTokens: 1048576,
     supportsStreaming: true,
     supportsWebSearch: true,
     capabilities: ["text", "vision", "audio", "web-search"],
@@ -71,7 +71,7 @@ export const models: AIModel[] = [
     supportsThinkingStream: false,
   },
   {
-    id: "gemini-2.0-flash",
+    id: "gemini-2.5-flash",
     name: "Gemini 2.0 Flash",
     provider: "google",
     description: "Latest Gemini model with enhanced capabilities",

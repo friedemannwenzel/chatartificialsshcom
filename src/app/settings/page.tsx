@@ -5,16 +5,27 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Settings, Shield, LogOut, User, MessageSquare } from "lucide-react";
+import { Settings, Shield, LogOut, User, MessageSquare, LockKeyhole } from "lucide-react";
 import { MessageUsageBar } from "@/components/MessageUsageBar";
 import { useSecureLogout } from "@/hooks/useSecureLogout";
 import { useUser, UserButton } from "@clerk/nextjs";
-import { useState } from "react";
+import { storage } from "@/lib/storage";
+import { useEffect, useState } from "react";
 
 export default function SettingsPage() {
   const { user } = useUser();
   const { secureSignOut } = useSecureLogout();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [usageLimitPassword, setUsageLimitPassword] = useState("");
+
+  useEffect(() => {
+    setUsageLimitPassword(storage.getUsageLimitPassword());
+  }, []);
+
+  const handleUsageLimitPasswordChange = (password: string) => {
+    setUsageLimitPassword(password);
+    storage.setUsageLimitPassword(password.trim());
+  };
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -111,6 +122,33 @@ export default function SettingsPage() {
           <TabsContent value="usage" className="flex-1 overflow-auto">
             <div className="space-y-6 pb-6">
               <MessageUsageBar />
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <LockKeyhole className="h-5 w-5" />
+                    Usage Password
+                  </CardTitle>
+                  <CardDescription>
+                    Store the optional password used to bypass weekly usage limits
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <Label htmlFor="usage-limit-password">Password</Label>
+                  <Input
+                    id="usage-limit-password"
+                    type="password"
+                    value={usageLimitPassword}
+                    onChange={(event) => handleUsageLimitPasswordChange(event.target.value)}
+                    placeholder="Enter usage password"
+                    autoComplete="off"
+                    className="max-w-sm"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Leave this empty to use the normal weekly message limit.
+                  </p>
+                </CardContent>
+              </Card>
               
               <Card>
                 <CardHeader>

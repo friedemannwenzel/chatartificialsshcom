@@ -1,5 +1,6 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import { selectedModelValidator } from "./modelValidators";
 
 export default defineSchema({
   chats: defineTable({
@@ -21,6 +22,7 @@ export default defineSchema({
       type: v.string(),
       size: v.optional(v.number()),
     }))),
+    reasoningContent: v.optional(v.string()),
     createdAt: v.number(),
     groundingMetadata: v.optional(v.object({
       groundingChunks: v.array(v.object({
@@ -49,20 +51,7 @@ export default defineSchema({
 
   userPreferences: defineTable({
     userId: v.string(),
-    selectedModel: v.object({
-      id: v.string(),
-      name: v.string(),
-      provider: v.string(),
-      description: v.string(),
-      maxTokens: v.optional(v.float64()),
-      supportsStreaming: v.boolean(),
-      supportsWebSearch: v.optional(v.boolean()),
-      capabilities: v.optional(v.array(v.string())),
-      isReasoningModel: v.optional(v.boolean()),
-      supportsVision: v.optional(v.boolean()),
-      supportsFileUpload: v.optional(v.boolean()),
-      supportsThinkingStream: v.optional(v.boolean()),
-    }),
+    selectedModel: selectedModelValidator,
     lastUsed: v.number(),
   })
     .index("by_userId", ["userId"]),

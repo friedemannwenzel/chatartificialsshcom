@@ -14,7 +14,7 @@ import bash from 'react-syntax-highlighter/dist/cjs/languages/prism/bash';
 import json from 'react-syntax-highlighter/dist/cjs/languages/prism/json';
 import { Button } from '@/components/ui/button';
 import { Copy, Check, FileText } from 'lucide-react';
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { cn } from '@/lib/utils';
 
 // Register languages
@@ -38,7 +38,7 @@ interface CodeComponentProps {
   children?: React.ReactNode;
 }
 
-export function MessageContent({ content, className }: MessageContentProps) {
+export const MessageContent = memo(function MessageContent({ content, className }: MessageContentProps) {
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
   const copyToClipboard = async (code: string, blockId: string) => {
@@ -52,7 +52,7 @@ export function MessageContent({ content, className }: MessageContentProps) {
   };
 
   return (
-    <div className={cn("prose prose-sm max-w-none dark:prose-invert text-base text-[#A7A7A7] text-left", className)}>
+    <div className={cn("prose prose-sm max-w-none dark:prose-invert text-[15px] leading-7 text-[#A7A7A7] text-left prose-p:my-3 prose-li:my-1 prose-pre:my-0", className)}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
@@ -65,32 +65,14 @@ export function MessageContent({ content, className }: MessageContentProps) {
 
             if (!inline && language) {
               return (
-                <div className="relative group my-2">
-                  <SyntaxHighlighter
-                    style={oneDark}
-                    language={language}
-                    PreTag="div"
-                    className="!m-0 !border-0 rounded-[20px]"
-                    customStyle={{
-                      margin: 0,
-                      padding: '1.5rem',
-                      fontSize: '1rem',
-                      lineHeight: '1.4',
-                      borderRadius: '20px',
-                    }}
-                    showLineNumbers={false}
-                    wrapLines={true}
-                    {...restProps}
-                  >
-                    {code}
-                  </SyntaxHighlighter>
-                  <div className="absolute top-2 right-2 flex items-center gap-2">
-                    <span className="text-xs font-medium text-muted-foreground/70 uppercase tracking-wide px-2 py-1 bg-background/20 rounded-[20px] backdrop-blur-sm">
-                      {language}
+                <div className="relative group my-4 overflow-hidden rounded-lg border border-[#2C2C2C] bg-[#0A0A0A]">
+                  <div className="flex items-center justify-between border-b border-[#2C2C2C] bg-[#111111] px-3 py-2">
+                    <span className="text-[11px] font-medium text-[#8A8A8A] uppercase">
+                      {language || 'code'}
                     </span>
                     <Button
                       size="sm"
-                      className="h-7 w-7 p-0 hover:cursor-pointer  bg-background/20 text-muted-foreground/70 hover:bg-background/100 backdrop-blur-sm rounded-[var(--radius)]"
+                      className="h-7 w-7 p-0 hover:cursor-pointer bg-transparent text-[#8A8A8A] hover:bg-[#2C2C2C] hover:text-[#D5D5D5] rounded-md"
                       onClick={() => copyToClipboard(code, blockId)}
                     >
                       {copiedCode === blockId ? (
@@ -100,6 +82,26 @@ export function MessageContent({ content, className }: MessageContentProps) {
                       )}
                     </Button>
                   </div>
+                  <SyntaxHighlighter
+                    style={oneDark}
+                    language={language}
+                    PreTag="div"
+                    className="!m-0 !border-0 !bg-[#0A0A0A]"
+                    customStyle={{
+                      margin: 0,
+                      padding: '1rem',
+                      fontSize: '0.875rem',
+                      lineHeight: '1.65',
+                      borderRadius: 0,
+                      background: '#0A0A0A',
+                    }}
+                    showLineNumbers={false}
+                    wrapLines={true}
+                    wrapLongLines={true}
+                    {...restProps}
+                  >
+                    {code}
+                  </SyntaxHighlighter>
                 </div>
               );
             }
@@ -107,10 +109,9 @@ export function MessageContent({ content, className }: MessageContentProps) {
             return (
               <code
                 className={cn(
-                  "bg-[#151515] font-mono text-[#A7A7A7] text-base px-1 py-0.5",
+                  "bg-[#1B1B1B] border border-[#2C2C2C] font-mono text-[#D5D5D5] text-[0.9em] px-1.5 py-0.5 rounded-md",
                   className
                 )}
-                style={{ borderRadius: '10px' }}
                 {...restProps}
               >
                 {children}
@@ -120,7 +121,7 @@ export function MessageContent({ content, className }: MessageContentProps) {
 
           blockquote({ children }) {
             return (
-              <blockquote className="border-l-4 border-primary/30 bg-muted/20 pl-4 py-2 my-4 italic rounded-[var(--radius)] text-base">
+              <blockquote className="border-l-2 border-[#5D5D5D] bg-[#151515] pl-4 pr-3 py-2 my-4 rounded-md text-[15px] text-[#B8B8B8]">
                 {children}
               </blockquote>
             );
@@ -128,8 +129,8 @@ export function MessageContent({ content, className }: MessageContentProps) {
 
           table({ children }) {
             return (
-              <div className="overflow-x-auto my-4">
-                <table className="w-full border-collapse border border-border rounded-[var(--radius)] text-base">
+              <div className="overflow-x-auto my-5 rounded-lg border border-[#2C2C2C] bg-[#0F0F0F]">
+                <table className="w-full border-collapse text-sm">
                   {children}
                 </table>
               </div>
@@ -138,7 +139,7 @@ export function MessageContent({ content, className }: MessageContentProps) {
 
           th({ children }) {
             return (
-              <th className="border border-border bg-muted/50 px-3 py-2 text-left font-medium text-base">
+              <th className="border-b border-r last:border-r-0 border-[#2C2C2C] bg-[#151515] px-3 py-2.5 text-left font-semibold text-[#D5D5D5] align-top">
                 {children}
               </th>
             );
@@ -146,7 +147,7 @@ export function MessageContent({ content, className }: MessageContentProps) {
 
           td({ children }) {
             return (
-              <td className="border border-border px-3 py-2 text-base">
+              <td className="border-b border-r last:border-r-0 border-[#242424] px-3 py-2.5 text-[#B8B8B8] align-top last:[tr_&]:border-r-0">
                 {children}
               </td>
             );
@@ -158,10 +159,10 @@ export function MessageContent({ content, className }: MessageContentProps) {
               <a
                 href={href}
                 className={cn(
-                  "inline-flex items-center gap-2 px-2 py-1 rounded-md font-medium transition-colors text-base",
+                  "inline-flex items-center gap-1.5 rounded-md font-medium transition-colors text-[15px]",
                   isFile
-                    ? "bg-muted text-foreground hover:bg-muted/80"
-                    : "text-primary hover:text-primary/80 underline underline-offset-2"
+                    ? "bg-[#1B1B1B] px-2 py-1 text-[#D5D5D5] hover:bg-[#242424]"
+                    : "text-[#D5D5D5] underline decoration-[#5D5D5D] underline-offset-4 hover:text-white hover:decoration-[#A7A7A7]"
                 )}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -192,7 +193,7 @@ export function MessageContent({ content, className }: MessageContentProps) {
 
           ul({ children }) {
             return (
-              <ul className="list-disc list-outside space-y-1 my-2 ml-6 text-base">
+              <ul className="list-disc list-outside space-y-1.5 my-3 pl-6 marker:text-[#6F6F6F]">
                 {children}
               </ul>
             );
@@ -200,7 +201,7 @@ export function MessageContent({ content, className }: MessageContentProps) {
 
           ol({ children }) {
             return (
-              <ol className="list-decimal list-outside space-y-1 my-2 ml-6 text-base">
+              <ol className="list-decimal list-outside space-y-1.5 my-3 pl-6 marker:text-[#8A8A8A] marker:font-medium">
                 {children}
               </ol>
             );
@@ -208,7 +209,7 @@ export function MessageContent({ content, className }: MessageContentProps) {
 
           h1({ children }) {
             return (
-              <h1 className="text-2xl font-bold mt-6 mb-3 border-b border-border pb-2 text-[#A7A7A7]">
+              <h1 className="text-2xl font-semibold mt-7 mb-3 border-b border-[#2C2C2C] pb-2 text-[#E5E5E5]">
                 {children}
               </h1>
             );
@@ -216,7 +217,7 @@ export function MessageContent({ content, className }: MessageContentProps) {
 
           h2({ children }) {
             return (
-              <h2 className="text-xl font-semibold mt-5 mb-2 text-[#A7A7A7]">
+              <h2 className="text-xl font-semibold mt-6 mb-2 text-[#E0E0E0]">
                 {children}
               </h2>
             );
@@ -224,7 +225,7 @@ export function MessageContent({ content, className }: MessageContentProps) {
 
           h3({ children }) {
             return (
-              <h3 className="text-base font-medium mt-4 mb-2 text-[#A7A7A7]">
+              <h3 className="text-base font-semibold mt-5 mb-2 text-[#D5D5D5]">
                 {children}
               </h3>
             );
@@ -232,7 +233,7 @@ export function MessageContent({ content, className }: MessageContentProps) {
 
           p({ children }) {
             return (
-              <p className="mb-3 leading-relaxed text-[#A7A7A7] text-base">
+              <p className="my-3 leading-7 text-[#B8B8B8] text-[15px]">
                 {children}
               </p>
             );
@@ -240,7 +241,7 @@ export function MessageContent({ content, className }: MessageContentProps) {
 
           li({ children }) {
             return (
-              <li className=" leading-relaxed text-[#A7A7A7] text-base">
+              <li className="pl-1 leading-7 text-[#B8B8B8] text-[15px]">
                 {children}
               </li>
             );
@@ -277,4 +278,4 @@ export function MessageContent({ content, className }: MessageContentProps) {
       </ReactMarkdown>
     </div>
   );
-} 
+}); 

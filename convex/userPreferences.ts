@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { selectedModelValidator } from "./modelValidators";
 
 export const getUserPreferences = query({
   args: { userId: v.string() },
@@ -16,16 +17,7 @@ export const getUserPreferences = query({
 export const setUserPreferences = mutation({
   args: {
     userId: v.string(),
-    selectedModel: v.object({
-      id: v.string(),
-      name: v.string(),
-      provider: v.string(),
-      description: v.string(),
-      maxTokens: v.optional(v.number()),
-      supportsStreaming: v.boolean(),
-      supportsWebSearch: v.optional(v.boolean()),
-      capabilities: v.optional(v.array(v.string())),
-    }),
+    selectedModel: selectedModelValidator,
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
@@ -53,16 +45,7 @@ export const setUserPreferences = mutation({
 export const updateSelectedModel = mutation({
   args: {
     userId: v.string(),
-    selectedModel: v.object({
-      id: v.string(),
-      name: v.string(),
-      provider: v.string(),
-      description: v.string(),
-      maxTokens: v.optional(v.number()),
-      supportsStreaming: v.boolean(),
-      supportsWebSearch: v.optional(v.boolean()),
-      capabilities: v.optional(v.array(v.string())),
-    }),
+    selectedModel: selectedModelValidator,
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db

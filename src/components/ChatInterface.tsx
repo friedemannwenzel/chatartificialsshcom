@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, memo } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Brain } from "lucide-react";
+import { Brain, AlertCircle, Globe } from "lucide-react";
 import { Doc } from "../../convex/_generated/dataModel";
 import { MessageInputBar } from "./MessageInputBar";
 import { MessageActions } from "./MessageActions";
@@ -46,21 +46,153 @@ interface ChatInterfaceProps {
   chatExists?: boolean;
 }
 
+// Memoized message row to prevent re-renders on hover/streaming changes in other messages
+const MessageRow = memo(function MessageRow({
+  message,
+  messageIndex,
+  isHovered,
+  isEditing,
+  editText,
+  isCopied,
+  cachedModelName,
+  onMouseEnter,
+  onMouseLeave,
+  onEditTextChange,
+  onCancelEdit,
+  onSaveEdit,
+  onRetry,
+  onEdit,
+  onCopy,
+  onBranch,
+  onSetHovered,
+}: {
+  message: Doc<"messages">;
+  messageIndex: number;
+  isHovered: boolean;
+  isEditing: boolean;
+  editText: string;
+  isCopied: boolean;
+  cachedModelName: string | undefined;
+  onMouseEnter: () => void;
+  onMouseLeave: () => void;
+  onEditTextChange: (text: string) => void;
+  onCancelEdit: () => void;
+  onSaveEdit: () => void;
+  onRetry: (index: number) => void;
+  onEdit: (id: string, content: string) => void;
+  onCopy: (content: string, id: string) => void;
+  onBranch: (index: number) => void;
+  onSetHovered: (id: string | null) => void;
+}) {
+  return (
+    <div
+      className={`flex flex-col ${
+        message.role === "user" ? "items-end" : "items-start"
+      }`}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+    >
+      <div
+        className={` rounded-[20px] pt-3 relative group flex items-center justify-center ${
+          message.role === "user"
+            ? "bg-[#2C2C2C] text-[#A7A7A7] px-4"
+            : "text-[#A7A7A7]"
+        }`}
+      >
+        {isEditing ? (
+          <div className="space-y-2">
+            <Textarea
+              value={editText}
+              onChange={(e) => onEditTextChange(e.target.value)}
+              className="min-h-[60px] resize-none bg-background/50 border-white/10"
+              autoFocus
+            />
+            <div className="flex gap-2 justify-end">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onCancelEdit}
+                className="h-8 px-3 text-xs"
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={onSaveEdit}
+                className="h-8 px-3 text-xs"
+              >
+                Save
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <MessageContent content={message.content} />
+        )}
+      </div>
+      {message.role === "assistant" && message.groundingMetadata && (
+        <SearchGroundingDetails groundingMetadata={message.groundingMetadata} />
+      )}
+      {message.role === "assistant" && message.reasoningContent && (
+        <details className="mt-3 max-w-[80%] rounded-[15px] border border-[#2C2C2C] bg-[#0A0A0A] px-3 py-2 text-[#A7A7A7]">
+          <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium text-blue-400">
+            <Brain className="h-4 w-4" />
+            Reasoning
+          </summary>
+          <div className="mt-3 whitespace-pre-wrap break-words text-sm leading-6 text-[#7A7A7A]">
+            {message.reasoningContent}
+          </div>
+        </details>
+      )}
+      {!isEditing && (
+        <MessageActions
+          messageId={message._id}
+          messageIndex={messageIndex}
+          role={message.role}
+          content={message.content}
+          model={cachedModelName}
+          onRetry={onRetry}
+          onEdit={onEdit}
+          onCopy={onCopy}
+          onBranch={onBranch}
+          hoveredMessage={isHovered ? message._id : null}
+          setHoveredMessage={onSetHovered}
+          copiedMessage={isCopied ? message._id : null}
+        />
+      )}
+    </div>
+  );
+});
+
 export function ChatInterface({ chatId, messages, chatExists = true }: ChatInterfaceProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [streamingMessage, setStreamingMessage] = useState("");
   const [streamingThinking, setStreamingThinking] = useState("");
+  const [streamingSearchStatus, setStreamingSearchStatus] = useState<"idle" | "searching" | "completed">("idle");
   const [streamingGroundingMetadata, setStreamingGroundingMetadata] = useState<GroundingMetadata | null>(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [hoveredMessage, setHoveredMessage] = useState<string | null>(null);
   const [editingMessage, setEditingMessage] = useState<string | null>(null);
   const [editText, setEditText] = useState("");
   const [copiedMessage, setCopiedMessage] = useState<string | null>(null);
+  const [streamError, setStreamError] = useState<string | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const { user } = useUser();
   const router = useRouter();
   const [pendingModel, setPendingModel] = useState<AIModel | undefined>();
   const [pendingWebSearch, setPendingWebSearch] = useState<boolean | undefined>();
+  const [pendingReasoningEffort, setPendingReasoningEffort] = useState<string | undefined>();
+  const [pendingUsageLimitPassword, setPendingUsageLimitPassword] = useState<string | undefined>();
+
+  // Refs for stable callback access (avoids re-creating handleAIResponse on every stream tick)
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const isLoadingRef = useRef(false);
+  const scrollRafRef = useRef<number | null>(null);
+
+  // Cache model name to avoid repeated localStorage reads during render
+  const cachedModelName = useRef<string>(storage.getSelectedModel().name);
+  useEffect(() => {
+    cachedModelName.current = storage.getSelectedModel().name;
+  }, [pendingModel]);
 
   const addMessage = useMutation(api.chats.addMessage);
   const updateChatTitle = useMutation(api.chats.updateChatTitle);
@@ -91,167 +223,150 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
     run();
   }, [user?.id, chatId, chatExists, createChat, addMessage]);
 
-  // Message action functions
-  const copyToClipboard = async (text: string, messageId: string) => {
+  const copyToClipboard = useCallback(async (text: string, messageId: string) => {
     try {
       await navigator.clipboard.writeText(text);
       setCopiedMessage(messageId);
-      // Reset the copied state after 2 seconds
       setTimeout(() => setCopiedMessage(null), 2000);
     } catch (err) {
       console.error('Failed to copy text: ', err);
     }
-  };
+  }, []);
 
-  const handleRetry = async (messageIndex: number) => {
+  const handleRetry = useCallback(async (messageIndex: number) => {
     if (messages[messageIndex].role === "user") {
-      // For user messages, resend the message and remove all subsequent messages
       const messageContent = messages[messageIndex].content;
-      
       try {
-        // Remove all messages from this point onwards (including the current message)
-        await deleteMessagesFromIndex({
-          chatId,
-          fromIndex: messageIndex,
-        });
-        
-        // Add the message again to trigger a new AI response
-        await addMessage({
-          chatId,
-          content: messageContent,
-          role: "user",
-        });
+        await deleteMessagesFromIndex({ chatId, fromIndex: messageIndex });
+        await addMessage({ chatId, content: messageContent, role: "user" });
       } catch (error) {
         console.error("Error retrying message:", error);
       }
     } else if (messageIndex > 0 && messages[messageIndex - 1].role === "user") {
-      // For assistant messages, remove this message and regenerate response
       try {
-        // Remove all messages from this assistant message onwards
-        await deleteMessagesFromIndex({
-          chatId,
-          fromIndex: messageIndex,
-        });
-        
-        // The AI response will be automatically triggered by the useEffect
-        // since we now have a user message without a response
+        await deleteMessagesFromIndex({ chatId, fromIndex: messageIndex });
       } catch (error) {
         console.error("Error retrying assistant message:", error);
       }
     }
-  };
+  }, [messages, chatId, deleteMessagesFromIndex, addMessage]);
 
-  const handleEdit = (messageId: string, content: string) => {
+  const handleEdit = useCallback((messageId: string, content: string) => {
     setEditingMessage(messageId);
     setEditText(content);
-  };
+  }, []);
 
-  const handleSaveEdit = async () => {
+  const handleSaveEdit = useCallback(async () => {
     if (!editingMessage || !editText.trim()) return;
-    
-    // TODO: Implement message editing in the database
     console.log("Save edit:", editingMessage, editText);
     setEditingMessage(null);
     setEditText("");
-  };
+  }, [editingMessage, editText]);
 
-  const handleCancelEdit = () => {
+  const handleCancelEdit = useCallback(() => {
     setEditingMessage(null);
     setEditText("");
-  };
+  }, []);
 
-  const handleBranch = async (messageIndex: number) => {
+  const handleBranch = useCallback(async (messageIndex: number) => {
     if (!user?.id) return;
-    
     try {
-      // Create a new chat ID
       const newChatId = uuidv4();
-      
-      // Create the new chat
-      await createChat({
-        chatId: newChatId,
-        userId: user.id,
-      });
-
-      // Copy all messages up to and including the selected message
+      await createChat({ chatId: newChatId, userId: user.id });
       const messagesToCopy = messages.slice(0, messageIndex + 1);
-      
       for (const message of messagesToCopy) {
         await addMessage({
           chatId: newChatId,
           content: message.content,
           role: message.role,
+          attachments: message.attachments,
+          reasoningContent: message.reasoningContent,
+          groundingMetadata: message.groundingMetadata,
         });
       }
-
-      // Set the title based on the first message if it exists
       if (messagesToCopy.length > 0 && messagesToCopy[0].role === "user") {
-        const title = messagesToCopy[0].content.length > 40 
+        const title = messagesToCopy[0].content.length > 40
           ? messagesToCopy[0].content.substring(0, 40) + "... (Branch)"
           : messagesToCopy[0].content + " (Branch)";
-        
-        await updateChatTitle({
-          chatId: newChatId,
-          title,
-        });
+        await updateChatTitle({ chatId: newChatId, title });
       }
-
-      // Navigate to the new chat
       router.push(`/c/${newChatId}`);
     } catch (error) {
       console.error("Error creating branch:", error);
     }
-  };
+  }, [user?.id, messages, createChat, addMessage, updateChatTitle, router]);
 
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     if (scrollAreaRef.current) {
       scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
     }
-  };
+  }, []);
 
-  const checkScrollPosition = () => {
-    if (scrollAreaRef.current) {
-      const { scrollTop, scrollHeight, clientHeight } = scrollAreaRef.current;
-      const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
-      setShowScrollButton(!isNearBottom);
-    }
-  };
+  // Throttled scroll handler using rAF
+  const checkScrollPosition = useCallback(() => {
+    if (scrollRafRef.current) return;
+    scrollRafRef.current = requestAnimationFrame(() => {
+      scrollRafRef.current = null;
+      if (scrollAreaRef.current) {
+        const { scrollTop, scrollHeight, clientHeight } = scrollAreaRef.current;
+        const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+        setShowScrollButton(prev => {
+          if (prev === !isNearBottom) return prev;
+          return !isNearBottom;
+        });
+      }
+    });
+  }, []);
 
   useEffect(() => {
     const scrollArea = scrollAreaRef.current;
     if (scrollArea) {
-      scrollArea.addEventListener('scroll', checkScrollPosition);
-      checkScrollPosition(); // Check initial position
-      
+      scrollArea.addEventListener('scroll', checkScrollPosition, { passive: true });
+      checkScrollPosition();
       return () => {
         scrollArea.removeEventListener('scroll', checkScrollPosition);
+        if (scrollRafRef.current) cancelAnimationFrame(scrollRafRef.current);
       };
     }
-  }, []);
+  }, [checkScrollPosition]);
 
-  // Only scroll to bottom for new user messages, not during streaming
   useEffect(() => {
     if (messages.length > 0 && messages[messages.length - 1].role === "user") {
       scrollToBottom();
     }
-  }, [messages]);
+  }, [messages, scrollToBottom]);
 
-  const handleAIResponse = useCallback(async (model?: AIModel, webSearch?: boolean) => {
-    if (isLoading || messages.length === 0) return;
-    
+  const handleStopGeneration = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+  }, []);
+
+  const handleAIResponse = useCallback(async (model?: AIModel, webSearch?: boolean, reasoningEffort?: string, usageLimitPassword?: string) => {
+    if (isLoadingRef.current || messages.length === 0) return;
+
+    isLoadingRef.current = true;
     setIsLoading(true);
     setStreamingMessage("");
     setStreamingThinking("");
+    setStreamingSearchStatus("idle");
+    setStreamError(null);
 
-    // Use provided model or get from storage
+    // Abort any in-flight request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
     const selectedModel = model || storage.getSelectedModel();
+    cachedModelName.current = selectedModel.name;
 
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: messages.map(msg => ({
             role: msg.role,
@@ -260,8 +375,16 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
           })),
           model: selectedModel.id,
           webSearch,
+          reasoningEffort,
+          usageLimitPassword: usageLimitPassword || storage.getUsageLimitPassword() || undefined,
         }),
+        signal: abortController.signal,
       });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.error || `Request failed (${response.status})`);
+      }
 
       if (!response.body) {
         throw new Error("No response body");
@@ -282,33 +405,43 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
 
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split("\n");
-        
-        // Keep the last incomplete line in the buffer
         buffer = lines.pop() || "";
 
         for (const line of lines) {
           if (line.startsWith("data: ")) {
             const data = line.slice(6).trim();
-            if (data === "[DONE]") {
-              break;
-            }
+            if (data === "[DONE]") break;
             try {
               const parsed = JSON.parse(data);
+              if (parsed.error) {
+                setStreamError(parsed.error);
+                continue;
+              }
               if (parsed.content) {
                 assistantMessage += parsed.content;
                 const now = Date.now();
-                if (now - lastTextFlush > 50) {
+                if (now - lastTextFlush > 30) {
                   setStreamingMessage(assistantMessage);
                   lastTextFlush = now;
+                  // Auto-scroll during streaming if near bottom
+                  if (scrollAreaRef.current) {
+                    const { scrollTop, scrollHeight, clientHeight } = scrollAreaRef.current;
+                    if (scrollHeight - scrollTop - clientHeight < 150) {
+                      scrollToBottom();
+                    }
+                  }
                 }
               }
               if (parsed.thinking) {
                 currentThinking += parsed.thinking;
                 const nowT = Date.now();
-                if (nowT - lastThinkingFlush > 80) {
+                if (nowT - lastThinkingFlush > 60) {
                   setStreamingThinking(currentThinking);
                   lastThinkingFlush = nowT;
                 }
+              }
+              if (parsed.searchStatus) {
+                setStreamingSearchStatus(parsed.searchStatus === "completed" ? "completed" : "searching");
               }
               if (parsed.groundingMetadata) {
                 groundingMetadata = parsed.groundingMetadata;
@@ -322,71 +455,74 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
       }
 
       if (assistantMessage) {
-        if (assistantMessage !== streamingMessage) {
-          setStreamingMessage(assistantMessage);
-        }
+        // Final flush
+        setStreamingMessage(assistantMessage);
         await addMessage({
           chatId,
           content: assistantMessage,
           role: "assistant",
+          reasoningContent: currentThinking || undefined,
           groundingMetadata: groundingMetadata || undefined,
         });
 
-        // Clear streaming preview after persistence to avoid flicker
         setStreamingMessage("");
         setStreamingThinking("");
+        setStreamingSearchStatus("idle");
         setStreamingGroundingMetadata(null);
 
-        // Auto-generate title if this is the first message
+        // Fire-and-forget title generation (don't block UI)
         if (messages.length === 1) {
           const firstUserMessage = messages[0];
-          const generatedTitle = await generateChatTitle(firstUserMessage.content);
-          if (generatedTitle) {
-            await updateChatTitle({
-              chatId,
-              title: generatedTitle,
-            });
-          }
+          generateChatTitle(firstUserMessage.content).then(generatedTitle => {
+            if (generatedTitle) {
+              updateChatTitle({ chatId, title: generatedTitle });
+            }
+          });
         }
       }
     } catch (error) {
-      console.error("Error getting AI response:", error);
+      if ((error as Error).name === 'AbortError') {
+        // User cancelled - not an error
+      } else {
+        console.error("Error getting AI response:", error);
+        setStreamError((error as Error).message || "Failed to get response. Please try again.");
+      }
     } finally {
+      isLoadingRef.current = false;
       setIsLoading(false);
+      abortControllerRef.current = null;
     }
-  }, [isLoading, messages, chatId, addMessage, updateChatTitle, streamingMessage]);
+  }, [messages, chatId, addMessage, updateChatTitle, scrollToBottom]);
 
   // Trigger AI response if there's a user message without an assistant response
   useEffect(() => {
-    const shouldTriggerResponse = 
-      messages.length > 0 && 
+    const shouldTriggerResponse =
+      messages.length > 0 &&
       messages[messages.length - 1].role === "user" &&
-      !isLoading &&
-      !streamingMessage &&
-      !streamingThinking;
-    
+      !isLoadingRef.current &&
+      !isLoading;
+
     if (shouldTriggerResponse) {
-      // Check if this is an odd number of messages (user message without response)
       const needsResponse = messages.length % 2 === 1;
-      
       if (needsResponse) {
-        handleAIResponse(pendingModel, pendingWebSearch);
+        handleAIResponse(pendingModel, pendingWebSearch, pendingReasoningEffort, pendingUsageLimitPassword);
       }
     }
-  }, [messages, isLoading, streamingMessage, streamingThinking, handleAIResponse, pendingModel, pendingWebSearch]);
+  }, [messages, isLoading, handleAIResponse, pendingModel, pendingWebSearch, pendingReasoningEffort, pendingUsageLimitPassword]);
 
-  const handleSendMessage = async (content: string, model: AIModel, webSearch?: boolean, attachments?: Array<{ url: string; name: string; type: string; size?: number }>) => {
+  const handleSendMessage = useCallback(async (content: string, model: AIModel, webSearch?: boolean, attachments?: Array<{ url: string; name: string; type: string; size?: number }>, reasoningEffort?: string) => {
     if (isLoading || !user?.id) return;
-    
+
     const hasContent = content.trim().length > 0 || (attachments && attachments.length > 0);
     if (!hasContent) return;
 
-    // Combine text content with attachments as markdown
+    setStreamError(null);
+
     let finalContent = content.trim();
     if (attachments && attachments.length > 0) {
       attachments.forEach((file) => {
-        const isImage = file.type?.startsWith("image/") || 
-          (!file.type && [".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".svg"].some(ext => 
+        const isImage = file.type?.startsWith("image/") ||
+          (!file.type && [".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".svg"].some(ext =>
             file.name.toLowerCase().endsWith(ext)
           ));
         if (isImage) {
@@ -398,111 +534,71 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
     }
 
     try {
-      // Create chat if it doesn't exist
       if (!chatExists) {
-        await createChat({
-          chatId,
-          userId: user.id,
-        });
+        await createChat({ chatId, userId: user.id });
       }
-
-      await addMessage({
-        chatId,
-        content: finalContent,
-        role: "user",
-        attachments,
-      });
-
+      await addMessage({ chatId, content: finalContent, role: "user", attachments });
       setPendingModel(model);
       setPendingWebSearch(webSearch);
+      setPendingReasoningEffort(reasoningEffort);
+      setPendingUsageLimitPassword(storage.getUsageLimitPassword() || undefined);
     } catch (error) {
       console.error("Error sending message:", error);
     }
-  };
+  }, [isLoading, user?.id, chatExists, chatId, createChat, addMessage]);
 
-
+  // Cleanup abort controller on unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   return (
     <div className="flex flex-col h-full relative">
-      {/* Scrollable chat area with bottom padding for fixed input */}
       <div className="flex-1 overflow-hidden">
         <div className="h-full overflow-y-auto pb-40" ref={scrollAreaRef}>
           <div className="space-y-4 max-w-4xl py-4 mx-auto pt-6">
             {messages.map((message, messageIndex) => (
-              <div
+              <MessageRow
                 key={message._id}
-                className={`flex flex-col ${
-                  message.role === "user" ? "items-end" : "items-start"
-                }`}
+                message={message}
+                messageIndex={messageIndex}
+                isHovered={hoveredMessage === message._id}
+                isEditing={editingMessage === message._id}
+                editText={editText}
+                isCopied={copiedMessage === message._id}
+                cachedModelName={message.role === "assistant" ? cachedModelName.current : undefined}
                 onMouseEnter={() => setHoveredMessage(message._id)}
                 onMouseLeave={() => setHoveredMessage(null)}
-              >
-                <div
-                  className={` rounded-[20px] pt-3 relative group flex items-center justify-center ${
-                    message.role === "user"
-                      ? "bg-[#2C2C2C] text-[#A7A7A7] px-4"
-                      : "text-[#A7A7A7]"
-                  }`}
-                >
-                  {editingMessage === message._id ? (
-                    <div className="space-y-2">
-                      <Textarea
-                        value={editText}
-                        onChange={(e) => setEditText(e.target.value)}
-                        className="min-h-[60px] resize-none bg-background/50 border-white/10"
-                        autoFocus
-                      />
-                      <div className="flex gap-2 justify-end">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={handleCancelEdit}
-                          className="h-8 px-3 text-xs"
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          size="sm"
-                          onClick={handleSaveEdit}
-                          className="h-8 px-3 text-xs"
-                        >
-                          Save
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <MessageContent content={message.content} />
-                  )}
-                </div>
-                {message.role === "assistant" && message.groundingMetadata && (
-                  <SearchGroundingDetails groundingMetadata={message.groundingMetadata} />
-                )}
-                {editingMessage !== message._id && (
-                  <MessageActions
-                    messageId={message._id}
-                    messageIndex={messageIndex}
-                    role={message.role}
-                    content={message.content}
-                    model={message.role === "assistant" ? storage.getSelectedModel().name : undefined}
-                    onRetry={handleRetry}
-                    onEdit={handleEdit}
-                    onCopy={copyToClipboard}
-                    onBranch={handleBranch}
-                    hoveredMessage={hoveredMessage}
-                    setHoveredMessage={setHoveredMessage}
-                    copiedMessage={copiedMessage}
-                  />
-                )}
-              </div>
+                onEditTextChange={setEditText}
+                onCancelEdit={handleCancelEdit}
+                onSaveEdit={handleSaveEdit}
+                onRetry={handleRetry}
+                onEdit={handleEdit}
+                onCopy={copyToClipboard}
+                onBranch={handleBranch}
+                onSetHovered={setHoveredMessage}
+              />
             ))}
 
+            {/* Loading indicator - distinguishes thinking vs generating */}
             {isLoading && !streamingMessage && !streamingThinking && (
-              <div 
+              <div
                 className="flex flex-col items-start"
                 onMouseEnter={() => setHoveredMessage("loading")}
                 onMouseLeave={() => setHoveredMessage(null)}
               >
-                {pendingModel?.isReasoningModel ? (
+                {streamingSearchStatus === "searching" ? (
+                  <div className="rounded-[20px] pt-3 relative group flex items-center justify-center text-[#A7A7A7]">
+                    <div className="flex items-center gap-3 p-4">
+                      <Globe className="h-4 w-4 animate-pulse text-blue-400" />
+                      <span className="text-sm text-[#5D5D5D]">Searching...</span>
+                    </div>
+                  </div>
+                ) : pendingModel?.isReasoningModel ? (
                   <div className="rounded-[20px] pt-3 relative group flex items-center justify-center text-[#A7A7A7]">
                     <div className="flex items-center gap-3 p-4">
                       <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#A7A7A7] border-t-transparent" />
@@ -512,7 +608,7 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
                 ) : (
                   <div className="rounded-[20px] pt-3 relative group flex items-center justify-center text-[#A7A7A7]">
                     <div className="flex items-center gap-3 p-4">
-                      <span className="text-sm text-[#5D5D5D]">Typing</span>
+                      <span className="text-sm text-[#5D5D5D]">Generating</span>
                       <span className="inline-flex gap-1 ml-1">
                         <span className="h-2 w-2 bg-[#5D5D5D] rounded-full animate-bounce [animation-delay:-0.3s]"></span>
                         <span className="h-2 w-2 bg-[#5D5D5D] rounded-full animate-bounce [animation-delay:-0.15s]"></span>
@@ -524,8 +620,18 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
               </div>
             )}
 
+            {isLoading && streamingSearchStatus === "searching" && (streamingMessage || streamingThinking) && (
+              <div className="flex flex-col items-start">
+                <div className="flex items-center gap-2 rounded-[15px] border border-[#2C2C2C] bg-[#0A0A0A] px-3 py-2 text-sm text-[#5D5D5D]">
+                  <Globe className="h-4 w-4 animate-pulse text-blue-400" />
+                  Searching...
+                </div>
+              </div>
+            )}
+
+            {/* Thinking stream */}
             {streamingThinking && (
-              <div 
+              <div
                 className="flex flex-col items-start"
                 onMouseEnter={() => setHoveredMessage("thinking")}
                 onMouseLeave={() => setHoveredMessage(null)}
@@ -542,8 +648,9 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
               </div>
             )}
 
+            {/* Streaming message */}
             {streamingMessage && (
-              <div 
+              <div
                 className="flex flex-col items-start"
                 onMouseEnter={() => setHoveredMessage("streaming")}
                 onMouseLeave={() => setHoveredMessage(null)}
@@ -559,7 +666,7 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
                   messageIndex={messages.length}
                   role="assistant"
                   content={streamingMessage}
-                  model={storage.getSelectedModel().name}
+                  model={cachedModelName.current}
                   onRetry={handleRetry}
                   onEdit={handleEdit}
                   onCopy={copyToClipboard}
@@ -568,6 +675,16 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
                   setHoveredMessage={setHoveredMessage}
                   copiedMessage={copiedMessage}
                 />
+              </div>
+            )}
+
+            {/* Error display */}
+            {streamError && !isLoading && (
+              <div className="flex flex-col items-start">
+                <div className="flex items-center gap-2 px-4 py-3 rounded-[15px] bg-red-500/10 border border-red-500/20 text-red-400 text-sm max-w-[80%]">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{streamError}</span>
+                </div>
               </div>
             )}
 
@@ -581,9 +698,6 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
         </div>
       </div>
 
-
-
-      {/* Message Input Bar */}
       <div className="absolute bottom-0 max-w-4xl mx-auto left-0 right-0">
         <MessageInputBar
           onSendMessage={handleSendMessage}
@@ -591,8 +705,10 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
           placeholder="Type your message..."
           showScrollButton={showScrollButton}
           onScrollToBottom={scrollToBottom}
+          showStopButton={isLoading && (Boolean(streamingMessage) || Boolean(streamingThinking))}
+          onStopGeneration={handleStopGeneration}
         />
       </div>
     </div>
   );
-} 
+}

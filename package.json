@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.74.0",
     "@clerk/elements": "^0.23.85",
     "@clerk/nextjs": "^6.36.0",
     "@google/genai": "^1.5.1",

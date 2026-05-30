@@ -5,6 +5,14 @@ import { api } from '../../../../convex/_generated/api';
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
+function getRateLimitServerSecret() {
+  const secret = process.env.RATE_LIMIT_SERVER_SECRET;
+  if (!secret) {
+    throw new Error('Missing RATE_LIMIT_SERVER_SECRET');
+  }
+  return secret;
+}
+
 export async function GET() {
   try {
     const { userId } = await auth();
@@ -43,6 +51,7 @@ export async function POST() {
 
     const newCount = await convex.mutation(api.rateLimiting.incrementMessageCount, {
       userId,
+      serverSecret: getRateLimitServerSecret(),
     });
 
     return NextResponse.json({ messageCount: newCount });
@@ -64,26 +73,8 @@ export async function POST() {
 } 
 
 export async function DELETE() {
-  try {
-    const { userId } = await auth();
-    
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const newCount = await convex.mutation(api.rateLimiting.decrementMessageCount, {
-      userId,
-    });
-
-    return NextResponse.json({ messageCount: newCount });
-  } catch (error) {
-    console.error('Rate limit decrement error:', error);
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 }
-    );
-  }
+  return NextResponse.json(
+    { error: 'Method Not Allowed' },
+    { status: 405, headers: { Allow: 'GET, POST' } }
+  );
 } 

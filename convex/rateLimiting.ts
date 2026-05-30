@@ -3,6 +3,13 @@ import { mutation, query } from "./_generated/server";
 
 const WEEKLY_MESSAGE_LIMIT = 15;
 
+function requireServerSecret(serverSecret: string) {
+  const configuredSecret = process.env.RATE_LIMIT_SERVER_SECRET;
+  if (!configuredSecret || serverSecret !== configuredSecret) {
+    throw new Error("Unauthorized rate limit mutation.");
+  }
+}
+
 function getWeekStartDate(date: Date = new Date()): number {
   const d = new Date(date);
   const day = d.getDay();
@@ -39,8 +46,10 @@ export const checkRateLimit = query({
 });
 
 export const incrementMessageCount = mutation({
-  args: { userId: v.string() },
+  args: { userId: v.string(), serverSecret: v.string() },
   handler: async (ctx, args) => {
+    requireServerSecret(args.serverSecret);
+
     const weekStart = getWeekStartDate();
     const now = Date.now();
     
@@ -76,8 +85,10 @@ export const incrementMessageCount = mutation({
 });
 
 export const decrementMessageCount = mutation({
-  args: { userId: v.string() },
+  args: { userId: v.string(), serverSecret: v.string() },
   handler: async (ctx, args) => {
+    requireServerSecret(args.serverSecret);
+
     const weekStart = getWeekStartDate();
     const now = Date.now();
     

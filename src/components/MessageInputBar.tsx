@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Globe, ChevronDown, Paperclip, X, AlertTriangle, ArrowUp, ArrowDown, ChevronUp, Brain, Eye, FileText } from "lucide-react";
+import { Globe, ChevronDown, Paperclip, X, AlertTriangle, ArrowUp, ArrowDown, ChevronUp, Brain, Eye, FileText, Square } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { models, AIModel } from "@/lib/models";
 import { storage, CloudSyncOptions, UserPreferences } from "@/lib/storage";
 import { useUser } from "@clerk/nextjs";
@@ -16,12 +17,16 @@ import { generateUploadButton } from "@uploadthing/react";
 import type { MessageAttachmentRouter } from "@/app/api/uploadthing/core";
 
 interface MessageInputBarProps {
-  onSendMessage: (content: string, model: AIModel, webSearch?: boolean, attachments?: Array<{ url: string; name: string; type: string; size?: number }>) => void;
+  onSendMessage: (content: string, model: AIModel, webSearch?: boolean, attachments?: Array<{ url: string; name: string; type: string; size?: number }>, reasoningEffort?: ReasoningEffort) => void;
   disabled?: boolean;
   placeholder?: string;
   showScrollButton?: boolean;
   onScrollToBottom?: () => void;
+  showStopButton?: boolean;
+  onStopGeneration?: () => void;
 }
+
+type ReasoningEffort = "minimal" | "low" | "medium" | "high" | "xhigh";
 
 const getProviderIcon = (provider: string) => {
   switch (provider) {
@@ -53,18 +58,27 @@ const useAutoSizeTextArea = (
 
 const AttachmentUploadButton = generateUploadButton<MessageAttachmentRouter>();
 
+const getReasoningEffortOptions = (provider: string): ReasoningEffort[] => {
+  return provider === "xai"
+    ? ["low", "medium", "high", "xhigh"]
+    : ["minimal", "low", "medium", "high"];
+};
+
 export function MessageInputBar({ 
   onSendMessage, 
   disabled = false, 
   placeholder = "Type your message here...",
   showScrollButton = false,
-  onScrollToBottom
+  onScrollToBottom,
+  showStopButton = false,
+  onStopGeneration
 }: MessageInputBarProps) {
   const [message, setMessage] = useState("");
   const [attachments, setAttachments] = useState<Array<{ url: string; name: string; type: string; size?: number }>>([]);
   const [uploadingFiles, setUploadingFiles] = useState<Array<{ name: string; progress: number }>>([]);
   const [selectedModel, setSelectedModel] = useState<AIModel>(() => storage.getSelectedModel());
   const [webSearchEnabled, setWebSearchEnabled] = useState(false);
+  const [reasoningEffort, setReasoningEffort] = useState<ReasoningEffort>(() => storage.getSelectedModel().defaultReasoningEffort || "medium");
   const [rateLimitError, setRateLimitError] = useState<string>("");
   const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -112,6 +126,7 @@ export function MessageInputBar({
 
   const handleModelChange = (model: AIModel) => {
     setSelectedModel(model);
+    setReasoningEffort(model.defaultReasoningEffort || "medium");
     setModelSelectorOpen(false);
     
     const cloudSync: CloudSyncOptions | undefined = user?.id ? {
@@ -142,7 +157,7 @@ export function MessageInputBar({
     if (!hasContent) return;
 
     setRateLimitError("");
-    onSendMessage(trimmed, selectedModel, webSearchEnabled, attachments);
+    onSendMessage(trimmed, selectedModel, webSearchEnabled, attachments, reasoningEffort);
     setMessage("");
     setAttachments([]);
   };
@@ -185,8 +200,8 @@ export function MessageInputBar({
           )}
 
           {/* Attachments and scroll button bar */}
-          {(attachments.length > 0 || uploadingFiles.length > 0 || showScrollButton) && (
-            <div className="flex flex-wrap items-center gap-2 py-2">
+          {(attachments.length > 0 || uploadingFiles.length > 0 || showScrollButton || showStopButton) && (
+            <div className="flex flex-wrap items-center gap-2 py-2 min-h-[52px]">
               {/* Completed attachments */}
               {attachments.map((file, index) => (
                 <div
@@ -242,6 +257,19 @@ export function MessageInputBar({
                     <span className="text-sm">Scroll to bottom</span>
                     <ArrowDown className="h-4 w-4" />
                   </Button>
+                </div>
+              )}
+
+              {showStopButton && (
+                <div className="flex-1 flex justify-center">
+                  <button
+                    onClick={onStopGeneration}
+                    className="flex items-center gap-2 px-4 py-2 rounded-full border border-[#2C2C2C] bg-[#151515] text-[#A7A7A7] hover:bg-[#2C2C2C] transition-colors text-sm hover:cursor-pointer"
+                    type="button"
+                  >
+                    <Square className="w-3 h-3 fill-current" />
+                    Stop generating
+                  </button>
                 </div>
               )}
             </div>
@@ -382,6 +410,42 @@ export function MessageInputBar({
                   <Globe className="w-4 h-4" />
                   Search
                 </button>
+              )}
+
+              {selectedModel.supportsReasoningEffort && (
+                <DropdownMenu>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            type="button"
+                            className="flex items-center gap-2 h-8 px-3 text-xs font-medium rounded-full border border-[#A7A7A7] bg-[#151515] hover:bg-[#2C2C2C] focus:outline-none transition hover:cursor-pointer text-[#A7A7A7]"
+                          >
+                            <Brain className="w-4 h-4 text-blue-400" />
+                            <span className="truncate max-w-[100px]">{reasoningEffort}</span>
+                            <ChevronDown className="w-4 h-4" />
+                          </button>
+                        </DropdownMenuTrigger>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Reasoning effort</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <DropdownMenuContent align="start" className="bg-[#151515] border-[#2C2C2C] text-[#A7A7A7]">
+                    {getReasoningEffortOptions(selectedModel.provider).map((effort) => (
+                      <DropdownMenuItem
+                        key={effort}
+                        onClick={() => setReasoningEffort(effort)}
+                        className="text-xs hover:cursor-pointer focus:bg-[#2C2C2C] focus:text-[#D5D5D5]"
+                      >
+                        <Brain className="mr-2 h-3.5 w-3.5 text-blue-400" />
+                        {effort}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               )}
 
               {/* Upload Button */}

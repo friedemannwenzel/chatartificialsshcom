@@ -12,6 +12,7 @@ export interface CloudSyncOptions {
 
 class Storage {
   private readonly SELECTED_MODEL_KEY = 'selectedModel';
+  private readonly USAGE_LIMIT_PASSWORD_KEY = 'usageLimitPassword';
   private readonly PENDING_INITIAL_KEY_PREFIX = 'pendingInitialMessage:';
 
   getSelectedModel(): AIModel {
@@ -49,6 +50,31 @@ class Storage {
       }
     } catch (error) {
       console.error('Error saving selected model:', error);
+    }
+  }
+
+  getUsageLimitPassword(): string {
+    if (typeof window === 'undefined') return '';
+
+    try {
+      return localStorage.getItem(this.USAGE_LIMIT_PASSWORD_KEY) || '';
+    } catch (error) {
+      console.error('Error loading usage limit password:', error);
+      return '';
+    }
+  }
+
+  setUsageLimitPassword(password: string): void {
+    if (typeof window === 'undefined') return;
+
+    try {
+      if (password) {
+        localStorage.setItem(this.USAGE_LIMIT_PASSWORD_KEY, password);
+      } else {
+        localStorage.removeItem(this.USAGE_LIMIT_PASSWORD_KEY);
+      }
+    } catch (error) {
+      console.error('Error saving usage limit password:', error);
     }
   }
 

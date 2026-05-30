@@ -76,6 +76,7 @@ export const addMessage = mutation({
       type: v.string(),
       size: v.optional(v.number()),
     }))),
+    reasoningContent: v.optional(v.string()),
     groundingMetadata: v.optional(v.object({
       groundingChunks: v.array(v.object({
         web: v.optional(v.object({
@@ -104,6 +105,7 @@ export const addMessage = mutation({
       content: args.content,
       role: args.role,
       attachments: args.attachments,
+      reasoningContent: args.reasoningContent,
       createdAt: Date.now(),
       groundingMetadata: args.groundingMetadata,
     });

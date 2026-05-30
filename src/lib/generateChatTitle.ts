@@ -14,8 +14,7 @@ export async function generateChatTitle(firstMessage: string): Promise<string> {
             content: `Generate a short, descriptive title (max 32 chars) for a chat that starts with this message: "${firstMessage}"`,
           },
         ],
-        model: "gemini-2.0-flash",
-        skipRateLimit: true,
+        model: "gemini-2.5-flash-lite",
       }),
     });
 

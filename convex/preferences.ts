@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { selectedModelValidator } from "./modelValidators";
 
 // Get user preferences
 export const getUserPreferences = query({
@@ -18,20 +19,7 @@ export const getUserPreferences = query({
 export const setUserPreferences = mutation({
   args: {
     userId: v.string(),
-    selectedModel: v.object({
-      id: v.string(),
-      name: v.string(),
-      provider: v.string(),
-      description: v.string(),
-      maxTokens: v.optional(v.float64()),
-      supportsStreaming: v.boolean(),
-      supportsWebSearch: v.optional(v.boolean()),
-      capabilities: v.optional(v.array(v.string())),
-      isReasoningModel: v.optional(v.boolean()),
-      supportsVision: v.optional(v.boolean()),
-      supportsFileUpload: v.optional(v.boolean()),
-      supportsThinkingStream: v.optional(v.boolean()),
-    }),
+    selectedModel: selectedModelValidator,
   },
   handler: async (ctx, args) => {
     const existingPreferences = await ctx.db
@@ -60,20 +48,7 @@ export const setUserPreferences = mutation({
 export const updateSelectedModel = mutation({
   args: {
     userId: v.string(),
-    selectedModel: v.object({
-      id: v.string(),
-      name: v.string(),
-      provider: v.string(),
-      description: v.string(),
-      maxTokens: v.optional(v.float64()),
-      supportsStreaming: v.boolean(),
-      supportsWebSearch: v.optional(v.boolean()),
-      capabilities: v.optional(v.array(v.string())),
-      isReasoningModel: v.optional(v.boolean()),
-      supportsVision: v.optional(v.boolean()),
-      supportsFileUpload: v.optional(v.boolean()),
-      supportsThinkingStream: v.optional(v.boolean()),
-    }),
+    selectedModel: selectedModelValidator,
   },
   handler: async (ctx, args) => {
     const existingPreferences = await ctx.db

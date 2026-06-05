@@ -24,6 +24,8 @@ interface MessageInputBarProps {
   onScrollToBottom?: () => void;
   showStopButton?: boolean;
   onStopGeneration?: () => void;
+  webSearchEnabled?: boolean;
+  onWebSearchChange?: (enabled: boolean) => void;
 }
 
 type ReasoningEffort = "minimal" | "low" | "medium" | "high" | "xhigh";
@@ -57,13 +59,19 @@ export function MessageInputBar({
   showScrollButton = false,
   onScrollToBottom,
   showStopButton = false,
-  onStopGeneration
+  onStopGeneration,
+  webSearchEnabled: webSearchEnabledProp,
+  onWebSearchChange,
 }: MessageInputBarProps) {
   const [message, setMessage] = useState("");
   const [attachments, setAttachments] = useState<Array<{ url: string; name: string; type: string; size?: number }>>([]);
   const [uploadingFiles, setUploadingFiles] = useState<Array<{ name: string; progress: number }>>([]);
   const [selectedModel, setSelectedModel] = useState<AIModel>(() => storage.getSelectedModel());
-  const [webSearchEnabled, setWebSearchEnabled] = useState(false);
+  const [internalWebSearchEnabled, setInternalWebSearchEnabled] = useState(false);
+  const isWebSearchControlled = onWebSearchChange !== undefined;
+  const webSearchEnabled = isWebSearchControlled
+    ? (webSearchEnabledProp ?? false)
+    : internalWebSearchEnabled;
   const [reasoningEffort, setReasoningEffort] = useState<ReasoningEffort>(() => storage.getSelectedModel().defaultReasoningEffort || "medium");
   const [rateLimitError, setRateLimitError] = useState<string>("");
   const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
@@ -80,16 +88,25 @@ export function MessageInputBar({
 
   useAutoSizeTextArea(textAreaRef, message);
 
+  const setWebSearchEnabled = useCallback((enabled: boolean) => {
+    if (isWebSearchControlled) {
+      onWebSearchChange?.(enabled);
+    } else {
+      setInternalWebSearchEnabled(enabled);
+    }
+  }, [isWebSearchControlled, onWebSearchChange]);
+
   useEffect(() => {
     if (getUserPreferences && user?.id) {
       const cloudModel = getUserPreferences.selectedModel;
       if (cloudModel && cloudModel.id !== selectedModel.id) {
         const validCloudModel = cloudModel as AIModel;
         setSelectedModel(validCloudModel);
+        setWebSearchEnabled(false);
         storage.setSelectedModel(validCloudModel);
       }
     }
-  }, [getUserPreferences, user?.id, selectedModel.id]);
+  }, [getUserPreferences, user?.id, selectedModel.id, setWebSearchEnabled]);
 
   // Handle closing the model selector when clicking outside
   useEffect(() => {
@@ -113,6 +130,7 @@ export function MessageInputBar({
   const handleModelChange = useCallback((model: AIModel) => {
     setSelectedModel(model);
     setReasoningEffort(model.defaultReasoningEffort || "medium");
+    setWebSearchEnabled(false);
     setModelSelectorOpen(false);
     
     const cloudSync: CloudSyncOptions | undefined = user?.id ? {
@@ -133,7 +151,7 @@ export function MessageInputBar({
         selectedModel: model,
       });
     }
-  }, [setUserPreferences, updateSelectedModel, user]);
+  }, [setUserPreferences, setWebSearchEnabled, updateSelectedModel, user]);
 
   const handleSend = useCallback(async () => {
     if (disabled) return;
@@ -371,10 +389,10 @@ export function MessageInputBar({
                 <button
                   type="button"
                   onClick={() => setWebSearchEnabled(!webSearchEnabled)}
-                  className={`flex items-center gap-1 h-8 px-3 text-xs rounded-full border border-input-bar-control bg-input-bar transition hover:cursor-pointer text-input-bar-muted ${
+                  className={`flex items-center gap-1 h-8 px-3 text-xs font-medium rounded-full border bg-input-bar transition hover:cursor-pointer ${
                     webSearchEnabled
-                      ? "text-input-bar-fg border-input-bar-control-active hover:cursor-pointer"
-                      : "hover:bg-input-bar-hover/80 hover:cursor-pointer"
+                      ? "text-input-bar-fg border-input-bar-control-active hover:bg-input-bar-hover"
+                      : "text-input-bar-muted border-input-bar-control hover:bg-input-bar-hover/80"
                   }`}
                 >
                   <Globe className="w-4 h-4" />

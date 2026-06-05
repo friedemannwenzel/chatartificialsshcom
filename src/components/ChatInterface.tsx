@@ -180,6 +180,7 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
   const [pendingWebSearch, setPendingWebSearch] = useState<boolean | undefined>();
   const [pendingReasoningEffort, setPendingReasoningEffort] = useState<string | undefined>();
   const [pendingUsageLimitPassword, setPendingUsageLimitPassword] = useState<string | undefined>();
+  const [webSearchEnabled, setWebSearchEnabled] = useState(false);
   const [currentModelName, setCurrentModelName] = useState(() => storage.getSelectedModel().name);
 
   // Refs for stable callback access (avoids re-creating handleAIResponse on every stream tick)
@@ -198,6 +199,14 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
   const deleteMessagesFromIndex = useMutation(api.chats.deleteMessagesFromIndex);
 
   useEffect(() => {
+    setWebSearchEnabled(false);
+    setPendingModel(undefined);
+    setPendingWebSearch(undefined);
+    setPendingReasoningEffort(undefined);
+    setPendingUsageLimitPassword(undefined);
+  }, [chatId]);
+
+  useEffect(() => {
     if (!user?.id || !chatId) return;
     const pending = storage.consumePendingInitialMessage(chatId);
     if (!pending) return;
@@ -214,6 +223,7 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
         });
         setPendingModel(pending.model);
         setPendingWebSearch(pending.webSearch);
+        setWebSearchEnabled(Boolean(pending.webSearch));
       } catch (e) {
         console.error("Failed to persist pending initial message:", e);
       }
@@ -668,6 +678,8 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
           onScrollToBottom={scrollToBottom}
           showStopButton={isLoading && (Boolean(streamingMessage) || Boolean(streamingThinking))}
           onStopGeneration={handleStopGeneration}
+          webSearchEnabled={webSearchEnabled}
+          onWebSearchChange={setWebSearchEnabled}
         />
       </div>
     </div>

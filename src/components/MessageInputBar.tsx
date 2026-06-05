@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { Globe, ChevronDown, Paperclip, X, AlertTriangle, ArrowUp, ArrowDown, ChevronUp, Brain, Eye, FileText, Square } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
@@ -29,14 +29,15 @@ interface MessageInputBarProps {
 type ReasoningEffort = "minimal" | "low" | "medium" | "high" | "xhigh";
 
 const useAutoSizeTextArea = (
-  textAreaRef: HTMLTextAreaElement | null,
+  textAreaRef: React.RefObject<HTMLTextAreaElement | null>,
   value: string
 ) => {
   useEffect(() => {
-    if (textAreaRef) {
-      textAreaRef.style.height = "0px";
-      const scrollHeight = textAreaRef.scrollHeight;
-      textAreaRef.style.height = Math.min(scrollHeight, 200) + "px";
+    const textArea = textAreaRef.current;
+    if (textArea) {
+      textArea.style.height = "0px";
+      const scrollHeight = textArea.scrollHeight;
+      textArea.style.height = Math.min(scrollHeight, 200) + "px";
     }
   }, [textAreaRef, value]);
 };
@@ -77,7 +78,7 @@ export function MessageInputBar({
     user?.id ? { userId: user.id } : "skip"
   );
 
-  useAutoSizeTextArea(textAreaRef.current, message);
+  useAutoSizeTextArea(textAreaRef, message);
 
   useEffect(() => {
     if (getUserPreferences && user?.id) {
@@ -109,7 +110,7 @@ export function MessageInputBar({
     };
   }, [modelSelectorOpen]);
 
-  const handleModelChange = (model: AIModel) => {
+  const handleModelChange = useCallback((model: AIModel) => {
     setSelectedModel(model);
     setReasoningEffort(model.defaultReasoningEffort || "medium");
     setModelSelectorOpen(false);
@@ -132,9 +133,9 @@ export function MessageInputBar({
         selectedModel: model,
       });
     }
-  };
+  }, [setUserPreferences, updateSelectedModel, user]);
 
-  const handleSend = async () => {
+  const handleSend = useCallback(async () => {
     if (disabled) return;
 
     const trimmed = message.trim();
@@ -145,26 +146,26 @@ export function MessageInputBar({
     onSendMessage(trimmed, selectedModel, webSearchEnabled, attachments, reasoningEffort);
     setMessage("");
     setAttachments([]);
-  };
+  }, [attachments, disabled, message, onSendMessage, reasoningEffort, selectedModel, webSearchEnabled]);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
-  };
+  }, [handleSend]);
 
-  const removeAttachment = (index: number) => {
+  const removeAttachment = useCallback((index: number) => {
     setAttachments(prev => prev.filter((_, i) => i !== index));
-  };
+  }, []);
 
-  const groupedModels = models.reduce((acc, model) => {
+  const groupedModels = useMemo(() => models.reduce((acc, model) => {
     if (!acc[model.provider]) {
       acc[model.provider] = [];
     }
     acc[model.provider].push(model);
     return acc;
-  }, {} as Record<string, AIModel[]>);
+  }, {} as Record<string, AIModel[]>), []);
 
   const providerLabels = {
     openai: "OpenAI",
@@ -498,7 +499,7 @@ export function MessageInputBar({
                 type="button"
                 onClick={handleSend}
                 disabled={disabled || (!message.trim() && attachments.length === 0)}
-                className={`flex items-center justify-center h-8 w-8 rounded-full border border-ink bg-ink text-white transition p-0 hover:cursor-pointer hover:bg-body ${
+                className={`flex items-center justify-center h-8 w-8 rounded-full border border-black bg-black text-white transition p-0 hover:cursor-pointer hover:bg-neutral-800 ${
                   disabled || (!message.trim() && attachments.length === 0)
                     ? "opacity-40 cursor-not-allowed"
                     : ""

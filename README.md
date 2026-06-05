@@ -1,8 +1,8 @@
 # ArtificialSSH Chat 🤖💬
 
-A modern, full-stack AI chat application built with Next.js 15, featuring multiple AI providers, beautiful UI, and comprehensive rate limiting.
+A modern, full-stack AI chat application built with Next.js 16, featuring multiple AI providers, beautiful UI, and comprehensive rate limiting.
 
-![ArtificialSSH Chat](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js)
+![ArtificialSSH Chat](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
 
@@ -22,8 +22,8 @@ A modern, full-stack AI chat application built with Next.js 15, featuring multip
 
 ### Prerequisites
 
-- Node.js 18+ 
-- npm or yarn
+- Bun 1.3+
+- Node.js 20.9+ for Next.js tooling compatibility
 - Accounts for required services (see Environment Variables)
 
 ### 1. Clone the Repository
@@ -31,7 +31,7 @@ A modern, full-stack AI chat application built with Next.js 15, featuring multip
 ```bash
 git clone <your-repo-url>
 cd artificialssh-chat
-npm install
+bun install
 ```
 
 ### 2. Environment Variables
@@ -62,7 +62,7 @@ UPLOADTHING_SECRET=sk_live_...
 #### Convex Database
 1. Visit [convex.dev](https://convex.dev) and create an account
 2. Create a new project
-3. Run `npx convex dev` to set up your database
+3. Run `bunx convex dev` to set up your database
 4. Copy the deployment URL and add to your `.env.local`
 
 #### Clerk Authentication
@@ -89,7 +89,7 @@ UPLOADTHING_SECRET=sk_live_...
 ### 4. Deploy Database Schema
 
 ```bash
-npx convex dev
+bunx convex dev
 ```
 
 This will:
@@ -100,7 +100,7 @@ This will:
 ### 5. Run the Development Server
 
 ```bash
-npm run dev
+bun run dev
 ```
 
 Visit [http://localhost:3000](http://localhost:3000) to see your app!

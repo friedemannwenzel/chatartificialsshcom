@@ -5,8 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Settings, Shield, LogOut, User, MessageSquare, LockKeyhole } from "lucide-react";
+import { Settings, Shield, LogOut, User, MessageSquare, LockKeyhole, SunMoon } from "lucide-react";
 import { MessageUsageBar } from "@/components/MessageUsageBar";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { useSecureLogout } from "@/hooks/useSecureLogout";
 import { useUser, UserButton } from "@clerk/nextjs";
 import { storage } from "@/lib/storage";
@@ -96,6 +97,32 @@ export default function SettingsPage() {
                     <p className="text-xs text-muted-foreground">
                       Email address is managed through your account settings
                     </p>
+                  </div>
+
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <SunMoon className="h-5 w-5" />
+                    Theme
+                  </CardTitle>
+                  <CardDescription>
+                    Customize how the app looks on your device
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium">Color mode</p>
+                      <p className="text-xs text-muted-foreground">
+                        Light mode uses a clean white interface. Dark mode uses a calm near-black workspace.
+                      </p>
+                    </div>
+                    <div className="w-44 shrink-0">
+                      <ThemeToggle />
+                    </div>
                   </div>
                 </CardContent>
               </Card>

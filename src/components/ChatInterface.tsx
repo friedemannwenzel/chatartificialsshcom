@@ -180,6 +180,7 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
   const [pendingWebSearch, setPendingWebSearch] = useState<boolean | undefined>();
   const [pendingReasoningEffort, setPendingReasoningEffort] = useState<string | undefined>();
   const [pendingUsageLimitPassword, setPendingUsageLimitPassword] = useState<string | undefined>();
+  const [currentModelName, setCurrentModelName] = useState(() => storage.getSelectedModel().name);
 
   // Refs for stable callback access (avoids re-creating handleAIResponse on every stream tick)
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -187,9 +188,8 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
   const scrollRafRef = useRef<number | null>(null);
 
   // Cache model name to avoid repeated localStorage reads during render
-  const cachedModelName = useRef<string>(storage.getSelectedModel().name);
   useEffect(() => {
-    cachedModelName.current = storage.getSelectedModel().name;
+    setCurrentModelName(storage.getSelectedModel().name);
   }, [pendingModel]);
 
   const addMessage = useMutation(api.chats.addMessage);
@@ -292,7 +292,7 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
     } catch (error) {
       console.error("Error creating branch:", error);
     }
-  }, [user?.id, messages, createChat, addMessage, updateChatTitle, router]);
+  }, [user, messages, createChat, addMessage, updateChatTitle, router]);
 
   const scrollToBottom = useCallback(() => {
     if (scrollAreaRef.current) {
@@ -359,7 +359,7 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
     abortControllerRef.current = abortController;
 
     const selectedModel = model || storage.getSelectedModel();
-    cachedModelName.current = selectedModel.name;
+    setCurrentModelName(selectedModel.name);
 
     try {
       const response = await fetch("/api/chat", {
@@ -543,7 +543,7 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
     } catch (error) {
       console.error("Error sending message:", error);
     }
-  }, [isLoading, user?.id, chatExists, chatId, createChat, addMessage]);
+  }, [isLoading, user, chatExists, chatId, createChat, addMessage]);
 
   // Cleanup abort controller on unmount
   useEffect(() => {
@@ -558,7 +558,7 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
     <div className="chat-surface relative flex h-full flex-col">
       <div className="flex-1 overflow-hidden">
         <div className="h-full overflow-y-auto pb-40" ref={scrollAreaRef}>
-          <div className="mx-auto max-w-3xl space-y-6 px-4 py-6 pt-8">
+          <div className="mx-auto max-w-4xl space-y-6 px-4 py-6 pt-8">
             {messages.map((message, messageIndex) => (
               <MessageRow
                 key={message._id}
@@ -568,7 +568,7 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
                 isEditing={editingMessage === message._id}
                 editText={editText}
                 isCopied={copiedMessage === message._id}
-                cachedModelName={message.role === "assistant" ? cachedModelName.current : undefined}
+                cachedModelName={message.role === "assistant" ? currentModelName : undefined}
                 onMouseEnter={() => setHoveredMessage(message._id)}
                 onMouseLeave={() => setHoveredMessage(null)}
                 onEditTextChange={setEditText}
@@ -611,7 +611,7 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
                       messageIndex={messages.length}
                       role="assistant"
                       content={streamingMessage}
-                      model={cachedModelName.current}
+                      model={currentModelName}
                       onRetry={handleRetry}
                       onEdit={handleEdit}
                       onCopy={copyToClipboard}

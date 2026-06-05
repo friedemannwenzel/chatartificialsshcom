@@ -1,4 +1,7 @@
 import { mutation } from "./_generated/server";
+import { Doc } from "./_generated/dataModel";
+
+type UserPreferenceWithTheme = Doc<"userPreferences"> & { theme?: unknown };
 
 export const removeThemeFromUserPreferences = mutation({
   args: {},
@@ -7,7 +10,8 @@ export const removeThemeFromUserPreferences = mutation({
     
     for (const pref of allPreferences) {
       if ('theme' in pref) {
-        const { theme, ...cleanPref } = pref as any;
+        const { theme: _theme, ...cleanPref } = pref as UserPreferenceWithTheme;
+        void _theme;
         await ctx.db.replace(pref._id, {
           userId: cleanPref.userId,
           selectedModel: cleanPref.selectedModel,

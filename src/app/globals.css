@@ -242,12 +242,6 @@ body {
   background: var(--app);
 }
 
-.dark .chat-surface {
-  background:
-    radial-gradient(120% 70% at 50% -10%, var(--brand-weak), transparent 60%),
-    var(--app);
-}
-
 /* Slim, theme-aware scrollbars */
 * {
   scrollbar-width: thin;

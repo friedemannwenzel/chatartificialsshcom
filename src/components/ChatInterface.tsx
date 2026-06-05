@@ -13,6 +13,8 @@ import { AgentTimeline } from "./AgentTimeline";
 import { AIModel } from "@/lib/models";
 import { storage } from "@/lib/storage";
 import { MessageContent } from "./MessageContent";
+import { MessageImageGallery } from "./MessageImageGallery";
+import { getMessageImages, stripImagesFromContent } from "@/lib/messageImages";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
@@ -85,6 +87,13 @@ const MessageRow = memo(function MessageRow({
   onSetHovered: (id: string | null) => void;
 }) {
   const isUser = message.role === "user";
+  const images = isUser ? getMessageImages(message.content, message.attachments) : [];
+  const displayContent =
+    isUser && images.length > 0
+      ? stripImagesFromContent(message.content)
+      : message.content;
+  const hasTextContent = displayContent.trim().length > 0;
+  const showMessageBubble = isEditing || !isUser || hasTextContent;
 
   return (
     <div
@@ -101,46 +110,52 @@ const MessageRow = memo(function MessageRow({
           />
         )}
 
-      <div
-        className={`relative flex max-w-full ${
-          isUser
-            ? "items-center rounded-[20px] bg-bubble px-4 py-2 text-ink"
-            : "pt-1 text-ink"
-        }`}
-      >
-        {isEditing ? (
-          <div className="space-y-2">
-            <Textarea
-              value={editText}
-              onChange={(e) => onEditTextChange(e.target.value)}
-              className="min-h-[60px] resize-none border-line bg-elevated text-body"
-              autoFocus
-            />
-            <div className="flex gap-2 justify-end">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onCancelEdit}
-                className="h-8 px-3 text-xs"
-              >
-                Cancel
-              </Button>
-              <Button
-                size="sm"
-                onClick={onSaveEdit}
-                className="h-8 px-3 text-xs"
-              >
-                Save
-              </Button>
+      {isUser && images.length > 0 && (
+        <MessageImageGallery images={images} className="justify-end" />
+      )}
+
+      {showMessageBubble && (
+        <div
+          className={`relative flex max-w-full ${
+            isUser
+              ? "items-center rounded-[20px] bg-bubble px-4 py-2 text-ink"
+              : "pt-1 text-ink"
+          }`}
+        >
+          {isEditing ? (
+            <div className="space-y-2">
+              <Textarea
+                value={editText}
+                onChange={(e) => onEditTextChange(e.target.value)}
+                className="min-h-[60px] resize-none border-line bg-elevated text-body"
+                autoFocus
+              />
+              <div className="flex gap-2 justify-end">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onCancelEdit}
+                  className="h-8 px-3 text-xs"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={onSaveEdit}
+                  className="h-8 px-3 text-xs"
+                >
+                  Save
+                </Button>
+              </div>
             </div>
-          </div>
-        ) : (
-          <MessageContent
-            content={message.content}
-            className={isUser ? "prose-p:my-0 prose-p:leading-snug" : undefined}
-          />
-        )}
-      </div>
+          ) : (
+            <MessageContent
+              content={displayContent}
+              className={isUser ? "prose-p:my-0 prose-p:leading-snug" : undefined}
+            />
+          )}
+        </div>
+      )}
       {!isEditing && (
         <MessageActions
           messageId={message._id}

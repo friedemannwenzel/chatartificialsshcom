@@ -1,24 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
 import { Brain, Eye, FileText } from "lucide-react";
 import { models } from "@/lib/models";
-
-const getProviderIcon = (provider: string) => {
-  switch (provider) {
-    case 'openai':
-      return "/OpenAI.svg";
-    case 'google':
-      return "/Gemini.svg";
-    case 'anthropic':
-      return "/Anthropic.svg";
-    case 'xai':
-      return "/Grok_dark.svg";
-    default:
-      return null;
-  }
-};
+import { ProviderIcon } from "@/components/ProviderIcon";
 
 const providerLabels: Record<string, string> = {
   openai: "OpenAI",
@@ -102,15 +87,7 @@ export function ModelsSection() {
                 }
               `}
             >
-              {getProviderIcon(provider) && (
-                <Image
-                  src={getProviderIcon(provider)!}
-                  alt={provider}
-                  width={20}
-                  height={20}
-                  className="w-5 h-5"
-                />
-              )}
+              <ProviderIcon provider={provider} size={20} className="w-5 h-5" inverted />
               {providerLabels[provider]}
             </button>
           ))}
@@ -120,8 +97,6 @@ export function ModelsSection() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredModels.map((model, index) => {
             const isVisible = visibleModels.includes(index);
-            const providerIcon = getProviderIcon(model.provider);
-
             return (
               <div
                 key={model.id}
@@ -138,17 +113,9 @@ export function ModelsSection() {
                 {/* Header */}
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    {providerIcon && (
-                      <div className="w-10 h-10 rounded-[20px] bg-[#0A0A0A] border border-[#2C2C2C] flex items-center justify-center">
-                        <Image
-                          src={providerIcon}
-                          alt={model.provider}
-                          width={24}
-                          height={24}
-                          className="w-6 h-6"
-                        />
-                      </div>
-                    )}
+                    <div className="w-10 h-10 rounded-[20px] bg-[#0A0A0A] border border-[#2C2C2C] flex items-center justify-center">
+                      <ProviderIcon provider={model.provider} size={24} className="w-6 h-6" inverted />
+                    </div>
                     <div>
                       <h3 className="text-lg font-semibold text-[#A7A7A7] group-hover:text-white transition-colors">
                         {model.name}

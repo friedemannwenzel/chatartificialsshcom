@@ -5,11 +5,11 @@ import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Brain, AlertCircle, Globe } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { Doc } from "../../convex/_generated/dataModel";
 import { MessageInputBar } from "./MessageInputBar";
 import { MessageActions } from "./MessageActions";
-import { SearchGroundingDetails } from "./SearchGroundingDetails";
+import { AgentTimeline } from "./AgentTimeline";
 import { AIModel } from "@/lib/models";
 import { storage } from "@/lib/storage";
 import { MessageContent } from "./MessageContent";
@@ -84,19 +84,28 @@ const MessageRow = memo(function MessageRow({
   onBranch: (index: number) => void;
   onSetHovered: (id: string | null) => void;
 }) {
+  const isUser = message.role === "user";
+
   return (
     <div
-      className={`flex flex-col ${
-        message.role === "user" ? "items-end" : "items-start"
-      }`}
+      className={`flex w-full flex-col ${isUser ? "items-end" : "items-start"}`}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >
+      {/* Agent activity (reasoning + search) is surfaced above the answer */}
+      {message.role === "assistant" &&
+        (message.reasoningContent || message.groundingMetadata) && (
+          <AgentTimeline
+            reasoningContent={message.reasoningContent}
+            groundingMetadata={message.groundingMetadata}
+          />
+        )}
+
       <div
-        className={` rounded-[20px] pt-3 relative group flex items-center justify-center ${
-          message.role === "user"
-            ? "bg-[#2C2C2C] text-[#A7A7A7] px-4"
-            : "text-[#A7A7A7]"
+        className={`relative flex max-w-full ${
+          isUser
+            ? "items-center rounded-[20px] bg-bubble px-4 py-2 text-ink"
+            : "pt-1 text-ink"
         }`}
       >
         {isEditing ? (
@@ -104,7 +113,7 @@ const MessageRow = memo(function MessageRow({
             <Textarea
               value={editText}
               onChange={(e) => onEditTextChange(e.target.value)}
-              className="min-h-[60px] resize-none bg-background/50 border-white/10"
+              className="min-h-[60px] resize-none border-line bg-elevated text-body"
               autoFocus
             />
             <div className="flex gap-2 justify-end">
@@ -126,23 +135,12 @@ const MessageRow = memo(function MessageRow({
             </div>
           </div>
         ) : (
-          <MessageContent content={message.content} />
+          <MessageContent
+            content={message.content}
+            className={isUser ? "prose-p:my-0 prose-p:leading-snug" : undefined}
+          />
         )}
       </div>
-      {message.role === "assistant" && message.groundingMetadata && (
-        <SearchGroundingDetails groundingMetadata={message.groundingMetadata} />
-      )}
-      {message.role === "assistant" && message.reasoningContent && (
-        <details className="mt-3 max-w-[80%] rounded-[15px] border border-[#2C2C2C] bg-[#0A0A0A] px-3 py-2 text-[#A7A7A7]">
-          <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium text-blue-400">
-            <Brain className="h-4 w-4" />
-            Reasoning
-          </summary>
-          <div className="mt-3 whitespace-pre-wrap break-words text-sm leading-6 text-[#7A7A7A]">
-            {message.reasoningContent}
-          </div>
-        </details>
-      )}
       {!isEditing && (
         <MessageActions
           messageId={message._id}
@@ -557,10 +555,10 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
   }, []);
 
   return (
-    <div className="flex flex-col h-full relative">
+    <div className="chat-surface relative flex h-full flex-col">
       <div className="flex-1 overflow-hidden">
         <div className="h-full overflow-y-auto pb-40" ref={scrollAreaRef}>
-          <div className="space-y-4 max-w-4xl py-4 mx-auto pt-6">
+          <div className="mx-auto max-w-3xl space-y-6 px-4 py-6 pt-8">
             {messages.map((message, messageIndex) => (
               <MessageRow
                 key={message._id}
@@ -584,104 +582,65 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
               />
             ))}
 
-            {/* Loading indicator - distinguishes thinking vs generating */}
-            {isLoading && !streamingMessage && !streamingThinking && (
+            {/* In-progress assistant turn: agent activity, then the answer */}
+            {(isLoading || streamingMessage || streamingThinking) && (
               <div
-                className="flex flex-col items-start"
-                onMouseEnter={() => setHoveredMessage("loading")}
-                onMouseLeave={() => setHoveredMessage(null)}
-              >
-                {streamingSearchStatus === "searching" ? (
-                  <div className="rounded-[20px] pt-3 relative group flex items-center justify-center text-[#A7A7A7]">
-                    <div className="flex items-center gap-3 p-4">
-                      <Globe className="h-4 w-4 animate-pulse text-blue-400" />
-                      <span className="text-sm text-[#5D5D5D]">Searching...</span>
-                    </div>
-                  </div>
-                ) : pendingModel?.isReasoningModel ? (
-                  <div className="rounded-[20px] pt-3 relative group flex items-center justify-center text-[#A7A7A7]">
-                    <div className="flex items-center gap-3 p-4">
-                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#A7A7A7] border-t-transparent" />
-                      <span className="text-sm text-[#5D5D5D]">Thinking...</span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="rounded-[20px] pt-3 relative group flex items-center justify-center text-[#A7A7A7]">
-                    <div className="flex items-center gap-3 p-4">
-                      <span className="text-sm text-[#5D5D5D]">Generating</span>
-                      <span className="inline-flex gap-1 ml-1">
-                        <span className="h-2 w-2 bg-[#5D5D5D] rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                        <span className="h-2 w-2 bg-[#5D5D5D] rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                        <span className="h-2 w-2 bg-[#5D5D5D] rounded-full animate-bounce"></span>
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {isLoading && streamingSearchStatus === "searching" && (streamingMessage || streamingThinking) && (
-              <div className="flex flex-col items-start">
-                <div className="flex items-center gap-2 rounded-[15px] border border-[#2C2C2C] bg-[#0A0A0A] px-3 py-2 text-sm text-[#5D5D5D]">
-                  <Globe className="h-4 w-4 animate-pulse text-blue-400" />
-                  Searching...
-                </div>
-              </div>
-            )}
-
-            {/* Thinking stream */}
-            {streamingThinking && (
-              <div
-                className="flex flex-col items-start"
-                onMouseEnter={() => setHoveredMessage("thinking")}
-                onMouseLeave={() => setHoveredMessage(null)}
-              >
-                <div className="rounded-[20px] pt-3 relative group flex items-center justify-start text-[#A7A7A7] max-w-[80%]">
-                  <div className="w-full">
-                    <div className="flex items-center gap-2 mb-3 text-blue-400">
-                      <Brain className="w-4 h-4" />
-                      <span className="text-sm font-medium">Thinking</span>
-                    </div>
-                    <div className="text-sm text-[#5D5D5D] bg-[#0A0A0A] p-3 rounded-[15px] border border-[#2C2C2C]/50 whitespace-pre-wrap break-words">{streamingThinking}</div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Streaming message */}
-            {streamingMessage && (
-              <div
-                className="flex flex-col items-start"
+                className="flex w-full flex-col items-start"
                 onMouseEnter={() => setHoveredMessage("streaming")}
                 onMouseLeave={() => setHoveredMessage(null)}
               >
-                <div className="rounded-[20px] pt-3 relative group flex items-center justify-center text-[#A7A7A7]">
-                  <MessageContent content={streamingMessage} />
-                </div>
-                {streamingGroundingMetadata && (
-                  <SearchGroundingDetails groundingMetadata={streamingGroundingMetadata} />
-                )}
-                <MessageActions
-                  messageId="streaming"
-                  messageIndex={messages.length}
-                  role="assistant"
-                  content={streamingMessage}
-                  model={cachedModelName.current}
-                  onRetry={handleRetry}
-                  onEdit={handleEdit}
-                  onCopy={copyToClipboard}
-                  onBranch={handleBranch}
-                  hoveredMessage={hoveredMessage}
-                  setHoveredMessage={setHoveredMessage}
-                  copiedMessage={copiedMessage}
+                <AgentTimeline
+                  liveReasoning={streamingThinking || undefined}
+                  reasoningActive={
+                    isLoading &&
+                    !streamingMessage &&
+                    streamingSearchStatus !== "searching" &&
+                    (Boolean(streamingThinking) || Boolean(pendingModel?.isReasoningModel))
+                  }
+                  searchActive={streamingSearchStatus === "searching"}
+                  groundingMetadata={streamingGroundingMetadata}
                 />
+
+                {streamingMessage ? (
+                  <>
+                    <div className="pt-1 text-body">
+                      <MessageContent content={streamingMessage} />
+                    </div>
+                    <MessageActions
+                      messageId="streaming"
+                      messageIndex={messages.length}
+                      role="assistant"
+                      content={streamingMessage}
+                      model={cachedModelName.current}
+                      onRetry={handleRetry}
+                      onEdit={handleEdit}
+                      onCopy={copyToClipboard}
+                      onBranch={handleBranch}
+                      hoveredMessage={hoveredMessage}
+                      setHoveredMessage={setHoveredMessage}
+                      copiedMessage={copiedMessage}
+                    />
+                  </>
+                ) : (
+                  !streamingThinking &&
+                  streamingSearchStatus !== "searching" && (
+                    <div className="flex items-center gap-3 py-3 text-dim">
+                      <span className="text-sm">Generating</span>
+                      <span className="inline-flex gap-1">
+                        <span className="h-1.5 w-1.5 rounded-full bg-faint animate-bounce [animation-delay:-0.3s]" />
+                        <span className="h-1.5 w-1.5 rounded-full bg-faint animate-bounce [animation-delay:-0.15s]" />
+                        <span className="h-1.5 w-1.5 rounded-full bg-faint animate-bounce" />
+                      </span>
+                    </div>
+                  )
+                )}
               </div>
             )}
 
             {/* Error display */}
             {streamError && !isLoading && (
               <div className="flex flex-col items-start">
-                <div className="flex items-center gap-2 px-4 py-3 rounded-[15px] bg-red-500/10 border border-red-500/20 text-red-400 text-sm max-w-[80%]">
+                <div className="flex max-w-[80%] items-center gap-2 rounded-[15px] border border-danger/30 bg-danger-weak px-4 py-3 text-sm text-danger">
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   <span>{streamError}</span>
                 </div>
@@ -689,16 +648,18 @@ export function ChatInterface({ chatId, messages, chatExists = true }: ChatInter
             )}
 
             {messages.length === 0 && !streamingMessage && (
-              <div className="text-center text-muted-foreground py-12">
-                <p className="text-lg font-medium">Start a conversation</p>
-                <p className="text-sm opacity-70 mt-1">Type a message below to begin</p>
+              <div className="py-12 text-center text-faint">
+                <p className="text-lg font-medium text-dim">Start a conversation</p>
+                <p className="mt-1 text-sm">Type a message below to begin</p>
               </div>
             )}
           </div>
         </div>
       </div>
 
-      <div className="absolute bottom-0 max-w-4xl mx-auto left-0 right-0">
+      <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-app via-app/90 to-transparent" />
+
+      <div className="absolute bottom-0 left-0 right-0 mx-auto max-w-4xl px-4">
         <MessageInputBar
           onSendMessage={handleSendMessage}
           disabled={isLoading}

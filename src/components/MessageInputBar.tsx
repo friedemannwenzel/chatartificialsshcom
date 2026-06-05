@@ -12,8 +12,8 @@ import { storage, CloudSyncOptions, UserPreferences } from "@/lib/storage";
 import { useUser } from "@clerk/nextjs";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import Image from "next/image";
 import { generateUploadButton } from "@uploadthing/react";
+import { ProviderIcon } from "@/components/ProviderIcon";
 import type { MessageAttachmentRouter } from "@/app/api/uploadthing/core";
 
 interface MessageInputBarProps {
@@ -27,21 +27,6 @@ interface MessageInputBarProps {
 }
 
 type ReasoningEffort = "minimal" | "low" | "medium" | "high" | "xhigh";
-
-const getProviderIcon = (provider: string) => {
-  switch (provider) {
-    case 'openai':
-      return "/OpenAI.svg";
-    case 'google':
-      return "/Gemini.svg";
-    case 'anthropic':
-      return "/Anthropic.svg";
-    case 'xai':
-      return "/Grok_dark.svg";
-    default:
-      return null;
-  }
-};
 
 const useAutoSizeTextArea = (
   textAreaRef: HTMLTextAreaElement | null,
@@ -206,7 +191,7 @@ export function MessageInputBar({
               {attachments.map((file, index) => (
                 <div
                   key={`attachment-${index}`}
-                  className="flex items-center gap-2 bg-[#151515] rounded-[20px] px-3 py-3 text-xs border border-[#2C2C2C] shadow-none group hover:cursor-pointer text-[#A7A7A7]"
+                  className="flex items-center gap-2 bg-elevated rounded-[20px] px-3 py-3 text-xs border border-line shadow-none group hover:cursor-pointer text-dim"
                 >
                   <Paperclip className="w-4 h-4 text-muted-foreground" />
                   <span className="truncate max-w-32 font-medium">{file.name}</span>
@@ -225,11 +210,11 @@ export function MessageInputBar({
               {uploadingFiles.map((file, index) => (
                 <div
                   key={`uploading-${index}`}
-                  className="flex items-center gap-2 bg-[#151515] rounded-[20px] px-3 py-3 text-xs border border-[#2C2C2C] shadow-none relative overflow-hidden"
+                  className="flex items-center gap-2 bg-elevated rounded-[20px] px-3 py-3 text-xs border border-line shadow-none relative overflow-hidden"
                 >
                   {/* Progress background */}
                   <div
-                    className="absolute inset-0 bg-[#2C2C2C]/10 transition-all duration-300"
+                    className="absolute inset-0 bg-hover/40 transition-all duration-300"
                     style={{
                       width: `${file.progress}%`,
                     }}
@@ -237,9 +222,9 @@ export function MessageInputBar({
                   
                   {/* Content */}
                   <div className="relative z-10 flex items-center gap-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#A7A7A7] border-t-transparent" />
-                    <span className="truncate max-w-32 font-medium text-[#A7A7A7]">{file.name}</span>
-                    <span className="text-[#A7A7A7] text-[10px] font-mono">{Math.round(file.progress)}%</span>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-line-strong border-t-transparent" />
+                    <span className="truncate max-w-32 font-medium text-dim">{file.name}</span>
+                    <span className="text-dim text-[10px] font-mono">{Math.round(file.progress)}%</span>
                   </div>
                 </div>
               ))}
@@ -250,7 +235,7 @@ export function MessageInputBar({
                   <Button
                     onClick={onScrollToBottom}
                     size="sm"
-                    className="py-3 px-4 rounded-[20px] bg-[#151515] text-[#5D5D5D] hover:text-[#A7A7A7] border border-[#2C2C2C] shadow-lg hover:bg-[#2C2C2C] transition-all duration-200 hover:cursor-pointer flex items-center gap-2"
+                    className="py-3 px-4 rounded-[20px] bg-elevated text-faint hover:text-dim border border-line shadow-lg hover:bg-hover transition-all duration-200 hover:cursor-pointer flex items-center gap-2"
                     variant="secondary"
                     type="button"
                   >
@@ -264,7 +249,7 @@ export function MessageInputBar({
                 <div className="flex-1 flex justify-center">
                   <button
                     onClick={onStopGeneration}
-                    className="flex items-center gap-2 px-4 py-2 rounded-full border border-[#2C2C2C] bg-[#151515] text-[#A7A7A7] hover:bg-[#2C2C2C] transition-colors text-sm hover:cursor-pointer"
+                    className="flex items-center gap-2 px-4 py-2 rounded-full border border-line bg-elevated text-dim hover:bg-hover transition-colors text-sm hover:cursor-pointer"
                     type="button"
                   >
                     <Square className="w-3 h-3 fill-current" />
@@ -276,7 +261,7 @@ export function MessageInputBar({
           )}
 
           {/* Message Input Bar */}
-          <div className="relative w-full bg-[#151515] rounded-t-[20px] border-t border-l border-r border-[#2C2C2C] flex flex-col">
+          <div className="relative w-full bg-elevated rounded-t-[20px] border-t border-l border-r border-line flex flex-col">
             {/* Textarea */}
             <div className="w-full px-3 py-1">
               <Textarea
@@ -286,7 +271,7 @@ export function MessageInputBar({
                 onKeyDown={handleKeyDown}
                 placeholder={placeholder}
                 disabled={disabled}
-                className="min-h-[40px] max-h-[120px] resize-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent text-base text-[#A7A7A7] placeholder:text-muted-foreground px-0"
+                className="min-h-[40px] max-h-[120px] resize-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent text-base text-ink placeholder:text-faint px-0"
                 rows={1}
                 style={{
                   background: "transparent",
@@ -303,18 +288,10 @@ export function MessageInputBar({
                 <button
                   type="button"
                   onClick={() => setModelSelectorOpen(!modelSelectorOpen)}
-                  className="flex items-center gap-2 h-8 px-3 text-xs font-medium rounded-full border border-[#A7A7A7] bg-[#151515] hover:bg-[#2C2C2C] focus:outline-none transition hover:cursor-pointer text-[#A7A7A7]"
+                  className="flex items-center gap-2 h-8 px-3 text-xs font-medium rounded-full border border-line-strong bg-elevated hover:bg-hover focus:outline-none transition hover:cursor-pointer text-dim"
                   style={{ minWidth: 0 }}
                 >
-                  {getProviderIcon(selectedModel.provider) && (
-                    <Image
-                      src={getProviderIcon(selectedModel.provider)!}
-                      alt={selectedModel.provider}
-                      width={16}
-                      height={16}
-                      className="w-4 h-4"
-                    />
-                  )}
+                  <ProviderIcon provider={selectedModel.provider} size={16} className="w-4 h-4" />
                   <span className="truncate max-w-[100px]">{selectedModel.name}</span>
                   {modelSelectorOpen ? (
                     <ChevronUp className="w-4 h-4" />
@@ -324,20 +301,12 @@ export function MessageInputBar({
                 </button>
                 {/* Model Dropdown */}
                 {modelSelectorOpen && (
-                  <div className="absolute bottom-full left-0 mb-2 w-80 bg-[#151515] border border-[#2C2C2C] rounded-[20px] shadow-lg z-50">
+                  <div className="absolute bottom-full left-0 mb-2 w-80 bg-elevated border border-line rounded-[20px] shadow-lg z-50">
                     <div className="max-h-64 overflow-y-auto">
                       {Object.entries(groupedModels).map(([provider, providerModels]) => (
                         <div key={provider} className="p-2">
                           <div className="flex items-center gap-2 px-2 py-1 text-xs font-medium text-muted-foreground">
-                            {getProviderIcon(provider) && (
-                              <Image
-                                src={getProviderIcon(provider)!}
-                                alt={provider}
-                                width={16}
-                                height={16}
-                                className="w-4 h-4"
-                              />
-                            )}
+                            <ProviderIcon provider={provider} size={16} className="w-4 h-4" />
                             {providerLabels[provider as keyof typeof providerLabels]}
                           </div>
                           {providerModels.map((model) => (
@@ -354,7 +323,7 @@ export function MessageInputBar({
                                     {model.isReasoningModel && (
                                       <Tooltip>
                                         <TooltipTrigger asChild>
-                                          <Brain className="w-3 h-3 text-blue-400" />
+                                          <Brain className="w-3 h-3 text-dim" />
                                         </TooltipTrigger>
                                         <TooltipContent>
                                           <p>Reasoning Model</p>
@@ -401,10 +370,10 @@ export function MessageInputBar({
                 <button
                   type="button"
                   onClick={() => setWebSearchEnabled(!webSearchEnabled)}
-                  className={`flex items-center gap-1 h-8 px-3 text-xs rounded-full border border-[#2C2C2C] bg-[#151515] transition hover:cursor-pointer text-[#5D5D5D] ${
+                  className={`flex items-center gap-1 h-8 px-3 text-xs rounded-full border border-line bg-elevated transition hover:cursor-pointer text-faint ${
                     webSearchEnabled
-                      ? "text-[#A7A7A7] border-[#A7A7A7] hover:cursor-pointer"
-                      : "hover:bg-[#232427]/80 hover:cursor-pointer"
+                      ? "text-dim border-line-strong hover:cursor-pointer"
+                      : "hover:bg-hover hover:cursor-pointer"
                   }`}
                 >
                   <Globe className="w-4 h-4" />
@@ -420,9 +389,9 @@ export function MessageInputBar({
                         <DropdownMenuTrigger asChild>
                           <button
                             type="button"
-                            className="flex items-center gap-2 h-8 px-3 text-xs font-medium rounded-full border border-[#A7A7A7] bg-[#151515] hover:bg-[#2C2C2C] focus:outline-none transition hover:cursor-pointer text-[#A7A7A7]"
+                            className="flex items-center gap-2 h-8 px-3 text-xs font-medium rounded-full border border-line-strong bg-elevated hover:bg-hover focus:outline-none transition hover:cursor-pointer text-dim"
                           >
-                            <Brain className="w-4 h-4 text-blue-400" />
+                            <Brain className="w-4 h-4 text-dim" />
                             <span className="truncate max-w-[100px]">{reasoningEffort}</span>
                             <ChevronDown className="w-4 h-4" />
                           </button>
@@ -433,14 +402,14 @@ export function MessageInputBar({
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
-                  <DropdownMenuContent align="start" className="bg-[#151515] border-[#2C2C2C] text-[#A7A7A7]">
+                  <DropdownMenuContent align="start" className="bg-elevated border-line text-dim">
                     {getReasoningEffortOptions(selectedModel.provider).map((effort) => (
                       <DropdownMenuItem
                         key={effort}
                         onClick={() => setReasoningEffort(effort)}
-                        className="text-xs hover:cursor-pointer focus:bg-[#2C2C2C] focus:text-[#D5D5D5]"
+                        className="text-xs hover:cursor-pointer focus:bg-hover focus:text-ink"
                       >
-                        <Brain className="mr-2 h-3.5 w-3.5 text-blue-400" />
+                        <Brain className="mr-2 h-3.5 w-3.5 text-dim" />
                         {effort}
                       </DropdownMenuItem>
                     ))}
@@ -486,16 +455,16 @@ export function MessageInputBar({
                       <div
                         className={`border rounded-[20px] transition-all duration-200 p-2 flex items-center justify-center relative overflow-hidden
                           ${attachments.length > 0
-                            ? " border-[#A7A7A7] text-[#A7A7A7] hover:bg-[#2C2C2C]"
-                            : "bg-transparent border-[#2C2C2C] text-[#5D5D5D] hover:bg-[#2C2C2C] hover:text-[#A7A7A7]"
+                            ? " border-line-strong text-dim hover:bg-hover"
+                            : "bg-transparent border-line text-faint hover:bg-hover hover:text-dim"
                           }
-                          ${isUploading ? "border-[#A7A7A7] text-[#A7A7A7]" : ""}
+                          ${isUploading ? "border-line-strong text-dim" : ""}
                           hover:cursor-pointer
                         `}
                       >
                         {isUploading && (
                           <div
-                            className="absolute inset-0 bg-blue-500/20 transition-all duration-300"
+                            className="absolute inset-0 bg-hover transition-all duration-300"
                             style={{
                               width: `${uploadProgress}%`,
                             }}
@@ -503,7 +472,7 @@ export function MessageInputBar({
                         )}
                         <div className="relative z-10 flex items-center justify-center">
                           {isUploading ? (
-                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#A7A7A7] border-t-transparent" />
+                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-line-strong border-t-transparent" />
                           ) : (
                             <Paperclip className="w-4 h-4" />
                           )}
@@ -514,7 +483,7 @@ export function MessageInputBar({
                 />
               ) : (
                 <div
-                  className="border rounded-[20px] transition-all duration-200 p-2 flex items-center justify-center bg-transparent border-[#2C2C2C] text-[#5D5D5D] opacity-50 cursor-not-allowed"
+                  className="border rounded-[20px] transition-all duration-200 p-2 flex items-center justify-center bg-transparent border-line text-faint opacity-50 cursor-not-allowed"
                   title="This model doesn't support file uploads"
                 >
                   <Paperclip className="w-4 h-4" />
@@ -529,14 +498,14 @@ export function MessageInputBar({
                 type="button"
                 onClick={handleSend}
                 disabled={disabled || (!message.trim() && attachments.length === 0)}
-                className={`flex items-center justify-center h-8 w-8 rounded-full border border-[#A7A7A7] bg-[#151515] hover:bg-[#2C2C2C] transition p-0 hover:cursor-pointer text-[#A7A7A7] ${
+                className={`flex items-center justify-center h-8 w-8 rounded-full border border-ink bg-ink text-white transition p-0 hover:cursor-pointer hover:bg-body ${
                   disabled || (!message.trim() && attachments.length === 0)
-                    ? "opacity-50 cursor-not-allowed"
+                    ? "opacity-40 cursor-not-allowed"
                     : ""
                 }`}
                 style={{ marginRight: 0 }}
               >
-                <ArrowUp className="w-4 h-4 text-muted-foreground" />
+                <ArrowUp className="w-4 h-4" />
               </button>
             </div>
             

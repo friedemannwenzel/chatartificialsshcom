@@ -60,13 +60,16 @@ export default function HomePage() {
   return (
     <>
       <SignedIn>
-        <div className="flex flex-col h-full relative">
-          <div className="flex-1 flex items-center justify-center">
-            <span className="text-6xl font-semibold text-center text-[#A7A7A7]">Here to help!</span>
+        <div className="chat-surface relative flex h-full flex-col">
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6">
+            <span className="bg-gradient-to-b from-ink to-dim bg-clip-text text-center text-5xl font-semibold tracking-tight text-transparent sm:text-6xl">
+              Here to help!
+            </span>
+            <span className="text-sm text-faint">Pick a model, turn on search or reasoning, and ask anything.</span>
           </div>
 
           {/* Message Input Bar */}
-          <div className="absolute bottom-0 max-w-4xl mx-auto left-0 right-0">
+          <div className="absolute bottom-0 left-0 right-0 mx-auto max-w-4xl px-4">
             <MessageInputBar
               onSendMessage={handleSendMessage}
               disabled={isLoading}

@@ -120,7 +120,7 @@ export function Sidebar({
         <Button
           onClick={onToggle}
           className={cn(
-            "h-12 w-12 rounded-full shadow-lg backdrop-blur-xl border border-white/20",
+            "h-12 w-12 rounded-full shadow-lg backdrop-blur-xl border border-line",
             "bg-card/80 hover:bg-card/90 text-foreground",
             "transition-all duration-300 ease-out",
             "hover:shadow-xl hover:scale-105 active:scale-95",
@@ -133,7 +133,7 @@ export function Sidebar({
         <Button
           onClick={handleNewChat}
           className={cn(
-            "h-12 w-12 rounded-full shadow-lg backdrop-blur-xl border border-white/20",
+            "h-12 w-12 rounded-full shadow-lg backdrop-blur-xl border border-line",
             "bg-primary/20 hover:bg-primary/30 text-primary-foreground",
             "transition-all duration-300 ease-out",
             "hover:shadow-xl hover:scale-105 active:scale-95",
@@ -150,12 +150,11 @@ export function Sidebar({
     <div className="w-80 h-full pr-6 flex items-center">
       <div className={cn(
         "w-full h-[calc(100vh-4rem)] rounded-r-[20px]",
-        "bg-[#151515] backdrop-blur-2xl border-r border-t border-b border-[#2C2C2C]",
-        "shadow-[0_24px_64px_rgba(0,0,0,0.15)]",
+        "bg-panel border-r border-t border-b border-line",
         "flex flex-col",
         "transition-all duration-300 ease-out"
       )}>
-        <div className="p-4 flex-shrink-0 border-b border-[#2C2C2C]/30">
+        <div className="p-4 flex-shrink-0 border-b border-line">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="relative">
@@ -164,9 +163,9 @@ export function Sidebar({
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                   placeholder="Search chats..."
-                  className="w-full rounded-[20px] border border-[#2C2C2C] bg-[#151515] px-3 py-1.5 pl-9 text-sm text-[#A7A7A7] hover:cursor-pointer focus:outline-none"
+                  className="w-full rounded-[20px] border border-line bg-panel px-3 py-1.5 pl-9 text-sm text-body hover:cursor-pointer focus:outline-none"
                 />
-                <Search className="absolute left-3 top-2.5 w-4 h-4 text-[#5D5D5D]" />
+                <Search className="absolute left-3 top-2.5 w-4 h-4 text-faint" />
               </div>
               
               <Button
@@ -174,11 +173,11 @@ export function Sidebar({
                 size="sm"
                 className={cn(
                   "h-8 w-8 rounded-full hover:cursor-pointer",
-                  "bg-[#151515] hover:bg-[#2C2C2C]",
-                  "border border-[#2C2C2C]"
+                  "bg-panel hover:bg-hover",
+                  "border border-line"
                 )}
               >
-                <Plus className="h-5 w-5 text-[#5D5D5D]" />
+                <Plus className="h-5 w-5 text-faint" />
               </Button>
             </div>
           </div>
@@ -205,9 +204,9 @@ export function Sidebar({
                           className={cn(
                             "flex items-center px-3 py-2 text-sm transition-all duration-200 border border-transparent w-full relative",
                             "rounded-[20px] min-h-[36px]",
-                            "hover:bg-[#2C2C2C] hover:border-[#2C2C2C] hover:text-[#A7A7A7] hover:cursor-pointer",
+                            "hover:bg-hover hover:border-line hover:text-body hover:cursor-pointer",
                             currentChatId === chat.chatId 
-                              ? "bg-[#2C2C2C] border-[#2C2C2C] shadow-md" 
+                              ? "bg-hover border-line" 
                               : ""
                           )}
                         >
@@ -216,8 +215,8 @@ export function Sidebar({
                             "truncate",
                             "max-w-[200px]",
                             currentChatId === chat.chatId 
-                              ? "text-[#A7A7A7]" 
-                              : "text-[#5D5D5D]"
+                              ? "text-ink font-medium" 
+                              : "text-dim"
                           )}>
                             {chat.title || "New Chat"}
                           </span>
@@ -234,7 +233,7 @@ export function Sidebar({
                                 "flex items-center justify-center",
                                 "transition-all duration-200",
                                 "hover:bg-red-500/20 hover:cursor-pointer",
-                                "text-[#5D5D5D] hover:text-red-500",
+                                "text-faint hover:text-red-500",
                                 "opacity-100 z-10"
                               )}
                             >
@@ -252,7 +251,7 @@ export function Sidebar({
                 <div className="text-center text-muted-foreground py-8">
                   <div className={cn(
                     "h-12 w-12 mx-auto mb-3 rounded-[20px]",
-                    "bg-[#151515] border border-[#2C2C2C]",
+                    "bg-panel border border-line",
                     "flex items-center justify-center"
                   )}>
                     <MessageSquare className="h-6 w-6 opacity-50" />
@@ -265,21 +264,20 @@ export function Sidebar({
           </ScrollArea>
         </div>
 
-        <div className="flex-shrink-0 p-4 border-t border-[#2C2C2C]/30 bg-[#151515] rounded-b-[20px]">
+        <div className="flex-shrink-0 p-4 border-t border-line bg-panel rounded-b-[20px]">
           <Link href="/settings">
             <Button
               variant="ghost"
               className={cn(
                 "w-full justify-start gap-3 h-auto p-3 rounded-2xl",
-                "hover:bg-[#2C2C2C] border border-[#2C2C2C] hover:cursor-pointer text-[#A7A7A7]",
-                "transition-all duration-200",
-                "shadow-sm hover:shadow-md"
+                "hover:bg-hover border border-line hover:cursor-pointer text-ink",
+                "transition-all duration-200"
               )}
             >
               <div className="flex items-center gap-3 flex-1">
-                <Avatar className="h-8 w-8 ring-2 ring-white/20">
+                <Avatar className="h-8 w-8 ring-2 ring-line">
                   <AvatarImage src={user?.imageUrl} />
-                  <AvatarFallback className="text-xs bg-[#151515]">
+                  <AvatarFallback className="text-xs bg-panel">
                     {getUserInitials(user?.fullName)}
                   </AvatarFallback>
                 </Avatar>
@@ -292,7 +290,7 @@ export function Sidebar({
                 </div>
               </div>
               
-              <Settings className="h-4 w-4 text-[#5D5D5D] opacity-70" />
+              <Settings className="h-4 w-4 text-faint opacity-70" />
             </Button>
           </Link>
         </div>

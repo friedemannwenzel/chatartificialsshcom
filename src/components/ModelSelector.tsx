@@ -4,28 +4,13 @@ import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { models, AIModel } from "@/lib/models";
-import Image from "next/image";
+import { ProviderIcon } from "@/components/ProviderIcon";
 
 interface ModelSelectorProps {
   selectedModel: AIModel;
   onModelChange: (model: AIModel) => void;
   className?: string;
 }
-
-const getProviderIcon = (provider: string) => {
-  switch (provider) {
-    case 'openai':
-      return "/OpenAI.svg";
-    case 'google':
-      return "/Gemini.svg";
-    case 'anthropic':
-      return "/Anthropic.svg";
-    case 'xai':
-      return "/Grok_dark.svg";
-    default:
-      return null;
-  }
-};
 
 export function ModelSelector({ selectedModel, onModelChange, className = "" }: ModelSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -59,15 +44,7 @@ export function ModelSelector({ selectedModel, onModelChange, className = "" }: 
         className="h-8 px-3 text-sm font-medium hover:bg-muted/50 justify-between min-w-[120px]"
       >
         <div className="flex items-center gap-2">
-          {getProviderIcon(selectedModel.provider) && (
-            <Image
-              src={getProviderIcon(selectedModel.provider)!}
-              alt={selectedModel.provider}
-              width={16}
-              height={16}
-              className="w-4 h-4"
-            />
-          )}
+          <ProviderIcon provider={selectedModel.provider} size={16} className="w-4 h-4" />
           <span>{selectedModel.name}</span>
         </div>
         <ChevronDown className="w-4 h-4 opacity-50" />
@@ -84,15 +61,7 @@ export function ModelSelector({ selectedModel, onModelChange, className = "" }: 
               {Object.entries(groupedModels).map(([provider, providerModels]) => (
                 <div key={provider} className="p-2">
                   <div className="flex items-center gap-2 px-2 py-1 text-sm font-medium text-muted-foreground">
-                    {getProviderIcon(provider) && (
-                      <Image
-                        src={getProviderIcon(provider)!}
-                        alt={provider}
-                        width={16}
-                        height={16}
-                        className="w-4 h-4"
-                      />
-                    )}
+                    <ProviderIcon provider={provider} size={16} className="w-4 h-4" />
                     {providerLabels[provider as keyof typeof providerLabels]}
                   </div>
                   {providerModels.map((model) => (

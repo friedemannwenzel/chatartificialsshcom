@@ -1,27 +1,27 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useState } from "react";
+import { ProviderIcon } from "@/components/ProviderIcon";
 
 const providers = [
   {
     name: "OpenAI",
-    logo: "/OpenAI.svg",
+    provider: "openai",
     description: "GPT-5, GPT-4o, and more",
   },
   {
     name: "Google",
-    logo: "/Gemini.svg",
+    provider: "google",
     description: "Gemini 2.5 Flash and variants",
   },
   {
     name: "Anthropic",
-    logo: "/Anthropic.svg",
+    provider: "anthropic",
     description: "Claude models",
   },
   {
     name: "Grok",
-    logo: "/Grok_dark.svg",
+    provider: "xai",
     description: "Grok 4 Fast and Grok 3 Mini",
   },
 ];
@@ -65,12 +65,11 @@ export function PoweredBySection() {
               style={{ transitionDelay: `${index * 100}ms` }}
             >
               <div className="relative w-24 h-24 mb-4 flex items-center justify-center">
-                <Image
-                  src={provider.logo}
-                  alt={provider.name}
-                  width={80}
-                  height={80}
+                <ProviderIcon
+                  provider={provider.provider}
+                  size={80}
                   className="object-contain opacity-60 hover:opacity-100 transition-opacity"
+                  inverted
                 />
               </div>
               <h3 className="text-lg font-semibold text-[#A7A7A7] mb-1">

@@ -4,7 +4,11 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ============================================================
+   LIGHT  —  clean white surfaces, neutral grays
+   ============================================================ */
 :root {
+  /* shadcn base tokens (kept for the Radix-based UI primitives) */
   --background: oklch(1 0 0);
   --foreground: oklch(0.1450 0 0);
   --card: oklch(1 0 0);
@@ -16,7 +20,7 @@
   --secondary: oklch(0.9700 0 0);
   --secondary-foreground: oklch(0.2050 0 0);
   --muted: oklch(0.9700 0 0);
-  --muted-foreground: oklch(0.5560 0 0);
+  --muted-foreground: oklch(0.3800 0 0);
   --accent: oklch(0.9700 0 0);
   --accent-foreground: oklch(0.2050 0 0);
   --destructive: oklch(0.5770 0.2450 27.3250);
@@ -37,9 +41,9 @@
   --sidebar-accent-foreground: oklch(0.2050 0 0);
   --sidebar-border: oklch(0.9220 0 0);
   --sidebar-ring: oklch(0.7080 0 0);
-  --font-sans: Inter;
-  --font-serif: Inter;
-  --font-mono: Geist_Mono;
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: ui-serif, Georgia, serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
   --radius: 0.625rem;
   --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
   --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
@@ -51,21 +55,50 @@
   --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
   --tracking-normal: 0em;
   --spacing: 0.25rem;
+
+  /* ---- semantic palette (used across the chat surface) ---- */
+  --app: #ffffff;
+  --panel: #fafafa;
+  --elevated: #ffffff;
+  --sunken: #0d0e11;
+  --bubble: #f4f4f5;
+
+  --ink: #000000;
+  --body: #171717;
+  --dim: #525252;
+  --faint: #737373;
+
+  --line: #e5e5e5;
+  --line-strong: #d4d4d4;
+
+  --brand: #000000;
+  --brand-ink: #000000;
+  --brand-weak: rgba(0, 0, 0, 0.06);
+  --brand-line: rgba(0, 0, 0, 0.18);
+
+  --danger: #dc2626;
+  --danger-weak: rgba(220, 38, 38, 0.08);
+
+  --node: #d4d4d8;
+  --hover: #f4f4f5;
 }
 
+/* ============================================================
+   GRAPHITE (dark)  —  calm near-monochrome workspace
+   ============================================================ */
 .dark {
   --background: oklch(0.1450 0 0);
   --foreground: oklch(0.9850 0 0);
   --card: oklch(0.2050 0 0);
   --card-foreground: oklch(0.9850 0 0);
-  --popover: oklch(0.2690 0 0);
+  --popover: oklch(0.2200 0 0);
   --popover-foreground: oklch(0.9850 0 0);
   --primary: oklch(0.9220 0 0);
   --primary-foreground: oklch(0.2050 0 0);
   --secondary: oklch(0.2690 0 0);
   --secondary-foreground: oklch(0.9850 0 0);
   --muted: oklch(0.2690 0 0);
-  --muted-foreground: oklch(0.7080 0 0);
+  --muted-foreground: oklch(0.7450 0 0);
   --accent: oklch(0.3710 0 0);
   --accent-foreground: oklch(0.9850 0 0);
   --destructive: oklch(0.7040 0.1910 22.2160);
@@ -86,18 +119,32 @@
   --sidebar-accent-foreground: oklch(0.9850 0 0);
   --sidebar-border: oklch(0.2750 0 0);
   --sidebar-ring: oklch(0.4390 0 0);
-  --font-sans: Inter;
-  --font-serif: Inter;
-  --font-mono: Geist_Mono;
-  --radius: 0.625rem;
-  --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-  --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-  --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 1px 2px -1px hsl(0 0% 0% / 0.10);
-  --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 1px 2px -1px hsl(0 0% 0% / 0.10);
-  --shadow-md: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 2px 4px -1px hsl(0 0% 0% / 0.10);
-  --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 4px 6px -1px hsl(0 0% 0% / 0.10);
-  --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 8px 10px -1px hsl(0 0% 0% / 0.10);
-  --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
+
+  /* ---- Graphite semantic palette ---- */
+  --app: #121212;
+  --panel: #181818;
+  --elevated: #1f1f1f;
+  --sunken: #0a0a0a;
+  --bubble: #2a2a2a;
+
+  --ink: #f3f2f0;
+  --body: #dcdcdc;
+  --dim: #a0a0a0;
+  --faint: #6e6e6e;
+
+  --line: #2a2a2a;
+  --line-strong: #3a3a3a;
+
+  --brand: #7aa2f7;
+  --brand-ink: #9bb8fb;
+  --brand-weak: rgba(122, 162, 247, 0.13);
+  --brand-line: rgba(122, 162, 247, 0.34);
+
+  --danger: #f87171;
+  --danger-weak: rgba(248, 113, 113, 0.12);
+
+  --node: #3a3a3a;
+  --hover: #2b2b2b;
 }
 
 @theme inline {
@@ -134,6 +181,27 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
+  /* ---- graphite utility colors (bg-app, text-body, border-line, …) ---- */
+  --color-app: var(--app);
+  --color-panel: var(--panel);
+  --color-elevated: var(--elevated);
+  --color-sunken: var(--sunken);
+  --color-bubble: var(--bubble);
+  --color-ink: var(--ink);
+  --color-body: var(--body);
+  --color-dim: var(--dim);
+  --color-faint: var(--faint);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-brand: var(--brand);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-weak: var(--brand-weak);
+  --color-brand-line: var(--brand-line);
+  --color-danger: var(--danger);
+  --color-danger-weak: var(--danger-weak);
+  --color-node: var(--node);
+  --color-hover: var(--hover);
+
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
   --font-serif: var(--font-serif);
@@ -162,7 +230,74 @@ body {
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-app text-ink;
   }
 }
 
+/* ============================================================
+   Atmosphere & details
+   ============================================================ */
+
+.chat-surface {
+  background: var(--app);
+}
+
+.dark .chat-surface {
+  background:
+    radial-gradient(120% 70% at 50% -10%, var(--brand-weak), transparent 60%),
+    var(--app);
+}
+
+/* Slim, theme-aware scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background-color: var(--line-strong);
+  border-radius: 9999px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover { background-color: var(--dim); }
+
+/* ---- animations used by the agent timeline ---- */
+@keyframes step-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-step-in { animation: step-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+@keyframes node-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--brand-line); }
+  50%      { box-shadow: 0 0 0 4px transparent; }
+}
+.animate-node-pulse { animation: node-pulse 1.6s ease-in-out infinite; }
+
+/* shimmering label for in-progress agent steps */
+@keyframes label-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.text-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--faint) 0%,
+    var(--ink) 25%,
+    var(--faint) 50%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: label-shimmer 2.2s linear infinite;
+}
+
+/* smooth open/close for the collapsible agent step bodies */
+@keyframes reveal {
+  from { opacity: 0; transform: translateY(-2px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-reveal { animation: reveal 0.25s ease-out both; }

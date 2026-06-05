@@ -27,6 +27,11 @@ SyntaxHighlighter.registerLanguage('css', css);
 SyntaxHighlighter.registerLanguage('bash', bash);
 SyntaxHighlighter.registerLanguage('json', json);
 
+// Code blocks stay intentionally dark in both themes — a framed "editor"
+// card that reads as a distinct surface against the conversation.
+const CODE_BG = '#0d0e11';
+const CODE_HEADER_BG = '#15171c';
+
 interface MessageContentProps {
   content: string;
   className?: string;
@@ -52,7 +57,7 @@ export const MessageContent = memo(function MessageContent({ content, className 
   };
 
   return (
-    <div className={cn("prose prose-sm max-w-none dark:prose-invert text-[15px] leading-7 text-[#A7A7A7] text-left prose-p:my-3 prose-li:my-1 prose-pre:my-0", className)}>
+    <div className={cn("prose prose-sm max-w-none dark:prose-invert text-[15px] leading-7 text-ink text-left prose-p:my-3 prose-li:my-1 prose-pre:my-0", className)}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
@@ -65,18 +70,18 @@ export const MessageContent = memo(function MessageContent({ content, className 
 
             if (!inline && language) {
               return (
-                <div className="relative group my-4 overflow-hidden rounded-lg border border-[#2C2C2C] bg-[#0A0A0A]">
-                  <div className="flex items-center justify-between border-b border-[#2C2C2C] bg-[#111111] px-3 py-2">
-                    <span className="text-[11px] font-medium text-[#8A8A8A] uppercase">
+                <div className="relative group my-4 overflow-hidden rounded-xl border border-line" style={{ background: CODE_BG }}>
+                  <div className="flex items-center justify-between border-b border-white/[0.06] px-3.5 py-2" style={{ background: CODE_HEADER_BG }}>
+                    <span className="text-[11px] font-medium uppercase tracking-wider text-[#8a8f99]">
                       {language || 'code'}
                     </span>
                     <Button
                       size="sm"
-                      className="h-7 w-7 p-0 hover:cursor-pointer bg-transparent text-[#8A8A8A] hover:bg-[#2C2C2C] hover:text-[#D5D5D5] rounded-md"
+                      className="h-7 w-7 p-0 hover:cursor-pointer bg-transparent text-[#8a8f99] hover:bg-white/10 hover:text-zinc-100 rounded-md"
                       onClick={() => copyToClipboard(code, blockId)}
                     >
                       {copiedCode === blockId ? (
-                        <Check className="h-3 w-3 text-green-500" />
+                        <Check className="h-3 w-3 text-emerald-400" />
                       ) : (
                         <Copy className="h-3 w-3" />
                       )}
@@ -86,14 +91,14 @@ export const MessageContent = memo(function MessageContent({ content, className 
                     style={oneDark}
                     language={language}
                     PreTag="div"
-                    className="!m-0 !border-0 !bg-[#0A0A0A]"
+                    className="!m-0 !border-0"
                     customStyle={{
                       margin: 0,
                       padding: '1rem',
                       fontSize: '0.875rem',
                       lineHeight: '1.65',
                       borderRadius: 0,
-                      background: '#0A0A0A',
+                      background: CODE_BG,
                     }}
                     showLineNumbers={false}
                     wrapLines={true}
@@ -109,7 +114,7 @@ export const MessageContent = memo(function MessageContent({ content, className 
             return (
               <code
                 className={cn(
-                  "bg-[#1B1B1B] border border-[#2C2C2C] font-mono text-[#D5D5D5] text-[0.9em] px-1.5 py-0.5 rounded-md",
+                  "bg-panel border border-line font-mono text-ink text-[0.9em] px-1.5 py-0.5 rounded-md",
                   className
                 )}
                 {...restProps}
@@ -121,7 +126,7 @@ export const MessageContent = memo(function MessageContent({ content, className 
 
           blockquote({ children }) {
             return (
-              <blockquote className="border-l-2 border-[#5D5D5D] bg-[#151515] pl-4 pr-3 py-2 my-4 rounded-md text-[15px] text-[#B8B8B8]">
+              <blockquote className="border-l-2 border-brand-line bg-panel/70 pl-4 pr-3 py-2 my-4 rounded-r-md text-[15px] text-body">
                 {children}
               </blockquote>
             );
@@ -129,7 +134,7 @@ export const MessageContent = memo(function MessageContent({ content, className 
 
           table({ children }) {
             return (
-              <div className="overflow-x-auto my-5 rounded-lg border border-[#2C2C2C] bg-[#0F0F0F]">
+              <div className="overflow-x-auto my-5 rounded-lg border border-line bg-panel">
                 <table className="w-full border-collapse text-sm">
                   {children}
                 </table>
@@ -139,7 +144,7 @@ export const MessageContent = memo(function MessageContent({ content, className 
 
           th({ children }) {
             return (
-              <th className="border-b border-r last:border-r-0 border-[#2C2C2C] bg-[#151515] px-3 py-2.5 text-left font-semibold text-[#D5D5D5] align-top">
+              <th className="border-b border-r last:border-r-0 border-line bg-panel px-3 py-2.5 text-left font-semibold text-ink align-top">
                 {children}
               </th>
             );
@@ -147,7 +152,7 @@ export const MessageContent = memo(function MessageContent({ content, className 
 
           td({ children }) {
             return (
-              <td className="border-b border-r last:border-r-0 border-[#242424] px-3 py-2.5 text-[#B8B8B8] align-top last:[tr_&]:border-r-0">
+              <td className="border-b border-r last:border-r-0 border-line px-3 py-2.5 text-body align-top last:[tr_&]:border-r-0">
                 {children}
               </td>
             );
@@ -161,8 +166,8 @@ export const MessageContent = memo(function MessageContent({ content, className 
                 className={cn(
                   "inline-flex items-center gap-1.5 rounded-md font-medium transition-colors text-[15px]",
                   isFile
-                    ? "bg-[#1B1B1B] px-2 py-1 text-[#D5D5D5] hover:bg-[#242424]"
-                    : "text-[#D5D5D5] underline decoration-[#5D5D5D] underline-offset-4 hover:text-white hover:decoration-[#A7A7A7]"
+                    ? "bg-panel border border-line px-2 py-1 text-body hover:bg-hover"
+                    : "text-brand-ink underline decoration-brand-line underline-offset-4 hover:text-brand hover:decoration-brand"
                 )}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -175,7 +180,7 @@ export const MessageContent = memo(function MessageContent({ content, className 
 
           img({ src, alt }) {
             if (!src) return null;
-            
+
             return (
               <div className="my-4">
                 <Image
@@ -183,7 +188,7 @@ export const MessageContent = memo(function MessageContent({ content, className 
                   alt={alt || 'Uploaded image'}
                   width={800}
                   height={600}
-                  className="rounded-lg border max-w-full h-auto max-h-96"
+                  className="rounded-lg border border-line max-w-full h-auto max-h-96"
                   style={{ objectFit: 'contain' }}
                   unoptimized
                 />
@@ -193,7 +198,7 @@ export const MessageContent = memo(function MessageContent({ content, className 
 
           ul({ children }) {
             return (
-              <ul className="list-disc list-outside space-y-1.5 my-3 pl-6 marker:text-[#6F6F6F]">
+              <ul className="list-disc list-outside space-y-1.5 my-3 pl-6 marker:text-faint">
                 {children}
               </ul>
             );
@@ -201,7 +206,7 @@ export const MessageContent = memo(function MessageContent({ content, className 
 
           ol({ children }) {
             return (
-              <ol className="list-decimal list-outside space-y-1.5 my-3 pl-6 marker:text-[#8A8A8A] marker:font-medium">
+              <ol className="list-decimal list-outside space-y-1.5 my-3 pl-6 marker:text-dim marker:font-medium">
                 {children}
               </ol>
             );
@@ -209,7 +214,7 @@ export const MessageContent = memo(function MessageContent({ content, className 
 
           h1({ children }) {
             return (
-              <h1 className="text-2xl font-semibold mt-7 mb-3 border-b border-[#2C2C2C] pb-2 text-[#E5E5E5]">
+              <h1 className="text-2xl font-semibold tracking-tight mt-7 mb-3 border-b border-line pb-2 text-ink">
                 {children}
               </h1>
             );
@@ -217,7 +222,7 @@ export const MessageContent = memo(function MessageContent({ content, className 
 
           h2({ children }) {
             return (
-              <h2 className="text-xl font-semibold mt-6 mb-2 text-[#E0E0E0]">
+              <h2 className="text-xl font-semibold tracking-tight mt-6 mb-2 text-ink">
                 {children}
               </h2>
             );
@@ -225,7 +230,7 @@ export const MessageContent = memo(function MessageContent({ content, className 
 
           h3({ children }) {
             return (
-              <h3 className="text-base font-semibold mt-5 mb-2 text-[#D5D5D5]">
+              <h3 className="text-base font-semibold mt-5 mb-2 text-ink">
                 {children}
               </h3>
             );
@@ -233,7 +238,7 @@ export const MessageContent = memo(function MessageContent({ content, className 
 
           p({ children }) {
             return (
-              <p className="my-3 leading-7 text-[#B8B8B8] text-[15px]">
+              <p className="my-3 leading-7 text-body text-[15px]">
                 {children}
               </p>
             );
@@ -241,7 +246,7 @@ export const MessageContent = memo(function MessageContent({ content, className 
 
           li({ children }) {
             return (
-              <li className="pl-1 leading-7 text-[#B8B8B8] text-[15px]">
+              <li className="pl-1 leading-7 text-body text-[15px]">
                 {children}
               </li>
             );
@@ -253,13 +258,13 @@ export const MessageContent = memo(function MessageContent({ content, className 
 
           hr() {
             return (
-              <hr className="my-6 border-border" />
+              <hr className="my-6 border-line" />
             );
           },
 
           em({ children }) {
             return (
-              <em className="italic text-[#A7A7A7] text-base">
+              <em className="italic text-dim text-base">
                 {children}
               </em>
             );
@@ -267,7 +272,7 @@ export const MessageContent = memo(function MessageContent({ content, className 
 
           strong({ children }) {
             return (
-              <strong className="font-semibold text-[#d5d5d5] text-base">
+              <strong className="font-semibold text-ink text-base">
                 {children}
               </strong>
             );
@@ -278,4 +283,4 @@ export const MessageContent = memo(function MessageContent({ content, className 
       </ReactMarkdown>
     </div>
   );
-}); 
+});

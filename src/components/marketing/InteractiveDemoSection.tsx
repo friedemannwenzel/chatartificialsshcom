@@ -2,24 +2,9 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { ArrowUp, Globe, Brain, Paperclip, ChevronDown, X } from "lucide-react";
-import Image from "next/image";
 import { Textarea } from "@/components/ui/textarea";
 import { MessageContent } from "@/components/MessageContent";
-
-const getProviderIcon = (provider: string) => {
-  switch (provider) {
-    case 'openai':
-      return "/OpenAI.svg";
-    case 'google':
-      return "/Gemini.svg";
-    case 'anthropic':
-      return "/Anthropic.svg";
-    case 'xai':
-      return "/Grok_dark.svg";
-    default:
-      return null;
-  }
-};
+import { ProviderIcon } from "@/components/ProviderIcon";
 
 // Hardcoded real AI response
 const assistantResponse = `Quantum computing is a revolutionary computing paradigm that leverages the principles of quantum mechanics to process information in fundamentally different ways than classical computers.
@@ -255,15 +240,7 @@ export function InteractiveDemoSection() {
                         className="flex items-center gap-2 h-8 px-3 text-xs font-medium rounded-full border border-[#A7A7A7] bg-[#151515] hover:bg-[#2C2C2C] focus:outline-none transition hover:cursor-pointer text-[#A7A7A7]"
                         style={{ minWidth: 0 }}
                       >
-                        {getProviderIcon(selectedModel.provider) && (
-                          <Image
-                            src={getProviderIcon(selectedModel.provider)!}
-                            alt={selectedModel.provider}
-                            width={16}
-                            height={16}
-                            className="w-4 h-4"
-                          />
-                        )}
+                        <ProviderIcon provider={selectedModel.provider} size={16} className="w-4 h-4" inverted />
                         <span className="truncate max-w-[100px]">{selectedModel.name}</span>
                         <ChevronDown className="w-4 h-4" />
                       </button>

@@ -46,18 +46,18 @@ export function MessageActions({
           <Button
             variant="ghost"
             size="sm"
-            className="h-6 w-6 p-0 transition-opacity duration-200 hover:bg-[#2C2C2C] cursor-pointer text-[#A7A7A7]"
+            className="h-6 w-6 p-0 transition-opacity duration-200 hover:bg-hover cursor-pointer text-dim"
           >
-            <MoreHorizontal className="h-3 w-3 text-[#A7A7A7]" />
+            <MoreHorizontal className="h-3 w-3 text-dim" />
           </Button>
         ) : (
-          <div className="flex items-center gap-1 text-[#5D5D5D] hover:text-[#A7A7A7]">
+          <div className="flex items-center gap-1 text-faint hover:text-body">
             {role === "user" ? (
               <>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-6 w-6 p-0 hover:text-[#A7A7A7] transition-colors cursor-pointer"
+                  className="h-6 w-6 p-0 hover:text-body transition-colors cursor-pointer"
                   onClick={() => onRetry(messageIndex)}
                   title="Retry"
                 >
@@ -66,7 +66,7 @@ export function MessageActions({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-6 w-6 p-0 hover:text-[#A7A7A7] transition-colors cursor-pointer"
+                  className="h-6 w-6 p-0 hover:text-body transition-colors cursor-pointer"
                   onClick={() => onEdit(messageId, content)}
                   title="Edit"
                 >
@@ -75,7 +75,7 @@ export function MessageActions({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-6 w-6 p-0 hover:text-[#A7A7A7] transition-colors cursor-pointer"
+                  className="h-6 w-6 p-0 hover:text-body transition-colors cursor-pointer"
                   onClick={() => onCopy(content, messageId)}
                   title="Copy"
                 >
@@ -91,7 +91,7 @@ export function MessageActions({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-6 w-6 p-0 hover:text-[#A7A7A7] transition-colors cursor-pointer"
+                  className="h-6 w-6 p-0 hover:text-body transition-colors cursor-pointer"
                   onClick={() => onRetry(messageIndex)}
                   title="Retry"
                 >
@@ -100,7 +100,7 @@ export function MessageActions({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-6 w-6 p-0 hover:text-[#A7A7A7] transition-colors cursor-pointer"
+                  className="h-6 w-6 p-0 hover:text-body transition-colors cursor-pointer"
                   onClick={() => onCopy(content, messageId)}
                   title="Copy"
                 >
@@ -113,14 +113,14 @@ export function MessageActions({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-6 w-6 p-0 hover:text-[#A7A7A7] transition-colors cursor-pointer"
+                  className="h-6 w-6 p-0 hover:text-body transition-colors cursor-pointer"
                   onClick={() => onBranch(messageIndex)}
                   title="Branch"
                 >
                   <GitBranch className="h-3 w-3" />
                 </Button>
                 {model && (
-                  <span className="text-xs text-muted-foreground px-2 py-1 bg-white/5 rounded-[20px] ml-2">
+                  <span className="text-xs text-muted-foreground px-2 py-1 bg-hover rounded-[20px] ml-2">
                     {model}
                   </span>
                 )}

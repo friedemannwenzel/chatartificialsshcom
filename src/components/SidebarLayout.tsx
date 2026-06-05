@@ -24,7 +24,7 @@ export function SidebarLayout({ children }: SidebarLayoutProps) {
   const shouldShowSidebar = sidebarState === "open";
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-app">
       <Sidebar 
         state={sidebarState}
         isVisible={shouldShowSidebar}

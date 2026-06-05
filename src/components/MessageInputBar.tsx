@@ -192,7 +192,7 @@ export function MessageInputBar({
               {attachments.map((file, index) => (
                 <div
                   key={`attachment-${index}`}
-                  className="flex items-center gap-2 bg-elevated rounded-[20px] px-3 py-3 text-xs border border-line shadow-none group hover:cursor-pointer text-dim"
+                  className="flex items-center gap-2 bg-input-bar rounded-[20px] px-3 py-3 text-xs border border-input-bar-border shadow-none group hover:cursor-pointer text-input-bar-fg"
                 >
                   <Paperclip className="w-4 h-4 text-muted-foreground" />
                   <span className="truncate max-w-32 font-medium">{file.name}</span>
@@ -211,7 +211,7 @@ export function MessageInputBar({
               {uploadingFiles.map((file, index) => (
                 <div
                   key={`uploading-${index}`}
-                  className="flex items-center gap-2 bg-elevated rounded-[20px] px-3 py-3 text-xs border border-line shadow-none relative overflow-hidden"
+                  className="flex items-center gap-2 bg-input-bar rounded-[20px] px-3 py-3 text-xs border border-input-bar-border shadow-none relative overflow-hidden"
                 >
                   {/* Progress background */}
                   <div
@@ -223,9 +223,9 @@ export function MessageInputBar({
                   
                   {/* Content */}
                   <div className="relative z-10 flex items-center gap-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-line-strong border-t-transparent" />
-                    <span className="truncate max-w-32 font-medium text-dim">{file.name}</span>
-                    <span className="text-dim text-[10px] font-mono">{Math.round(file.progress)}%</span>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-input-bar-control-active border-t-transparent" />
+                    <span className="truncate max-w-32 font-medium text-input-bar-fg">{file.name}</span>
+                    <span className="text-input-bar-fg text-[10px] font-mono">{Math.round(file.progress)}%</span>
                   </div>
                 </div>
               ))}
@@ -236,7 +236,7 @@ export function MessageInputBar({
                   <Button
                     onClick={onScrollToBottom}
                     size="sm"
-                    className="py-3 px-4 rounded-[20px] bg-elevated text-faint hover:text-dim border border-line shadow-lg hover:bg-hover transition-all duration-200 hover:cursor-pointer flex items-center gap-2"
+                    className="py-3 px-4 rounded-[20px] bg-input-bar text-input-bar-muted hover:text-input-bar-fg border border-input-bar-border shadow-lg hover:bg-input-bar-hover transition-all duration-200 hover:cursor-pointer flex items-center gap-2"
                     variant="secondary"
                     type="button"
                   >
@@ -250,7 +250,7 @@ export function MessageInputBar({
                 <div className="flex-1 flex justify-center">
                   <button
                     onClick={onStopGeneration}
-                    className="flex items-center gap-2 px-4 py-2 rounded-full border border-line bg-elevated text-dim hover:bg-hover transition-colors text-sm hover:cursor-pointer"
+                    className="flex items-center gap-2 px-4 py-2 rounded-full border border-input-bar-border bg-input-bar text-input-bar-fg hover:bg-input-bar-hover transition-colors text-sm hover:cursor-pointer"
                     type="button"
                   >
                     <Square className="w-3 h-3 fill-current" />
@@ -262,7 +262,7 @@ export function MessageInputBar({
           )}
 
           {/* Message Input Bar */}
-          <div className="relative w-full bg-elevated rounded-t-[20px] border-t border-l border-r border-line flex flex-col">
+          <div className="relative w-full bg-input-bar rounded-t-[20px] border-t border-l border-r border-input-bar-border flex flex-col">
             {/* Textarea */}
             <div className="w-full px-3 py-1">
               <Textarea
@@ -272,7 +272,7 @@ export function MessageInputBar({
                 onKeyDown={handleKeyDown}
                 placeholder={placeholder}
                 disabled={disabled}
-                className="min-h-[40px] max-h-[120px] resize-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent text-base text-ink placeholder:text-faint px-0"
+                className="min-h-[40px] max-h-[120px] resize-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent text-base text-input-bar-fg placeholder:text-input-bar-muted px-0"
                 rows={1}
                 style={{
                   background: "transparent",
@@ -289,7 +289,7 @@ export function MessageInputBar({
                 <button
                   type="button"
                   onClick={() => setModelSelectorOpen(!modelSelectorOpen)}
-                  className="flex items-center gap-2 h-8 px-3 text-xs font-medium rounded-full border border-line-strong bg-elevated hover:bg-hover focus:outline-none transition hover:cursor-pointer text-dim"
+                  className="flex items-center gap-2 h-8 px-3 text-xs font-medium rounded-full border border-input-bar-control-active bg-input-bar hover:bg-input-bar-hover focus:outline-none transition hover:cursor-pointer text-input-bar-fg"
                   style={{ minWidth: 0 }}
                 >
                   <ProviderIcon provider={selectedModel.provider} size={16} className="w-4 h-4" />
@@ -302,7 +302,7 @@ export function MessageInputBar({
                 </button>
                 {/* Model Dropdown */}
                 {modelSelectorOpen && (
-                  <div className="absolute bottom-full left-0 mb-2 w-80 bg-elevated border border-line rounded-[20px] shadow-lg z-50">
+                  <div className="absolute bottom-full left-0 mb-2 w-80 bg-input-bar border border-input-bar-border rounded-[20px] shadow-lg z-50">
                     <div className="max-h-64 overflow-y-auto">
                       {Object.entries(groupedModels).map(([provider, providerModels]) => (
                         <div key={provider} className="p-2">
@@ -324,7 +324,7 @@ export function MessageInputBar({
                                     {model.isReasoningModel && (
                                       <Tooltip>
                                         <TooltipTrigger asChild>
-                                          <Brain className="w-3 h-3 text-dim" />
+                                          <Brain className="w-3 h-3 text-input-bar-fg" />
                                         </TooltipTrigger>
                                         <TooltipContent>
                                           <p>Reasoning Model</p>
@@ -371,10 +371,10 @@ export function MessageInputBar({
                 <button
                   type="button"
                   onClick={() => setWebSearchEnabled(!webSearchEnabled)}
-                  className={`flex items-center gap-1 h-8 px-3 text-xs rounded-full border border-line bg-elevated transition hover:cursor-pointer text-faint ${
+                  className={`flex items-center gap-1 h-8 px-3 text-xs rounded-full border border-input-bar-control bg-input-bar transition hover:cursor-pointer text-input-bar-muted ${
                     webSearchEnabled
-                      ? "text-dim border-line-strong hover:cursor-pointer"
-                      : "hover:bg-hover hover:cursor-pointer"
+                      ? "text-input-bar-fg border-input-bar-control-active hover:cursor-pointer"
+                      : "hover:bg-input-bar-hover/80 hover:cursor-pointer"
                   }`}
                 >
                   <Globe className="w-4 h-4" />
@@ -390,9 +390,9 @@ export function MessageInputBar({
                         <DropdownMenuTrigger asChild>
                           <button
                             type="button"
-                            className="flex items-center gap-2 h-8 px-3 text-xs font-medium rounded-full border border-line-strong bg-elevated hover:bg-hover focus:outline-none transition hover:cursor-pointer text-dim"
+                            className="flex items-center gap-2 h-8 px-3 text-xs font-medium rounded-full border border-input-bar-control-active bg-input-bar hover:bg-input-bar-hover focus:outline-none transition hover:cursor-pointer text-input-bar-fg"
                           >
-                            <Brain className="w-4 h-4 text-dim" />
+                            <Brain className="w-4 h-4 text-input-bar-fg" />
                             <span className="truncate max-w-[100px]">{reasoningEffort}</span>
                             <ChevronDown className="w-4 h-4" />
                           </button>
@@ -403,14 +403,14 @@ export function MessageInputBar({
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
-                  <DropdownMenuContent align="start" className="bg-elevated border-line text-dim">
+                  <DropdownMenuContent align="start" className="bg-input-bar border-input-bar-border text-input-bar-fg">
                     {getReasoningEffortOptions(selectedModel.provider).map((effort) => (
                       <DropdownMenuItem
                         key={effort}
                         onClick={() => setReasoningEffort(effort)}
-                        className="text-xs hover:cursor-pointer focus:bg-hover focus:text-ink"
+                        className="text-xs hover:cursor-pointer focus:bg-input-bar-hover focus:text-input-bar-fg"
                       >
-                        <Brain className="mr-2 h-3.5 w-3.5 text-dim" />
+                        <Brain className="mr-2 h-3.5 w-3.5 text-input-bar-fg" />
                         {effort}
                       </DropdownMenuItem>
                     ))}
@@ -456,16 +456,16 @@ export function MessageInputBar({
                       <div
                         className={`border rounded-[20px] transition-all duration-200 p-2 flex items-center justify-center relative overflow-hidden
                           ${attachments.length > 0
-                            ? " border-line-strong text-dim hover:bg-hover"
-                            : "bg-transparent border-line text-faint hover:bg-hover hover:text-dim"
+                            ? " border-input-bar-control-active text-input-bar-fg hover:bg-input-bar-hover"
+                            : "bg-transparent border-input-bar-control text-input-bar-muted hover:bg-input-bar-hover hover:text-input-bar-fg"
                           }
-                          ${isUploading ? "border-line-strong text-dim" : ""}
+                          ${isUploading ? "border-input-bar-control-active text-input-bar-fg" : ""}
                           hover:cursor-pointer
                         `}
                       >
                         {isUploading && (
                           <div
-                            className="absolute inset-0 bg-hover transition-all duration-300"
+                            className="absolute inset-0 bg-blue-500/20 transition-all duration-300"
                             style={{
                               width: `${uploadProgress}%`,
                             }}
@@ -473,7 +473,7 @@ export function MessageInputBar({
                         )}
                         <div className="relative z-10 flex items-center justify-center">
                           {isUploading ? (
-                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-line-strong border-t-transparent" />
+                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-input-bar-control-active border-t-transparent" />
                           ) : (
                             <Paperclip className="w-4 h-4" />
                           )}
@@ -484,7 +484,7 @@ export function MessageInputBar({
                 />
               ) : (
                 <div
-                  className="border rounded-[20px] transition-all duration-200 p-2 flex items-center justify-center bg-transparent border-line text-faint opacity-50 cursor-not-allowed"
+                  className="border rounded-[20px] transition-all duration-200 p-2 flex items-center justify-center bg-transparent border-input-bar-control text-input-bar-muted opacity-50 cursor-not-allowed"
                   title="This model doesn't support file uploads"
                 >
                   <Paperclip className="w-4 h-4" />
@@ -499,14 +499,14 @@ export function MessageInputBar({
                 type="button"
                 onClick={handleSend}
                 disabled={disabled || (!message.trim() && attachments.length === 0)}
-                className={`flex items-center justify-center h-8 w-8 rounded-full border border-black bg-black text-white transition p-0 hover:cursor-pointer hover:bg-neutral-800 ${
+                className={`flex items-center justify-center h-8 w-8 rounded-full border transition p-0 hover:cursor-pointer border-black bg-black text-white hover:bg-neutral-800 dark:border-input-bar-control-active dark:bg-input-bar dark:text-input-bar-fg dark:hover:bg-input-bar-hover ${
                   disabled || (!message.trim() && attachments.length === 0)
-                    ? "opacity-40 cursor-not-allowed"
+                    ? "opacity-50 cursor-not-allowed"
                     : ""
                 }`}
                 style={{ marginRight: 0 }}
               >
-                <ArrowUp className="w-4 h-4" />
+                <ArrowUp className="w-4 h-4 text-white dark:text-input-bar-muted" />
               </button>
             </div>
             

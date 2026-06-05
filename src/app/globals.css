@@ -81,24 +81,33 @@
 
   --node: #d4d4d8;
   --hover: #f4f4f5;
+
+  /* message input bar */
+  --input-bar: #ffffff;
+  --input-bar-border: #e5e5e5;
+  --input-bar-control: #e5e5e5;
+  --input-bar-control-active: #525252;
+  --input-bar-fg: #171717;
+  --input-bar-muted: #737373;
+  --input-bar-hover: #f4f4f5;
 }
 
 /* ============================================================
    GRAPHITE (dark)  —  calm near-monochrome workspace
    ============================================================ */
 .dark {
-  --background: oklch(0.1450 0 0);
-  --foreground: oklch(0.9850 0 0);
-  --card: oklch(0.2050 0 0);
-  --card-foreground: oklch(0.9850 0 0);
+  --background: #000000;
+  --foreground: oklch(0.84 0 0);
+  --card: #151515;
+  --card-foreground: oklch(0.84 0 0);
   --popover: oklch(0.2200 0 0);
-  --popover-foreground: oklch(0.9850 0 0);
-  --primary: oklch(0.9220 0 0);
+  --popover-foreground: oklch(0.84 0 0);
+  --primary: oklch(0.84 0 0);
   --primary-foreground: oklch(0.2050 0 0);
   --secondary: oklch(0.2690 0 0);
-  --secondary-foreground: oklch(0.9850 0 0);
+  --secondary-foreground: oklch(0.84 0 0);
   --muted: oklch(0.2690 0 0);
-  --muted-foreground: oklch(0.7450 0 0);
+  --muted-foreground: oklch(0.62 0 0);
   --accent: oklch(0.3710 0 0);
   --accent-foreground: oklch(0.9850 0 0);
   --destructive: oklch(0.7040 0.1910 22.2160);
@@ -112,28 +121,28 @@
   --chart-4: oklch(0.4900 0.2200 264);
   --chart-5: oklch(0.4200 0.1800 266);
   --sidebar: oklch(0.2050 0 0);
-  --sidebar-foreground: oklch(0.9850 0 0);
+  --sidebar-foreground: oklch(0.84 0 0);
   --sidebar-primary: oklch(0.4880 0.2430 264.3760);
-  --sidebar-primary-foreground: oklch(0.9850 0 0);
+  --sidebar-primary-foreground: oklch(0.84 0 0);
   --sidebar-accent: oklch(0.2690 0 0);
-  --sidebar-accent-foreground: oklch(0.9850 0 0);
+  --sidebar-accent-foreground: oklch(0.84 0 0);
   --sidebar-border: oklch(0.2750 0 0);
   --sidebar-ring: oklch(0.4390 0 0);
 
-  /* ---- Graphite semantic palette ---- */
-  --app: #121212;
-  --panel: #181818;
-  --elevated: #1f1f1f;
-  --sunken: #0a0a0a;
-  --bubble: #2a2a2a;
+  /* ---- dark semantic palette ---- */
+  --app: #000000;
+  --panel: #151515;
+  --elevated: #151515;
+  --sunken: #000000;
+  --bubble: #2c2c2c;
 
-  --ink: #f3f2f0;
-  --body: #dcdcdc;
-  --dim: #a0a0a0;
-  --faint: #6e6e6e;
+  --ink: #d6d6d6;
+  --body: #d0d0d0;
+  --dim: #b0b0b0;
+  --faint: #888888;
 
-  --line: #2a2a2a;
-  --line-strong: #3a3a3a;
+  --line: #2c2c2c;
+  --line-strong: #c8c8c8;
 
   --brand: #7aa2f7;
   --brand-ink: #9bb8fb;
@@ -144,7 +153,16 @@
   --danger-weak: rgba(248, 113, 113, 0.12);
 
   --node: #3a3a3a;
-  --hover: #2b2b2b;
+  --hover: #2c2c2c;
+
+  /* message input bar */
+  --input-bar: #151515;
+  --input-bar-border: #2c2c2c;
+  --input-bar-control: #2c2c2c;
+  --input-bar-control-active: #c8c8c8;
+  --input-bar-fg: #d6d6d6;
+  --input-bar-muted: #9a9a9a;
+  --input-bar-hover: #2c2c2c;
 }
 
 @theme inline {
@@ -201,6 +219,13 @@
   --color-danger-weak: var(--danger-weak);
   --color-node: var(--node);
   --color-hover: var(--hover);
+  --color-input-bar: var(--input-bar);
+  --color-input-bar-border: var(--input-bar-border);
+  --color-input-bar-control: var(--input-bar-control);
+  --color-input-bar-control-active: var(--input-bar-control-active);
+  --color-input-bar-fg: var(--input-bar-fg);
+  --color-input-bar-muted: var(--input-bar-muted);
+  --color-input-bar-hover: var(--input-bar-hover);
 
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);

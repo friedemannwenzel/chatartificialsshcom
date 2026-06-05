@@ -77,7 +77,14 @@ export function MessageInputBar({
   const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const modelSelectorRef = useRef<HTMLDivElement>(null);
+  const shouldRefocusRef = useRef(false);
   const { user } = useUser();
+
+  const focusTextArea = useCallback(() => {
+    requestAnimationFrame(() => {
+      textAreaRef.current?.focus();
+    });
+  }, []);
 
   const updateSelectedModel = useMutation(api.preferences.updateSelectedModel);
   const setUserPreferences = useMutation(api.preferences.setUserPreferences);
@@ -87,6 +94,13 @@ export function MessageInputBar({
   );
 
   useAutoSizeTextArea(textAreaRef, message);
+
+  useEffect(() => {
+    if (!disabled && shouldRefocusRef.current) {
+      shouldRefocusRef.current = false;
+      focusTextArea();
+    }
+  }, [disabled, focusTextArea]);
 
   const setWebSearchEnabled = useCallback((enabled: boolean) => {
     if (isWebSearchControlled) {
@@ -164,7 +178,9 @@ export function MessageInputBar({
     onSendMessage(trimmed, selectedModel, webSearchEnabled, attachments, reasoningEffort);
     setMessage("");
     setAttachments([]);
-  }, [attachments, disabled, message, onSendMessage, reasoningEffort, selectedModel, webSearchEnabled]);
+    shouldRefocusRef.current = true;
+    focusTextArea();
+  }, [attachments, disabled, focusTextArea, message, onSendMessage, reasoningEffort, selectedModel, webSearchEnabled]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -289,7 +305,6 @@ export function MessageInputBar({
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder={placeholder}
-                disabled={disabled}
                 className="min-h-[40px] max-h-[120px] resize-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent text-base text-input-bar-fg placeholder:text-input-bar-muted px-0"
                 rows={1}
                 style={{

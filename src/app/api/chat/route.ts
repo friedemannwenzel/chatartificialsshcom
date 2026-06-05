@@ -47,6 +47,7 @@ type ResponseInputMessage = {
   role: 'user' | 'assistant' | 'system' | 'developer';
   content: Array<
     | { type: 'input_text'; text: string }
+    | { type: 'output_text'; text: string }
     | { type: 'input_image'; image_url: string; detail?: 'auto' }
     | { type: 'input_file'; file_url: string; filename: string }
   >;
@@ -139,6 +140,8 @@ function messageToOpenAIResponseInput(message: ChatMessage): ResponseInputMessag
   let textContent = message.content;
   const regex = getImageRegex();
   let match: RegExpExecArray | null;
+  const isAssistantMessage = message.role === 'assistant';
+  const textContentType = isAssistantMessage ? 'output_text' : 'input_text';
 
   while ((match = regex.exec(message.content)) !== null) {
     imageUrls.add(match[1]);
@@ -149,7 +152,7 @@ function messageToOpenAIResponseInput(message: ChatMessage): ResponseInputMessag
   }
 
   if (textContent) {
-    content.push({ type: 'input_text', text: textContent });
+    content.push({ type: textContentType, text: textContent });
   }
 
   for (const url of imageUrls) {
@@ -169,7 +172,7 @@ function messageToOpenAIResponseInput(message: ChatMessage): ResponseInputMessag
   }
 
   if (content.length === 0) {
-    content.push({ type: 'input_text', text: '' });
+    content.push({ type: textContentType, text: '' });
   }
 
   return {
